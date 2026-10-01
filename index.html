@@ -924,15 +924,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <!-- Density Settings inside Profile Menu -->
-                            <div class="p-1.5 bg-slate-900/60 rounded-lg border border-slate-700/60">
-                                <span class="text-[10px] font-semibold text-slate-400 block mb-1">Density:</span>
-                                <div class="grid grid-cols-3 gap-1">
-                                    <button onclick="setGridDensity('compact')" class="density-btn py-1 px-1 text-center rounded text-[10px] text-slate-300 hover:bg-slate-700 transition" data-i18n="density_compact">Compact</button>
-                                    <button onclick="setGridDensity('standard')" class="density-btn py-1 px-1 text-center rounded text-[10px] bg-indigo-600 text-white font-semibold transition" data-i18n="density_standard">Standard</button>
-                                    <button onclick="setGridDensity('spacious')" class="density-btn py-1 px-1 text-center rounded text-[10px] text-slate-300 hover:bg-slate-700 transition" data-i18n="density_spacious">Spacious</button>
-                                </div>
-                            </div>
+
                             <!-- Quick Actions -->
                             <div class="space-y-1">
                                 <button onclick="togglePresentationMode()" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
@@ -2186,9 +2178,6 @@
                 commander_role: "Executive Command & Telemetry",
                 commander_shift: "Shift Alpha • Active Duty",
                 reset_dashboard_state: "Reset Memory & State",
-                density_compact: "Compact",
-                density_standard: "Standard",
-                density_spacious: "Spacious",
                 footer_sub: "Telemetry & Cross-Platform Incident Intelligence"
             },
             TH: {
@@ -2275,9 +2264,6 @@
                 commander_role: "ฝ่ายวิเคราะห์ข่าวกรองและบริหารระบบ",
                 commander_shift: "กะปฏิบัติการ Alpha • เข้าเวร",
                 reset_dashboard_state: "รีเซ็ตสถานะหน้าจอแดชบอร์ด",
-                density_compact: "กะทัดรัด",
-                density_standard: "มาตรฐาน",
-                density_spacious: "โปร่งสบาย",
                 footer_sub: "ระบบโทรมาตรและข่าวกรองอุบัติการณ์ข้ามแพลตฟอร์ม"
             }
         };
@@ -2620,32 +2606,8 @@
             lucide.createIcons();
         }
 
-        function setGridDensity(mode) {
-            const container = document.getElementById('mainContainer');
-            const btns = document.querySelectorAll('.density-btn');
-            btns.forEach(b => {
-                b.classList.remove('bg-indigo-600', 'text-white', 'font-semibold');
-                b.classList.add('text-slate-400');
-            });
-            if (event && event.target) {
-                event.target.classList.add('bg-indigo-600', 'text-white', 'font-semibold');
-                event.target.classList.remove('text-slate-400');
-            }
-
-            if (mode === 'compact') {
-                container.classList.remove('space-y-4', 'space-y-8', 'max-w-7xl');
-                container.classList.add('space-y-2.5', 'max-w-full', 'px-3');
-            } else if (mode === 'spacious') {
-                container.classList.remove('space-y-2.5', 'space-y-4', 'max-w-7xl');
-                container.classList.add('space-y-8', 'max-w-[1600px]', 'px-8');
-            } else {
-                container.classList.remove('space-y-2.5', 'space-y-8', 'max-w-full', 'max-w-[1600px]');
-                container.classList.add('space-y-4', 'max-w-7xl', 'px-4', 'sm:px-6');
-            }
-            window.dispatchEvent(new Event('resize'));
-        }
-
-        function detectProjectFromFilename(fileName) {
+        
+            function detectProjectFromFilename(fileName) {
             const upper = (fileName || '').toUpperCase();
             if (upper.includes('OBK') || upper.includes('ONE BANGKOK') || upper.includes('ONEBANGKOK')) {
                 updateProjectBranding("One Bangkok");
