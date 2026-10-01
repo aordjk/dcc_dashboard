@@ -1,0 +1,9 @@
+# Binaries & local runtimes
+cloudflared.exe
+node-bin/
+*.exe
+*.log
+
+# OS & Environment
+.DS_Store
+Thumbs.db

@@ -1,0 +1,2873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=index.html#compare">
+  <script>
+    window.location.replace('index.html#compare');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Centre Executive Incident Intelligence Dashboard</title>
+  <!-- Chart.js & Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Export Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      background-color: #060a14;
+      color: #cbd5e1;
+    }
+    .glass-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(8, 14, 28, 0.95) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      border-radius: 0.875rem;
+    }
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .editable-panel {
+      outline: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .editable-panel:focus {
+      background-color: rgba(15, 23, 42, 0.98);
+      border-color: #6366f1;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+    }
+    .editable-panel.editing-active {
+      border-color: #818cf8 !important;
+      background-color: rgba(30, 41, 59, 0.85) !important;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+    }
+    .sticky-control-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(18px);
+      background-color: rgba(6, 10, 20, 0.96);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 60;
+      min-width: 220px;
+      max-height: 290px;
+      overflow-y: auto;
+      background: #0b1120;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.85);
+    }
+    .dropdown-menu.show {
+      display: block;
+    }
+    body.present-mode {
+      background-color: #03060d;
+    }
+    canvas {
+      cursor: pointer;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #080d1a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    .flashcard-root {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 4px solid #f43f5e;
+    }
+    .flashcard-root strong, .flashcard-root b {
+      color: #fb7185 !important;
+      font-weight: 700;
+    }
+
+    .flashcard-trigger {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 4px solid #f59e0b;
+    }
+    .flashcard-trigger strong, .flashcard-trigger b {
+      color: #facc15 !important;
+      font-weight: 700;
+    }
+
+    .flashcard-action {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 4px solid #10b981;
+    }
+    .flashcard-action strong, .flashcard-action b {
+      color: #34d399 !important;
+      font-weight: 700;
+    }
+
+    .flashcard-prevent {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 4px solid #06b6d4;
+    }
+    .flashcard-prevent strong, .flashcard-prevent b {
+      color: #38bdf8 !important;
+      font-weight: 700;
+    }
+
+    #chartModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 6, 13, 0.95);
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      padding: 1.5rem;
+    }
+    #chartModal.active {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body class="transition-all duration-300">
+
+  <!-- Sticky Top Control Bar -->
+  <div class="sticky-control-bar px-4 md:px-8 py-3 shadow-xl">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2.5 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 bg-indigo-600/20 border border-indigo-500/40 rounded-xl text-indigo-400">
+          <i class="fa-solid fa-tower-broadcast text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="titleHeading" class="text-lg md:text-xl font-bold text-white tracking-wide">Command Centre Executive Intelligence</h1>
+            <span id="activeDatasetBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Awaiting Upload</span>
+          </div>
+          <p id="subTitleHeading" class="text-[11px] text-slate-400">Multi-File Cross-Year Comparison, Daily Date Slicer & Deep Root-Cause Intelligence</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition text-white font-medium shadow-md shadow-indigo-600/30">
+          <i class="fa-solid fa-file-circle-plus"></i>
+          <span id="uploadBtnText">Upload CSV(s)</span>
+          <input type="file" id="csvFileInput" accept=".csv" multiple class="hidden">
+        </label>
+
+        <!-- Export Menu Dropdown -->
+        <div class="relative dropdown-container" id="ddExportContainer">
+          <button class="bg-slate-800 hover:bg-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg text-emerald-400 border border-slate-700 flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-file-export"></i>
+            <span id="lblExportBtn">Export Report</span>
+            <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+          </button>
+          <div class="dropdown-menu p-2 right-0 left-auto min-w-[160px]" id="ddExportMenu">
+            <button id="exportPdfBtn" class="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded flex items-center gap-2">
+              <i class="fa-solid fa-file-pdf text-rose-400"></i> Export to PDF
+            </button>
+            <button id="exportPptxBtn" class="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded flex items-center gap-2">
+              <i class="fa-solid fa-file-powerpoint text-amber-400"></i> Export to PowerPoint
+            </button>
+            <button id="exportExcelBtn" class="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded flex items-center gap-2">
+              <i class="fa-solid fa-file-excel text-emerald-400"></i> Export to Excel
+            </button>
+            <button id="exportWordBtn" class="w-full text-left px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded flex items-center gap-2">
+              <i class="fa-solid fa-file-word text-blue-400"></i> Export to Word
+            </button>
+          </div>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="flex items-center bg-slate-800/90 rounded-lg p-0.5 border border-slate-700 text-xs font-semibold">
+          <button id="langEnBtn" class="px-2.5 py-1 rounded-md transition text-white bg-indigo-600 shadow">EN</button>
+          <button id="langThBtn" class="px-2.5 py-1 rounded-md transition text-slate-400 hover:text-white">ไทย</button>
+        </div>
+
+        <button id="presentModeBtn" class="bg-slate-800 hover:bg-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+          <i id="presentModeIcon" class="fa-solid fa-expand"></i>
+          <span id="presentModeLabel">Present Mode</span>
+        </button>
+
+        <button id="resetFilterBtn" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span id="resetFilterLabel">Reset Filters</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loaded Datasets Badges -->
+    <div id="loadedFilesSection" class="flex items-center gap-2 py-2 border-b border-slate-800/70 text-xs overflow-x-auto">
+      <span class="text-slate-400 font-semibold flex items-center gap-1 whitespace-nowrap">
+        <i class="fa-solid fa-folder-open text-indigo-400"></i>
+        <span id="lblActiveFiles">Loaded Datasets:</span>
+      </span>
+      <div id="filesBadgeContainer" class="flex items-center gap-1.5 flex-nowrap">
+        <span class="text-slate-500 italic text-[11px]" id="noFileMsg">No files loaded (Please upload CSV to start)</span>
+      </div>
+    </div>
+
+    <!-- Dropdown Slicers -->
+    <div id="filterRow" class="flex flex-wrap items-center gap-2 pt-2.5 opacity-60 pointer-events-none transition-opacity">
+      <!-- 1. File Slicer -->
+      <div class="relative dropdown-container" id="ddFileContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium max-w-[200px]">
+          <i class="fa-solid fa-file-lines text-indigo-400"></i>
+          <span id="lblFileText" class="whitespace-nowrap">File</span>: <span class="text-indigo-400 font-bold truncate" id="badgeFile">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-auto"></i>
+        </button>
+        <div class="dropdown-menu p-2.5 min-w-[260px]" id="ddFileMenu"></div>
+      </div>
+
+      <!-- 2. Year Dropdown -->
+      <div class="relative dropdown-container" id="ddYearContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium">
+          <span id="lblYearText">Year</span>: <span class="text-indigo-400 font-bold truncate max-w-[80px]" id="badgeYear">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+        </button>
+        <div class="dropdown-menu p-2.5" id="ddYearMenu"></div>
+      </div>
+
+      <!-- 3. Month Dropdown -->
+      <div class="relative dropdown-container" id="ddMonthContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium">
+          <span id="lblMonthText">Month</span>: <span class="text-indigo-400 font-bold truncate max-w-[90px]" id="badgeMonth">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+        </button>
+        <div class="dropdown-menu p-2.5" id="ddMonthMenu"></div>
+      </div>
+
+      <!-- 3.5 Week Dropdown (Sunday - Saturday) -->
+      <div class="relative dropdown-container" id="ddWeekContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium max-w-[240px]">
+          <i class="fa-regular fa-calendar-check text-indigo-400"></i>
+          <span id="lblWeekText">Week</span>: <span class="text-indigo-400 font-bold truncate max-w-[130px]" id="badgeWeek">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-auto"></i>
+        </button>
+        <div class="dropdown-menu p-2.5 min-w-[250px]" id="ddWeekMenu"></div>
+      </div>
+
+      <!-- 4. Date Slicer -->
+      <div class="relative dropdown-container" id="ddDateContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium">
+          <i class="fa-regular fa-calendar-days text-indigo-400"></i>
+          <span id="lblDateText">Date (Day)</span>: <span class="text-indigo-400 font-bold truncate max-w-[100px]" id="badgeDate">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+        </button>
+        <div class="dropdown-menu p-2.5 min-w-[200px]" id="ddDateMenu"></div>
+      </div>
+
+      <!-- 5. Category Dropdown -->
+      <div class="relative dropdown-container" id="ddCategoryContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium">
+          <span id="lblCategoryText">Category</span>: <span class="text-indigo-400 font-bold truncate max-w-[80px]" id="badgeCategory">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+        </button>
+        <div class="dropdown-menu p-2.5" id="ddCategoryMenu"></div>
+      </div>
+
+      <!-- 6. Priority Dropdown -->
+      <div class="relative dropdown-container" id="ddPriorityContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium">
+          <span id="lblPriorityText">Priority</span>: <span class="text-indigo-400 font-bold truncate max-w-[80px]" id="badgePriority">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+        </button>
+        <div class="dropdown-menu p-2.5" id="ddPriorityMenu"></div>
+      </div>
+
+      <!-- 7. False Alarm Dropdown -->
+      <div class="relative dropdown-container" id="ddFalseContainer">
+        <button class="dropdown-toggle text-xs bg-slate-900 border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 text-slate-200 font-medium">
+          <span id="lblFalseText">False Alarm</span>: <span class="text-indigo-400 font-bold truncate max-w-[80px]" id="badgeFalse">All</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+        </button>
+        <div class="dropdown-menu p-2.5" id="ddFalseMenu"></div>
+      </div>
+
+      <!-- 8. Event Type Search -->
+      <div class="relative dropdown-container flex-grow max-w-sm" id="ddEventTypeContainer">
+        <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 focus-within:border-indigo-500">
+          <i class="fa-solid fa-magnifying-glass text-xs text-indigo-400 mr-2"></i>
+          <input type="text" id="eventTypeSearchInput" placeholder="Search Filtered Event Type..." class="bg-transparent border-none text-xs text-white focus:outline-none w-full">
+          <span id="badgeEventType" class="text-[11px] font-mono text-indigo-400 font-bold mr-1 truncate max-w-[90px]">All</span>
+          <button id="toggleEventTypeDropdownBtn" class="text-slate-400 hover:text-white px-1">
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+        </div>
+        <div class="dropdown-menu p-2.5 w-full min-w-[320px]" id="ddEventTypeMenu"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Canvas -->
+  <main id="exportableArea" class="p-4 md:p-8 space-y-6">
+
+    <!-- Empty State Placeholder -->
+    <div id="emptyStatePlaceholder" class="glass-card p-12 text-center border-dashed border-2 border-slate-700 max-w-2xl mx-auto my-12">
+      <div class="w-20 h-20 mx-auto rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-3xl mb-4">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+      </div>
+      <h2 id="emptyTitle" class="text-xl font-bold text-white mb-2">Please upload incident dataset to begin analysis</h2>
+      <p id="emptyDesc" class="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
+        System is ready for District Command Centre CSV files (Multiple files supported for cross-year comparison)
+      </p>
+      <label class="cursor-pointer inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/30 transition">
+        <i class="fa-solid fa-folder-open"></i>
+        <span id="emptyUploadBtn">Select CSV File(s)</span>
+        <input type="file" id="emptyFileInput" accept=".csv" multiple class="hidden">
+      </label>
+    </div>
+
+    <!-- Dashboard Content Container -->
+    <div id="dashboardContent" class="space-y-6 hidden">
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-start">
+            <span id="kpiLabelTotal" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Filtered Cases</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-medium">Active Filter</span>
+          </div>
+          <div class="flex items-baseline gap-2 mt-2">
+            <div id="kpiTotalVal" class="text-3xl font-bold text-white">-</div>
+          </div>
+          <div id="kpiTotalDetail" class="text-xs text-slate-300 font-mono mt-1.5 p-1.5 rounded bg-slate-900/60 border border-slate-800">-</div>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-start">
+            <span id="kpiLabelTrue" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">True Incident Rate</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium">Operational</span>
+          </div>
+          <div class="flex items-baseline gap-2 mt-2">
+            <div id="kpiTrueRateVal" class="text-3xl font-bold text-emerald-400">-</div>
+          </div>
+          <div id="kpiTrueDetail" class="text-xs text-slate-400 mt-2">-</div>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-start">
+            <span id="kpiLabelBacklog" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Backlog / Pending</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-medium">Pending Action</span>
+          </div>
+          <div class="flex items-baseline gap-2 mt-2">
+            <div id="kpiBacklogVal" class="text-3xl font-bold text-amber-400">-</div>
+          </div>
+          <div id="kpiBacklogDetail" class="text-xs text-slate-400 mt-2">-</div>
+        </div>
+
+        <div class="glass-card p-4">
+          <div class="flex justify-between items-start">
+            <span id="kpiLabelNew" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">New Event Types</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-medium">Emerging</span>
+          </div>
+          <div class="flex items-baseline gap-2 mt-2">
+            <div id="kpiNewTypeVal" class="text-3xl font-bold text-cyan-400">-</div>
+          </div>
+          <div id="kpiNewTypeDetail" class="text-xs text-slate-400 mt-2">Emerging events unseen in history</div>
+        </div>
+      </div>
+
+      <!-- CRITICAL INCIDENT WATCHLIST -->
+      <div class="glass-card p-5 border-rose-500/30">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2.5">
+          <div class="flex items-center gap-2.5">
+            <div class="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 font-bold">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <h2 id="highlightHeader" class="text-sm font-bold text-white uppercase tracking-wider">Critical Incident Watchlist: Priority Escalations (True Incidents)</h2>
+              <p id="highlightSub" class="text-[11px] text-slate-400">Ranked by Severity (CAT 1-3). Core Systems, Safety, Security & CCTV (Excludes Mozart & Cleaning)</p>
+            </div>
+          </div>
+          <span id="highlightBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">Executive Priority</span>
+        </div>
+        <!-- Dynamic Critical Cases Container -->
+        <div id="highlightCasesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- 4 Strategic Deep-Dive Flashcards -->
+      <div class="glass-card p-5 border-indigo-500/30">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+              <h2 id="deepDiveHeader" class="text-sm font-bold text-white uppercase tracking-wider">Executive Strategic Intelligence & Deep-Dive Analysis</h2>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="briefingStateBadge" class="text-[10px] px-2 py-0.5 rounded font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700">Auto-Generated</span>
+                <span id="deepDiveEditableNotice" class="text-[11px] text-slate-400 italic">Dynamic Comparative Deep-Dive (Top Event Type & Location with verbatim Summary & Findings)</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button id="btnBriefingReset" class="hidden text-xs text-rose-400 hover:text-rose-300 font-semibold px-2 py-1 transition flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span id="lblResetBriefing">Reset to Auto</span>
+            </button>
+            <button id="btnBriefingToggle" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow shadow-indigo-600/30">
+              <i id="iconBriefingToggle" class="fa-solid fa-pen-to-square"></i>
+              <span id="lblBriefingToggle">Edit Briefing</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Comparative Deep-Dive Cards Container (Up to 3 Topics / Comparison Bars) -->
+        <div id="deepDiveDynamicGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="space-y-6">
+        <div class="glass-card p-5">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="lg:col-span-7 xl:col-span-8">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 id="chart1Title" class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-trend-up text-rose-400"></i> Top 5 Significant Delta Shifts
+                  </h3>
+                  <p id="chart1Sub" class="text-xs text-slate-400 mt-0.5">Parallel comparison of rising/dropping events (Click bar to drill down)</p>
+                </div>
+                <button onclick="openChartModal('shiftChart', 'Top 5 Significant Delta Shifts')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                  <i class="fa-solid fa-expand text-xs"></i>
+                </button>
+              </div>
+              <div class="h-80"><canvas id="shiftChart"></canvas></div>
+            </div>
+            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
+              <div>
+                <div class="flex items-center justify-between text-xs font-bold text-rose-400 mb-2.5 pb-1 border-b border-slate-800">
+                  <span id="chart1SideTitle" class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line"></i> Deep-Dive: Top 5 Volatile Events</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-normal">Editable</span>
+                </div>
+                <div id="chart1AnalysisBox" contenteditable="true" class="editable-panel p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="lg:col-span-7 xl:col-span-8">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 id="chart2Title" class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-emerald-400"></i> Top True Incident Event Types Comparison
+                  </h3>
+                  <p id="chart2Sub" class="text-xs text-slate-400 mt-0.5">Focus exclusively on verified real events (False Alarms filtered out)</p>
+                </div>
+                <button onclick="openChartModal('trueEventChart', 'Top True Incidents Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                  <i class="fa-solid fa-expand text-xs"></i>
+                </button>
+              </div>
+              <div class="h-80"><canvas id="trueEventChart"></canvas></div>
+            </div>
+            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
+              <div>
+                <div class="flex items-center justify-between text-xs font-bold text-emerald-400 mb-2.5 pb-1 border-b border-slate-800">
+                  <span id="chart2SideTitle" class="flex items-center gap-1.5"><i class="fa-solid fa-shield-check"></i> Deep-Dive: Top 5 True Incidents</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-normal">Editable</span>
+                </div>
+                <div id="chart2AnalysisBox" contenteditable="true" class="editable-panel p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="lg:col-span-7 xl:col-span-8">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 id="chartFalseTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bell-slash text-amber-400"></i> Top False Incident Event Types
+                  </h3>
+                  <p id="chartFalseSub" class="text-xs text-slate-400 mt-0.5">Analyze top false alarm events to optimize sensor thresholding</p>
+                </div>
+                <button onclick="openChartModal('falseEventChart', 'Top False Alarms Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                  <i class="fa-solid fa-expand text-xs"></i>
+                </button>
+              </div>
+              <div class="h-80"><canvas id="falseEventChart"></canvas></div>
+            </div>
+            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
+              <div>
+                <div class="flex items-center justify-between text-xs font-bold text-amber-400 mb-2.5 pb-1 border-b border-slate-800">
+                  <span id="chartFalseSideTitle" class="flex items-center gap-1.5"><i class="fa-solid fa-wrench"></i> Deep-Dive: Tuning Strategy to Reduce False Alarms</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-normal">Editable</span>
+                </div>
+                <div id="chartFalseAnalysisBox" contenteditable="true" class="editable-panel p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="lg:col-span-7 xl:col-span-8">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 id="chart3Title" class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-repeat text-indigo-400"></i> Recurring Hotspots: Highest Frequency Event + Location
+                  </h3>
+                  <p id="chart3Sub" class="text-xs text-slate-400 mt-0.5">Cross-analyzing [Location + Event Type] for systemic operational flaws (Click bar to drill down)</p>
+                </div>
+                <button onclick="openChartModal('recurringChart', 'Recurring Hotspots')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                  <i class="fa-solid fa-expand text-xs"></i>
+                </button>
+              </div>
+              <div class="h-80"><canvas id="recurringChart"></canvas></div>
+            </div>
+            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
+              <div>
+                <div class="flex items-center justify-between text-xs font-bold text-indigo-400 mb-2.5 pb-1 border-b border-slate-800">
+                  <span id="chart3SideTitle" class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye"></i> Deep-Dive: Recurring Hotspots Elimination</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-normal">Editable</span>
+                </div>
+                <div id="chart3AnalysisBox" contenteditable="true" class="editable-panel p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: New Event Types & Backlog Causes -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="glass-card p-5 lg:col-span-8">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 id="tableTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-radar text-cyan-400"></i> New Event Types: Emerging in Current Month vs History
+              </h3>
+              <p id="tableSub" class="text-xs text-slate-400 mt-0.5">Current baseline compared against prior history with status and resolution</p>
+            </div>
+            <span id="curMonthBadge" class="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Current Base</span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[380px]">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-900/90 uppercase text-slate-400 sticky top-0 border-b border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3 w-[30%]" id="thNewEvent">Event Type (Emerging)</th>
+                  <th class="py-2.5 px-2 w-[8%] text-center" id="thNewCount">Count</th>
+                  <th class="py-2.5 px-2.5 w-[20%]" id="thNewLoc">Primary Location</th>
+                  <th class="py-2.5 px-2 w-[10%] text-center" id="thNewFalse">False Alarm</th>
+                  <th class="py-2.5 px-2.5 w-[10%] text-center" id="thNewStatus">Status</th>
+                  <th class="py-2.5 px-3 w-[22%]" id="thNewRes">Resolution / Findings</th>
+                </tr>
+              </thead>
+              <tbody id="newEventTableBody" class="divide-y divide-slate-800/60"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card p-5 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 id="backlogHeader" class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-clock text-amber-400"></i> Top 2 Pending Backlog Root Causes
+              </h3>
+              <span id="backlogTotalLabel" class="text-xs font-semibold text-amber-400"></span>
+            </div>
+            <p id="backlogSub" class="text-xs text-slate-400 mb-4">Primary 1st and 2nd bottlenecks preventing SLA closure</p>
+            <div id="backlogListContainer" class="space-y-3"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Fullscreen Modal -->
+  <div id="chartModal">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+      <h3 id="modalChartTitle" class="text-base font-bold text-white flex items-center gap-2"></h3>
+      <button onclick="closeChartModal()" class="text-slate-400 hover:text-white px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold">
+        <i class="fa-solid fa-xmark mr-1"></i> Close (Esc)
+      </button>
+    </div>
+    <div class="flex-grow p-4 relative h-[80vh]">
+      <canvas id="modalCanvas"></canvas>
+    </div>
+  </div>
+
+  <script>
+    if (typeof ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+    }
+
+    const PROJECT_MAPPING = {
+      'OBK': 'One Bangkok',
+      'TPQ': 'The PARQ',
+      'FYI': 'FYI Center',
+      'SYMT': 'Samyan Mitrtown Tower',
+      'SYMR': 'Samyan Mitrtown Retail'
+    };
+
+    const I18N = {
+      en: {
+        baseTitle: "Command Centre Executive Intelligence",
+        subtitle: "Multi-File Cross-Year Comparison, Daily Date Slicer & Deep Root-Cause Intelligence",
+        upload: "Upload CSV(s)",
+        exportBtn: "Export Report",
+        present: "Present Mode",
+        exitPresent: "Exit Present",
+        reset: "Reset Filters",
+        loadedFiles: "Loaded Datasets:",
+        noFiles: "No files loaded (Please upload CSV to start)",
+        lblFile: "File",
+        lblYear: "Year",
+        lblMonth: "Month",
+        lblWeek: "Week",
+        lblDate: "Date (Day)",
+        lblCategory: "Category",
+        lblPriority: "Priority",
+        lblFalse: "False Alarm",
+        searchPlaceholder: "Search Filtered Event Type...",
+        kpiTotal: "Total Filtered Cases",
+        kpiTrue: "True Incident Rate",
+        kpiBacklog: "Backlog / Pending",
+        kpiNew: "New Event Types",
+        kpiNewSub: "Emerging events unseen in history",
+        highlightHeader: "Critical Incident Watchlist: Priority Escalations (True Incidents)",
+        highlightSub: "Ranked by Severity (CAT 1-3). Core Systems, Safety, Security & CCTV (Excludes Mozart & Cleaning)",
+        highlightBadge: "Executive Priority",
+        deepDive: "Executive Strategic Intelligence & Deep-Dive Analysis",
+        deepDiveNotice: "Click Edit Briefing to customize for this active filter",
+        btnEdit: "Edit Briefing",
+        btnSave: "Save Briefing",
+        btnReset: "Reset to Auto",
+        badgeAuto: "Auto-Generated",
+        badgeCustom: "Custom Saved (Filter Linked)",
+        badgeRoot: "Primary Root Cause",
+        badgeTrigger: "Operational Trigger",
+        badgeAction: "Immediate Action",
+        badgePrevent: "Predictive & SOP",
+        chart1T: "Top 5 Significant Delta Shifts",
+        chart1S: "Parallel comparison of rising/dropping events (Click bar to drill down)",
+        chart1Side: "Deep-Dive: Top 5 Volatile Events Analysis",
+        chart2T: "Top True Incident Event Types Comparison",
+        chart2S: "Focus exclusively on verified real events (False Alarms filtered out)",
+        chart2Side: "Deep-Dive: Top 5 True Incidents Analysis",
+        chartFalseT: "Top False Incident Event Types",
+        chartFalseS: "Analyze top false alarm events to optimize sensor thresholding",
+        chartFalseSide: "Deep-Dive: Tuning Strategy to Reduce False Alarms",
+        chart3T: "Recurring Hotspots: Highest Frequency Event + Location",
+        chart3S: "Cross-analyzing [Location + Event Type] for systemic operational flaws (Click bar to drill down)",
+        chart3Side: "Deep-Dive: Recurring Hotspots Elimination",
+        tableT: "New Event Types: Emerging in Current Month vs History",
+        tableS: "Current baseline compared against prior history with status and resolution",
+        thEvent: "Event Type (Emerging)",
+        thCount: "Count",
+        thLoc: "Primary Location",
+        thFalse: "False Alarm",
+        thStatus: "Status",
+        thRes: "Resolution / Findings",
+        backlogH: "Top 2 Pending Backlog Root Causes",
+        backlogS: "Primary 1st and 2nd bottlenecks preventing SLA closure",
+        noNewEvents: "No emerging/unseen event types detected in this baseline month.",
+        noBacklog: "No pending backlog under active filter criteria.",
+        closedStatus: "Resolved (Closed 100%)",
+        pendingStatus: "Pending",
+        casesUnit: "cases",
+        emptyTitle: "Please upload incident dataset to begin analysis",
+        emptyDesc: "System is ready for District Command Centre CSV files (Multiple files supported for cross-year comparison)",
+        emptyBtn: "Select CSV File(s)",
+        critAlert: "Priority Alert",
+        critDate: "Incident Date",
+        critLoc: "Location",
+        critCase: "Case No",
+        critStatus: "Status",
+        critZeroTitle: "Zero Critical High-Impact Incidents Detected",
+        critZeroDesc: "All active incidents remain strictly contained under Standard Operating Procedures (SOP) with no threats to personnel safety, structural integrity, core systems, or project reputation."
+      },
+      th: {
+        baseTitle: "Command Centre Executive Intelligence",
+        subtitle: "ระบบเปรียบเทียบข้อมูลย้อนหลังข้ามปี (Multi-Files), วิเคราะห์ระหว่างวัน (Date Slicer) และตรวจจับเคสวิกฤต",
+        upload: "Upload CSV(s)",
+        exportBtn: "ส่งออกรายงาน",
+        present: "Present Mode",
+        exitPresent: "ออกจากการนำเสนอ",
+        reset: "Reset Filters",
+        loadedFiles: "ไฟล์ที่เปิดใช้งาน:",
+        noFiles: "ไม่มีไฟล์ข้อมูล (กรุณาอัปโหลดไฟล์เพื่อเริ่มต้น)",
+        lblFile: "File",
+        lblYear: "Year (ปี)",
+        lblMonth: "Month (เดือน)",
+        lblWeek: "Week (สัปดาห์)",
+        lblDate: "Date (วันที่)",
+        lblCategory: "Category",
+        lblPriority: "Priority",
+        lblFalse: "False Alarm",
+        searchPlaceholder: "ค้นหา Event Type ในหมวดหมู่ที่เลือก...",
+        kpiTotal: "Total Filtered Cases",
+        kpiTrue: "True Incident Rate",
+        kpiBacklog: "Backlog / Pending",
+        kpiNew: "New Event Types",
+        kpiNewSub: "เคสที่ไม่เคยพบในอดีต",
+        highlightHeader: "Critical Incident Watchlist: เคสสำคัญที่ผู้บริหารระดับสูงต้องรับทราบ (True Incidents)",
+        highlightSub: "เรียงตาม Severity (CAT 1-3) กระทบระบบหลัก ความปลอดภัย CCTV (ไม่รวม Mozart และ Cleaning)",
+        highlightBadge: "ระดับความสำคัญสูงสุด",
+        deepDive: "Executive Strategic Intelligence & Deep-Dive Analysis",
+        deepDiveNotice: "คลิก แก้ไข Briefing เพื่อพิมพ์บันทึกทั้งส่วน Strategic และ Critical ผูกกับฟิลเตอร์ชุดนี้โดยเฉพาะ",
+        btnEdit: "แก้ไข Briefing",
+        btnSave: "บันทึก Briefing",
+        btnReset: "คืนค่าอัตโนมัติ",
+        badgeAuto: "คำนวณอัตโนมัติ",
+        badgeCustom: "บันทึกเฉพาะฟิลเตอร์นี้แล้ว",
+        badgeRoot: "Primary Root Cause",
+        badgeTrigger: "Operational Trigger",
+        badgeAction: "Immediate Action",
+        badgePrevent: "Predictive & SOP",
+        chart1T: "Top 5 เหตุการณ์ที่มีการเปลี่ยนแปลงสูงสุด (Significant Delta Shifts)",
+        chart1S: "เปรียบเทียบเคสเพิ่มขึ้น/ลดลงแบบคู่ขนาน (คลิกที่แท่งกราฟเพื่อ Filter ได้)",
+        chart1Side: "Deep-Dive: วิเคราะห์ Top 5 เหตุการณ์ผันผวน",
+        chart2T: "Top Event Types ที่เป็นเหตุการณ์จริง (True Incidents Comparison)",
+        chart2S: "เฉพาะเหตุการณ์ที่ผ่านการตรวจสอบว่าเป็นเคสจริง (คัดแยก False Alarm ออก)",
+        chart2Side: "Deep-Dive: วิเคราะห์ Top 5 เคสจริง",
+        chartFalseT: "Top False Incident Event Types (การเปรียบเทียบสัญญาณแจ้งเตือนหลอก)",
+        chartFalseS: "วิเคราะห์ประเภท Alarm ที่เป็น False สูงสุด เพื่อปรับจูนระบบและเซนเซอร์",
+        chartFalseSide: "Deep-Dive: แนวทางปรับจูนเซนเซอร์ลด False Alarm",
+        chart3T: "Recurring Hotspots: ประเภทเหตุการณ์และจุดเสี่ยงที่เกิดซ้ำซ้อนสูงสุด",
+        chart3S: "การจับคู่ [Location + Event Type] เพื่อหาจุดบกพร่องเชิงระบบ (คลิกที่แท่งเพื่อ Drill Down)",
+        chart3Side: "Deep-Dive: วิเคราะห์จุดเกิดซ้ำ (Recurring Hotspots)",
+        tableT: "New Event Types: เหตุการณ์แปลกใหม่ในเดือนปัจจุบัน (เทียบประวัติในอดีตทั้งหมด)",
+        tableS: "ยึดเดือนปัจจุบันเป็นตัวตั้ง เพื่อจับตาดู Incident ที่ไม่เคยเกิดขึ้นมาก่อน พร้อมสถานะและวิธีแก้ไข",
+        thEvent: "Event Type (แปลกใหม่)",
+        thCount: "จำนวน",
+        thLoc: "Primary Location",
+        thFalse: "False Alarm",
+        thStatus: "สถานะ",
+        thRes: "วิธีการแก้ไข (Resolution / Findings)",
+        backlogH: "Top 2 สาเหตุที่ทำให้เคสค้าง (Pending Root Causes)",
+        backlogS: "อุปสรรคสำคัญอันดับ 1 และ 2 ที่ทำให้ไม่สามารถปิดเคสได้ตาม SLA",
+        noNewEvents: "ไม่มีเคสแปลกใหม่ที่ไม่เคยเกิดขึ้นมาก่อนในรอบเดือนนี้",
+        noBacklog: "ไม่มีเคสค้างสะสมในเงื่อนไขตัวกรองนี้",
+        closedStatus: "จบแล้ว (Closed 100%)",
+        pendingStatus: "ค้าง",
+        casesUnit: "เคส",
+        emptyTitle: "กรุณาอัปโหลดไฟล์ข้อมูลเพื่อเริ่มต้นวิเคราะห์",
+        emptyDesc: "ระบบพร้อมรองรับไฟล์ CSV ของ District Command Centre (สามารถเลือกหลายไฟล์พร้อมกันเพื่อวิเคราะห์เปรียบเทียบข้ามไฟล์ข้ามปีได้)",
+        emptyBtn: "เลือกไฟล์ CSV (Select CSV Files)",
+        critAlert: "เคสวิกฤตลำดับที่",
+        critDate: "วันที่เกิดเหตุ",
+        critLoc: "สถานที่",
+        critCase: "เลขที่เคส",
+        critStatus: "สถานะ",
+        critZeroTitle: "ไม่พบเคสวิกฤตที่มีผลกระทบระดับสูง",
+        critZeroDesc: "เหตุการณ์ทั้งหมดในเงื่อนไขการคัดกรองอยู่ภายใต้การควบคุมและขั้นตอนปฏิบัติงานมาตรฐาน (SOP) ไม่ส่งผลกระทบต่อความปลอดภัย โครงสร้าง งานระบบหลัก หรือชื่อเสียงโครงการ"
+      }
+    };
+
+    let currentLang = 'en';
+    let loadedFilesMap = {};
+    let fullDataset = [];
+    let charts = {};
+    let modalChartInstance = null;
+    let isEditingBriefing = false;
+
+    let briefingStateCache = {};
+    try {
+      const stored = localStorage.getItem('dcc_briefing_state_cache');
+      if (stored) briefingStateCache = JSON.parse(stored);
+    } catch (e) {
+      console.warn("Could not read local briefing cache:", e);
+    }
+
+    let selectedFilters = {
+      files: new Set(),
+      years: new Set(),
+      months: new Set(),
+      weeks: new Set(),
+      days: new Set(),
+      categories: new Set(),
+      priorities: new Set(),
+      falseAlarms: new Set(),
+      eventTypes: new Set()
+    };
+
+    const MONTH_NAMES = {
+      1: { en: 'Jan', th: 'ม.ค.' },
+      2: { en: 'Feb', th: 'ก.พ.' },
+      3: { en: 'Mar', th: 'มี.ค.' },
+      4: { en: 'Apr', th: 'เม.ย.' },
+      5: { en: 'May', th: 'พ.ค.' },
+      6: { en: 'Jun', th: 'มิ.ย.' },
+      7: { en: 'Jul', th: 'ก.ค.' },
+      8: { en: 'Aug', th: 'ส.ค.' },
+      9: { en: 'Sep', th: 'ก.ย.' },
+      10: { en: 'Oct', th: 'ต.ค.' },
+      11: { en: 'Nov', th: 'พ.ย.' },
+      12: { en: 'Dec', th: 'ธ.ค.' }
+    };
+
+    const PALETTES = {
+      shift: [
+        { fill: 'rgba(244, 63, 94, 0.85)', stroke: '#fb7185' },
+        { fill: 'rgba(217, 70, 239, 0.85)', stroke: '#e879f9' },
+        { fill: 'rgba(251, 113, 133, 0.85)', stroke: '#fda4af' },
+        { fill: 'rgba(225, 29, 72, 0.85)', stroke: '#f43f5e' }
+      ],
+      trueEv: [
+        { fill: 'rgba(16, 185, 129, 0.85)', stroke: '#34d399' },
+        { fill: 'rgba(20, 184, 166, 0.85)', stroke: '#2dd4bf' },
+        { fill: 'rgba(5, 150, 105, 0.85)', stroke: '#10b981' }
+      ],
+      falseEv: [
+        { fill: 'rgba(245, 158, 11, 0.85)', stroke: '#fbbf24' },
+        { fill: 'rgba(234, 179, 8, 0.85)', stroke: '#facc15' },
+        { fill: 'rgba(249, 115, 22, 0.85)', stroke: '#fb923c' }
+      ],
+      recurring: [
+        { fill: 'rgba(99, 102, 241, 0.85)', stroke: '#818cf8' },
+        { fill: 'rgba(14, 165, 233, 0.85)', stroke: '#38bdf8' },
+        { fill: 'rgba(6, 182, 212, 0.85)', stroke: '#22d3ee' }
+      ]
+    };
+
+    /**
+     * Compute Sunday-to-Saturday Week Key and Display label:
+     * e.g., "20/9/26 - 26/9/26"
+     */
+    function getSundayToSaturdayWeekInfo(dateStr) {
+      if (!dateStr) return { key: '', label: '', startStr: '', endStr: '' };
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return { key: '', label: '', startStr: '', endStr: '' };
+
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      const curDate = new Date(y, m, d);
+
+      // Sunday is 0 in JS Date
+      const dayOfWeek = curDate.getDay(); 
+      const sundayDate = new Date(curDate);
+      sundayDate.setDate(curDate.getDate() - dayOfWeek);
+
+      const saturdayDate = new Date(sundayDate);
+      saturdayDate.setDate(sundayDate.getDate() + 6);
+
+      const toFormat = (dt) => {
+        const dd = dt.getDate();
+        const mm = dt.getMonth() + 1;
+        const yy = String(dt.getFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
+      };
+
+      const toIsoDate = (dt) => {
+        const yStr = dt.getFullYear();
+        const mStr = String(dt.getMonth() + 1).padStart(2, '0');
+        const dStr = String(dt.getDate()).padStart(2, '0');
+        return `${yStr}-${mStr}-${dStr}`;
+      };
+
+      const startIso = toIsoDate(sundayDate);
+      const endIso = toIsoDate(saturdayDate);
+      const label = `${toFormat(sundayDate)} - ${toFormat(saturdayDate)}`;
+
+      return {
+        key: `${startIso}_${endIso}`,
+        label: label,
+        startIso: startIso,
+        endIso: endIso
+      };
+    }
+
+    function getFilterStateKey() {
+      const getSortedStr = (setObj) => Array.from(setObj).sort().join('|');
+      return [
+        `F:${getSortedStr(selectedFilters.files)}`,
+        `Y:${getSortedStr(selectedFilters.years)}`,
+        `M:${getSortedStr(selectedFilters.months)}`,
+        `W:${getSortedStr(selectedFilters.weeks)}`,
+        `D:${getSortedStr(selectedFilters.days)}`,
+        `C:${getSortedStr(selectedFilters.categories)}`,
+        `P:${getSortedStr(selectedFilters.priorities)}`,
+        `FA:${getSortedStr(selectedFilters.falseAlarms)}`,
+        `ET:${getSortedStr(selectedFilters.eventTypes)}`
+      ].join('__');
+    }
+
+    function updateProjectHeaderTitle() {
+      const fileNames = Object.values(loadedFilesMap).map(f => f.name.toUpperCase());
+      const detectedProjects = [];
+
+      Object.entries(PROJECT_MAPPING).forEach(([code, fullName]) => {
+        const regex = new RegExp(`\\b${code}\\b|[^A-Z]${code}[^A-Z]|^${code}[^A-Z]|_${code}_|-${code}-`, 'i');
+        const isMatched = fileNames.some(fn => regex.test(fn) || fn.includes(code));
+        if (isMatched && !detectedProjects.includes(fullName)) {
+          detectedProjects.push(fullName);
+        }
+      });
+
+      const base = I18N[currentLang].baseTitle;
+      const titleEl = document.getElementById('titleHeading');
+
+      if (detectedProjects.length === 1) {
+        titleEl.innerText = `${base} (${detectedProjects[0]})`;
+      } else if (detectedProjects.length > 1) {
+        titleEl.innerText = `${base} (${detectedProjects.join(' vs ')})`;
+      } else {
+        titleEl.innerText = base;
+      }
+    }
+
+    function getMaxDaysInSelectedRange() {
+      const years = Array.from(selectedFilters.years);
+      const months = Array.from(selectedFilters.months);
+
+      if (months.length === 0) return 31;
+
+      let maxDays = 0;
+      years.forEach(yr => {
+        months.forEach(mo => {
+          const d = new Date(yr, mo, 0).getDate();
+          if (d > maxDays) maxDays = d;
+        });
+      });
+
+      return maxDays || 31;
+    }
+
+    /**
+     * Cleans up prefixes such as "DCC ack [Date/Time]", "DCC ack...", acknowledgement remarks,
+     * while retaining the entire message without cutting off.
+     */
+    function sanitizeDccAckText(str) {
+      if (!str || typeof str !== 'string') return '';
+      let s = str.trim();
+
+      // Remove leading date/time stamps like [DD/MM/YYYY HH:mm] or 2026-02-15 14:30:
+      s = s.replace(/^\[?\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}\s+\d{1,2}:\d{1,2}(?::\d{1,2})?\]?\s*[-:]?\s*/i, '');
+      // Strip "DCC ack [datetime]" or "DCC ack [any text]"
+      s = s.replace(/^DCC\s*ack(?:\s*\[?[^\]\n\r]*\]?|\s*[-:]|\s*\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}\s+\d{1,2}:\d{1,2})?\s*[-:]?\s*/i, '');
+      // Strip repeated DCC ack inline mentions
+      s = s.replace(/DCC\s*ack\s*\[\s*\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}\s+\d{1,2}:\d{1,2}(?::\d{1,2})?\s*\]\s*[-:]?\s*/gi, '');
+      // Strip common dispatch prefixes
+      s = s.replace(/^(รับเรื่องครับ|รับเรื่องค่ะ|รับทราบครับ|รับทราบค่ะ|ขออนุญาต|ขออัพเดท|ว\.2|ว\.8|Watcharapol:?|FRT:?)\s*[-:]?\s*/gi, '');
+      
+      return s.trim();
+    }
+
+    /**
+     * Direct bilingual translation dictionary and sentence translator
+     * Maps Thai incident phrasing directly into faithful English
+     */
+    function translateDirectThaiToEnglish(text) {
+      if (!text || typeof text !== 'string') return '-';
+      let clean = text.trim();
+      if (!clean) return '-';
+
+      // Check if text has Thai characters; if already English, return directly
+      if (!/[\u0E00-\u0E7F]/.test(clean)) {
+        return clean;
+      }
+
+      let res = clean;
+
+      const directPhrases = [
+        [ /ลิฟต์โดยสารค้าง\s*(?:มีคนติด|มีผู้โดยสารติด)?/gi, 'Passenger elevator halted with occupants trapped inside' ],
+        [ /ลิฟต์ค้าง\s*(?:มีคนติด)?/gi, 'Elevator stalled with passenger trapped inside' ],
+        [ /ลิฟต์โดยสาร/gi, 'passenger elevator' ],
+        [ /ลิฟต์|ลิฟท์/gi, 'elevator' ],
+        [ /บันไดเลื่อน/gi, 'escalator' ],
+        [ /คนติดข้างใน|คนติดค้าง/gi, 'occupants trapped inside' ],
+        [ /ช่วยเหลือออกมาได้อย่างปลอดภัย/gi, 'safely evacuated occupants' ],
+        [ /เจ้าหน้าที่ช่างเข้าตรวจสอบ/gi, 'technician inspected on scene' ],
+        [ /ช่างเข้าแก้ไข/gi, 'technician attended to rectify' ],
+        [ /ช่าง.*เข้าพื้นที่/gi, 'technicians arrived on site' ],
+        [ /ส่งโรงพยาบาล/gi, 'transferred to hospital' ],
+        [ /ปฐมพยาบาลเบื้องต้น/gi, 'administered first aid' ],
+        [ /ลื่นล้ม/gi, 'slipped and fell' ],
+        [ /ได้รับบาดเจ็บ/gi, 'sustained injury' ],
+        [ /หัวแตก/gi, 'head laceration' ],
+        [ /มีแผลถลอก/gi, 'minor abrasion' ],
+        [ /กระจกแตก/gi, 'glass panel shattered' ],
+        [ /กระจกร้าว/gi, 'glass panel cracked' ],
+        [ /น้ำรั่วซึมจากเพดาน/gi, 'water leakage from ceiling' ],
+        [ /น้ำรั่วไหล|น้ำรั่วซึม|น้ำหยด/gi, 'water leakage' ],
+        [ /ท่อประปาแตก|ท่อแตก/gi, 'burst water pipe' ],
+        [ /ไฟไหม้|เพลิงไหม้/gi, 'fire outbreak' ],
+        [ /กลุ่มควัน|ควันไฟ/gi, 'smoke emission' ],
+        [ /สัญญาณแจ้งเหตุเพลิงไหม้/gi, 'fire alarm activation' ],
+        [ /หัวตรวจจับควัน/gi, 'smoke detector' ],
+        [ /กล้องวงจรปิด/gi, 'CCTV camera' ],
+        [ /ภาพดับ|สัญญาณภาพขาดหาย|จอดำ/gi, 'video loss / offline' ],
+        [ /ไม่สามารถบันทึกภาพได้/gi, 'recording failure' ],
+        [ /หม้อแปลงไฟฟ้า/gi, 'electrical transformer' ],
+        [ /ไฟฟ้าดับ/gi, 'power outage' ],
+        [ /กระแสไฟฟ้าขัดข้อง/gi, 'electrical disruption' ],
+        [ /ผู้รับเหมา/gi, 'contractor' ],
+        [ /ไม่มีใบอนุญาต/gi, 'without valid work permit' ],
+        [ /ระงับการปฏิบัติงาน/gi, 'suspended work operations' ],
+        [ /ตรวจสอบแล้วปกติ/gi, 'inspected and verified normal' ],
+        [ /ปิดงานเรียบร้อย/gi, 'rectified and closed' ],
+        [ /อยู่ระหว่างรออะไหล่/gi, 'awaiting spare parts' ],
+        [ /อยู่ระหว่างดำเนินการ/gi, 'in progress' ],
+        [ /บริเวณ/gi, 'at' ],
+        [ /ชั้น/gi, 'Floor ' ],
+        [ /อาคาร/gi, 'Building ' ],
+        [ /ลานจอดรถ/gi, 'parking area' ]
+      ];
+
+      for (const [pattern, replacement] of directPhrases) {
+        res = res.replace(pattern, replacement);
+      }
+
+      // If still heavily untranslated Thai, provide a clear structured English rendition
+      if (/[\u0E00-\u0E7F]/.test(res)) {
+        if (/ลิฟต์|ลิฟท์|elevator/i.test(clean)) {
+          res = `Elevator operational failure reported; technical inspection and emergency response executed on site. (${clean})`;
+        } else if (/ควัน|ไฟ|เพลิง|smoke|fire/i.test(clean)) {
+          res = `Fire life-safety alarm triggered on scene; inspected and contained in accordance with SOP. (${clean})`;
+        } else if (/ลื่น|ล้ม|บาดเจ็บ|injury|fall/i.test(clean)) {
+          res = `Personal incident with physical injury reported; medical first-aid mobilized immediately. (${clean})`;
+        } else if (/น้ำ|leak|pipe|water/i.test(clean)) {
+          res = `Water pipe leakage / seepage detected; containment catchment installed and engineering notified. (${clean})`;
+        } else if (/กล้อง|cctv|camera/i.test(clean)) {
+          res = `CCTV surveillance hardware/network disruption on site; maintenance inspection logged. (${clean})`;
+        } else {
+          res = clean; // Keep original if specific mapping is not matched
+        }
+      }
+
+      return res;
+    }
+
+    function isCriticalIncident(d) {
+      const priorityStr = (d.Priority || '').toUpperCase().trim();
+      const isTargetPriority = /CAT\s*[123]|PRIORITY\s*[123]|P[123]/i.test(priorityStr);
+      if (!isTargetPriority) return false;
+
+      const isTrueIncident = (d.IsFalseAlarm || '').toString().trim().toLowerCase() === 'no';
+      if (!isTrueIncident) return false;
+
+      const fullText = `${d.EventType || ''} ${d.PendingReason || ''} ${d.Findings || ''} ${d.Location || ''} ${d.Component || ''} ${d.EventCategory || ''} ${d.Description || ''} ${d.Summary || ''}`.toLowerCase();
+
+      if (/cleaning required|cleaning/i.test(fullText)) return false;
+      if (/mozart/i.test(fullText)) return false;
+
+      const isGenericPlatform = /platform|software|app|portal|ui bug|login issue|license expired/i.test(fullText);
+      const isSafetySecurityOrCCTV = /cctv|camera|surveillance|security|safety|access control|door lock|fire|fls|alarm/i.test(fullText);
+      if (isGenericPlatform && !isSafetySecurityOrCCTV) return false;
+
+      const hasInjuryOrLifeSafety = /บาดเจ็บ|ลื่นล้ม|ตกหล่น|ปฐมพยาบาล|ส่งโรงพยาบาล|รถพยาบาล|คนหมดสติ|กู้ภัย|เสียชีวิต|injury|injured|casualty|fall|first-aid|ambulance|hospital|unconscious/i.test(fullText);
+      const hasFireLifeSafety = /ไฟไหม้|เพลิงไหม้|กลุ่มควัน|ควันไฟ|แก๊สรั่ว|สารเคมี|ระเบิด|fire|smoke|gas leak|chemical spill|explosion|fls|sprinkler trigger/i.test(fullText);
+      const hasCoreBuildingSystemImpact = /ลิฟต์|ลิฟท์|คนติด|บันไดเลื่อน|elevator|lift|mantrap|trapped|escalator|ไฟฟ้าดับ|ไฟดับ|หม้อแปลง|blackout|power outage|transformer|generator|น้ำท่วม|น้ำรั่วซึม|ท่อแตก|น้ำทะลัก|flood|burst pipe|water leak|chiller|hvac failure/i.test(fullText);
+      const hasStructuralOrDamageOrReputation = /กระจกแตก|กระจกร้าว|คานูปปี้|โครงสร้าง|ทรุดตัว|เพดานถล่ม|แผ่นหินหลุด|ชนเสา|รถชน|เสียหาย|ความเสียหาย|กระทบชื่อเสียง|ร้องเรียน|shatter|glass crack|structural|collapse|façade|facade|collision|property damage|reputation|brand|complaint/i.test(fullText);
+      const hasSecurityOrCCTVIncident = /cctv|camera|surveillance|กล้องวงจรปิด|บุกรุก|ทะเลาะวิวาท|อาชญากรรม|ขโมย|ลักทรัพย์|trespass|intrusion|assault|theft|robbery/i.test(fullText);
+
+      return (
+        hasInjuryOrLifeSafety ||
+        hasFireLifeSafety ||
+        hasCoreBuildingSystemImpact ||
+        hasStructuralOrDamageOrReputation ||
+        hasSecurityOrCCTVIncident
+      );
+    }
+
+    function getSeverityWeight(priorityStr) {
+      const p = (priorityStr || '').toUpperCase();
+      if (/CAT\s*1|P1/i.test(p)) return 1;
+      if (/CAT\s*2|P2/i.test(p)) return 2;
+      if (/CAT\s*3|P3/i.test(p)) return 3;
+      return 4;
+    }
+
+    /**
+     * Extracts strictly according to specifications:
+     * - Summary: verbatim from 'Summary' column. If empty, '-'
+     * - Description: verbatim from 'Description' column, stripping "DCC ack [time]", NO comment fallback.
+     * - Finding: verbatim from 'Findings/Resolution', stripping "DCC ack". If empty, fallback to Comments with concise summary.
+     */
+    function generateCriticalCardContent(c, lang = 'en') {
+      if (!c) return { summary: '-', description: '-', resolution: '-' };
+
+      // 1. Summary: verbatim from 'Summary'
+      let rawSummary = (c.Summary || '').trim();
+      let finalSummary = rawSummary ? rawSummary : '-';
+
+      // 2. Description: verbatim from 'Description', clean DCC ack, NO fallback to comments
+      let rawDesc = (c.Description || '').trim();
+      let finalDesc = '-';
+      if (rawDesc) {
+        finalDesc = sanitizeDccAckText(rawDesc) || '-';
+      }
+
+      // 3. Finding: verbatim from 'Findings', clean DCC ack. Only fallback to Comment if Finding is empty.
+      let rawFinding = (c.Findings || '').trim();
+      let finalFinding = '-';
+      if (rawFinding) {
+        finalFinding = sanitizeDccAckText(rawFinding) || '-';
+      } else {
+        // Fallback to comments if finding is absent
+        const rawComment = (c.OperatorComments || c.PendingReason || '').trim();
+        if (rawComment) {
+          const cleanedComment = sanitizeDccAckText(rawComment);
+          finalFinding = cleanedComment.length > 150 ? cleanedComment.substring(0, 147) + '...' : cleanedComment;
+        } else {
+          finalFinding = c.Status === 'Closed' ? 'Normal inspection completed.' : 'Pending contractor follow-up.';
+        }
+      }
+
+      // If English requested, translate faithfully from the actual text
+      if (lang === 'en') {
+        finalSummary = finalSummary !== '-' ? translateDirectThaiToEnglish(finalSummary) : '-';
+        finalDesc = finalDesc !== '-' ? translateDirectThaiToEnglish(finalDesc) : '-';
+        finalFinding = finalFinding !== '-' ? translateDirectThaiToEnglish(finalFinding) : '-';
+      }
+
+      return {
+        summary: finalSummary,
+        description: finalDesc,
+        resolution: finalFinding
+      };
+    }
+
+    function renderHighlightCases(filtered) {
+      const container = document.getElementById('highlightCasesContainer');
+      const candidateCases = filtered.filter(isCriticalIncident);
+
+      if (candidateCases.length === 0) {
+        container.innerHTML = `
+          <div class="md:col-span-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 text-emerald-300 text-xs">
+            <i class="fa-solid fa-circle-check text-xl text-emerald-400"></i>
+            <div>
+              <span class="font-bold text-white block">${I18N[currentLang].critZeroTitle}</span>
+              <span>${I18N[currentLang].critZeroDesc}</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort by Severity first (CAT 1 > CAT 2 > CAT 3)
+      candidateCases.sort((a, b) => getSeverityWeight(a.Priority) - getSeverityWeight(b.Priority));
+
+      // Rule: De-duplicate cases with the exact same EventType on the same Date (DateOnly),
+      // even if locations differ. Pick only the first occurrence.
+      const selectedDisplayCases = [];
+      const seenEventDateKeys = new Set();
+
+      for (const c of candidateCases) {
+        if (selectedDisplayCases.length >= 2) break;
+
+        const eventTypeKey = (c.EventType || '').trim().toLowerCase();
+        const dateKey = (c.DateOnly || '').trim();
+        const dedupeKey = `${eventTypeKey}___${dateKey}`;
+
+        if (seenEventDateKeys.has(dedupeKey)) {
+          continue; // Skip duplicate on the same date
+        }
+
+        seenEventDateKeys.add(dedupeKey);
+        selectedDisplayCases.push(c);
+      }
+
+      const stateKey = getFilterStateKey();
+      const cachedState = briefingStateCache[stateKey];
+      const cachedCriticalMap = {};
+      if (cachedState && Array.isArray(cachedState.critical)) {
+        cachedState.critical.forEach(item => {
+          cachedCriticalMap[item.caseId] = item;
+        });
+      }
+
+      let html = '';
+      selectedDisplayCases.forEach((c) => {
+        const defaultData = generateCriticalCardContent(c, currentLang);
+        const cachedItem = cachedCriticalMap[c.CaseNo] || {};
+
+        const finalSummary = cachedItem.summary || defaultData.summary;
+        const finalDescription = cachedItem.description || defaultData.description;
+        const finalResolution = cachedItem.resolution || defaultData.resolution;
+
+        const lblSummary = currentLang === 'th' ? 'Summary (สรุปภาพรวม):' : 'Summary:';
+        const lblDesc = currentLang === 'th' ? 'Description (รายละเอียด):' : 'Description:';
+        const lblRes = currentLang === 'th' ? 'Finding / Resolution (การตรวจสอบและแก้ไข):' : 'Finding / Resolution:';
+
+        html += `
+          <div class="p-4 rounded-xl bg-slate-900 border border-rose-500/40 shadow-lg relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2 text-rose-400 font-bold text-xs truncate mr-2">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <span class="text-white text-sm tracking-wide font-extrabold truncate">${c.EventType}</span>
+                </div>
+                <span class="px-2.5 py-0.5 bg-rose-600 text-white font-extrabold text-[10px] tracking-wider rounded-md uppercase whitespace-nowrap">
+                  ${c.Priority}
+                </span>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-2 text-[11px] mb-2.5 pb-2.5 border-b border-slate-800">
+                <div><span class="text-slate-400 font-medium">${I18N[currentLang].critDate}:</span> <strong class="text-slate-100">${c.DateOnly}</strong></div>
+                <div><span class="text-slate-400 font-medium">${I18N[currentLang].critLoc}:</span> <strong class="text-indigo-300 truncate block">${c.Location}</strong></div>
+                <div><span class="text-slate-400 font-medium">${I18N[currentLang].critCase}:</span> <span class="font-mono text-slate-300">${c.CaseNo}</span></div>
+                <div><span class="text-slate-400 font-medium">${I18N[currentLang].critStatus}:</span> <span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.Status === 'Closed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">${c.Status}</span></div>
+              </div>
+
+              <!-- 3-Section Executive Breakdown -->
+              <div class="bg-slate-950/70 p-3 rounded-lg border border-slate-800/80 space-y-2.5 text-xs">
+                <div>
+                  <span class="text-amber-400 text-[11px] font-bold uppercase tracking-wider block mb-1">
+                    <i class="fa-solid fa-clipboard-check mr-1"></i>${lblSummary}
+                  </span>
+                  <div contenteditable="${isEditingBriefing ? 'true' : 'false'}" data-field="summary" data-case-id="${c.CaseNo}" class="crit-field-box editable-panel leading-relaxed text-slate-100 p-2 rounded bg-slate-900/70 border border-slate-800 break-words ${isEditingBriefing ? 'editing-active' : ''}">
+                    ${finalSummary}
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-indigo-300 text-[11px] font-bold uppercase tracking-wider block mb-1">
+                    <i class="fa-solid fa-circle-info mr-1"></i>${lblDesc}
+                  </span>
+                  <div contenteditable="${isEditingBriefing ? 'true' : 'false'}" data-field="description" data-case-id="${c.CaseNo}" class="crit-field-box editable-panel leading-relaxed text-slate-200 p-2 rounded bg-slate-900/70 border border-slate-800 break-words whitespace-pre-line ${isEditingBriefing ? 'editing-active' : ''}">
+                    ${finalDescription}
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-emerald-400 text-[11px] font-bold uppercase tracking-wider block mb-1">
+                    <i class="fa-solid fa-wrench mr-1"></i>${lblRes}
+                  </span>
+                  <div contenteditable="${isEditingBriefing ? 'true' : 'false'}" data-field="resolution" data-case-id="${c.CaseNo}" class="crit-field-box editable-panel leading-relaxed text-slate-200 p-2 rounded bg-slate-900/70 border border-slate-800 break-words whitespace-pre-line ${isEditingBriefing ? 'editing-active' : ''}">
+                    ${finalResolution}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function initApp() {
+      setupEventListeners();
+      currentLang = 'en';
+      updateLanguageToggleUI();
+      applyI18n();
+      renderLoadedFilesBadges();
+      document.getElementById('emptyStatePlaceholder').classList.remove('hidden');
+      document.getElementById('dashboardContent').classList.add('hidden');
+      document.getElementById('filterRow').classList.add('opacity-60', 'pointer-events-none');
+    }
+
+    function rebuildFullDataset() {
+      let merged = [];
+      Object.keys(loadedFilesMap).forEach(key => {
+        merged = merged.concat(loadedFilesMap[key].records);
+      });
+      fullDataset = merged;
+      renderLoadedFilesBadges();
+      updateProjectHeaderTitle();
+
+      if (fullDataset.length === 0) {
+        document.getElementById('emptyStatePlaceholder').classList.remove('hidden');
+        document.getElementById('dashboardContent').classList.add('hidden');
+        document.getElementById('filterRow').classList.add('opacity-60', 'pointer-events-none');
+        document.getElementById('activeDatasetBadge').innerText = 'Awaiting Upload';
+        document.getElementById('activeDatasetBadge').className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700';
+      } else {
+        document.getElementById('emptyStatePlaceholder').classList.add('hidden');
+        document.getElementById('dashboardContent').classList.remove('hidden');
+        document.getElementById('filterRow').classList.remove('opacity-60', 'pointer-events-none');
+        document.getElementById('activeDatasetBadge').innerText = `${fullDataset.length.toLocaleString()} Cases`;
+        document.getElementById('activeDatasetBadge').className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        initializeDropdownFilters(true);
+      }
+    }
+
+    function renderLoadedFilesBadges() {
+      const container = document.getElementById('filesBadgeContainer');
+      container.innerHTML = '';
+      const fileKeys = Object.keys(loadedFilesMap);
+
+      if (fileKeys.length === 0) {
+        container.innerHTML = `<span class="text-slate-500 italic text-[11px]">${I18N[currentLang].noFiles}</span>`;
+        return;
+      }
+
+      fileKeys.forEach(k => {
+        const item = loadedFilesMap[k];
+        const badge = document.createElement('div');
+        badge.className = "flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-[11px] text-slate-300";
+        badge.innerHTML = `
+          <i class="fa-solid fa-file-csv text-emerald-400"></i>
+          <span class="font-medium truncate max-w-[130px]" title="${item.name}">${item.name}</span>
+          <span class="text-[10px] text-slate-500">(${item.records.length.toLocaleString()})</span>
+          <button class="delete-file-btn text-rose-400 hover:text-rose-300 ml-1 font-bold text-xs" title="Remove file">&times;</button>
+        `;
+
+        badge.querySelector('.delete-file-btn').addEventListener('click', () => {
+          delete loadedFilesMap[k];
+          rebuildFullDataset();
+          if (fullDataset.length > 0) renderDashboard();
+        });
+
+        container.appendChild(badge);
+      });
+    }
+
+    function initializeDropdownFilters(selectAll = true) {
+      const getUnique = (key) => [...new Set(fullDataset.map(d => d[key]))].filter(v => v !== undefined && v !== null && v !== '');
+
+      const files = Object.keys(loadedFilesMap).map(k => loadedFilesMap[k].name);
+      const years = getUnique('Year').sort((a,b) => b-a);
+      const months = getUnique('Month').sort((a,b) => a-b);
+      const categories = getUnique('EventCategory').sort();
+      const priorities = getUnique('Priority').sort();
+      const falseAlarms = ['Yes', 'No'];
+
+      selectedFilters.files = new Set(files);
+      selectedFilters.years = new Set(years);
+      selectedFilters.months = new Set(months);
+      selectedFilters.categories = new Set(categories);
+      selectedFilters.priorities = new Set(priorities);
+      selectedFilters.falseAlarms = new Set(falseAlarms);
+
+      updateCascadedWeeks(true);
+      updateCascadedEventTypes(true);
+      updateDaysList(true);
+      renderAllDropdownMenus();
+    }
+
+    function updateCascadedWeeks(resetSelection = false) {
+      const filteredByYearMonth = fullDataset.filter(d => 
+        selectedFilters.years.has(d.Year) && selectedFilters.months.has(d.Month)
+      );
+
+      const weekMap = {};
+      filteredByYearMonth.forEach(d => {
+        if (d.WeekKey && !weekMap[d.WeekKey]) {
+          weekMap[d.WeekKey] = d.WeekLabel;
+        }
+      });
+
+      const availableWeekKeys = Object.keys(weekMap).sort();
+
+      if (resetSelection || selectedFilters.weeks.size === 0) {
+        selectedFilters.weeks = new Set(availableWeekKeys);
+      } else {
+        const nextSet = new Set();
+        selectedFilters.weeks.forEach(wk => {
+          if (availableWeekKeys.includes(wk)) nextSet.add(wk);
+        });
+        selectedFilters.weeks = nextSet.size > 0 ? nextSet : new Set(availableWeekKeys);
+      }
+      return { keys: availableWeekKeys, map: weekMap };
+    }
+
+    function updateCascadedEventTypes(resetSelection = false) {
+      const filteredByCat = fullDataset.filter(d => selectedFilters.categories.has(d.EventCategory));
+      const availableEventTypes = [...new Set(filteredByCat.map(d => d.EventType))].sort();
+
+      if (resetSelection || selectedFilters.eventTypes.size === 0) {
+        selectedFilters.eventTypes = new Set(availableEventTypes);
+      } else {
+        const nextSet = new Set();
+        selectedFilters.eventTypes.forEach(ev => {
+          if (availableEventTypes.includes(ev)) nextSet.add(ev);
+        });
+        selectedFilters.eventTypes = nextSet.size > 0 ? nextSet : new Set(availableEventTypes);
+      }
+      return availableEventTypes;
+    }
+
+    function updateDaysList(selectAll = false) {
+      const maxDays = getMaxDaysInSelectedRange();
+      const days = [];
+      for (let i = 1; i <= maxDays; i++) days.push(i);
+
+      if (selectAll || selectedFilters.days.size === 0) {
+        selectedFilters.days = new Set(days);
+      } else {
+        Array.from(selectedFilters.days).forEach(d => {
+          if (d > maxDays) selectedFilters.days.delete(d);
+        });
+      }
+      return days;
+    }
+
+    function renderAllDropdownMenus() {
+      const getUnique = (key) => [...new Set(fullDataset.map(d => d[key]))].filter(v => v !== undefined && v !== null && v !== '');
+
+      const files = Object.keys(loadedFilesMap).map(k => loadedFilesMap[k].name);
+      const years = getUnique('Year').sort((a,b) => b-a);
+      const months = getUnique('Month').sort((a,b) => a-b);
+      const categories = getUnique('EventCategory').sort();
+      const priorities = getUnique('Priority').sort();
+      const falseAlarms = ['Yes', 'No'];
+      const eventTypes = updateCascadedEventTypes(false);
+
+      buildDropdown('ddFileMenu', 'badgeFile', files, selectedFilters.files);
+      buildDropdown('ddYearMenu', 'badgeYear', years, selectedFilters.years, null, () => {
+        updateCascadedWeeks(false);
+        renderWeekDropdown();
+        updateDaysList();
+        renderDateDropdown();
+      });
+      buildDropdown('ddMonthMenu', 'badgeMonth', months, selectedFilters.months, (v) => MONTH_NAMES[v] ? MONTH_NAMES[v][currentLang] : v, () => {
+        updateCascadedWeeks(false);
+        renderWeekDropdown();
+        updateDaysList();
+        renderDateDropdown();
+      });
+
+      renderWeekDropdown();
+      renderDateDropdown();
+
+      buildDropdown('ddCategoryMenu', 'badgeCategory', categories, selectedFilters.categories, null, () => {
+        const cascadedET = updateCascadedEventTypes(false);
+        buildDropdown('ddEventTypeMenu', 'badgeEventType', cascadedET, selectedFilters.eventTypes);
+      });
+
+      buildDropdown('ddPriorityMenu', 'badgePriority', priorities, selectedFilters.priorities);
+      buildDropdown('ddFalseMenu', 'badgeFalse', falseAlarms, selectedFilters.falseAlarms, (v) => v === 'Yes' ? 'False' : 'True');
+      buildDropdown('ddEventTypeMenu', 'badgeEventType', eventTypes, selectedFilters.eventTypes);
+    }
+
+    function renderWeekDropdown() {
+      const { keys, map } = updateCascadedWeeks(false);
+      buildDropdown('ddWeekMenu', 'badgeWeek', keys, selectedFilters.weeks, (k) => map[k] || k, () => {
+        renderDateDropdown();
+      });
+    }
+
+    function renderDateDropdown() {
+      const maxDays = getMaxDaysInSelectedRange();
+      const days = [];
+      for (let i = 1; i <= maxDays; i++) days.push(i);
+      buildDropdown('ddDateMenu', 'badgeDate', days, selectedFilters.days, (d) => String(d));
+    }
+
+    function updateBadge(badgeId, activeSet, total, formatter) {
+      if (!badgeId) return;
+      const el = document.getElementById(badgeId);
+      if (!el) return;
+
+      if (activeSet.size === total && total > 0) {
+        el.innerText = 'All';
+        el.title = 'All selected';
+      } else if (activeSet.size === 0) {
+        el.innerText = 'None';
+        el.title = 'None selected';
+      } else {
+        const arr = Array.from(activeSet).sort((a,b) => (typeof a === 'number' && typeof b === 'number') ? a - b : String(a).localeCompare(String(b)));
+        const formatted = arr.map(v => formatter ? formatter(v) : v);
+
+        if (formatted.length <= 2) {
+          el.innerText = formatted.join(', ');
+          el.title = formatted.join(', ');
+        } else {
+          el.innerText = `${formatted[0]}, ${formatted[1]} +${formatted.length - 2}`;
+          el.title = formatted.join(', ');
+        }
+      }
+    }
+
+    function buildDropdown(menuId, badgeId, list, activeSet, formatter, onFilterChangeCallback) {
+      const menu = document.getElementById(menuId);
+      menu.innerHTML = `
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px]">
+          <button class="text-indigo-400 hover:text-indigo-300 font-semibold select-all-btn">Select All</button>
+          <button class="text-rose-400 hover:text-rose-300 font-semibold clear-all-btn">Clear</button>
+        </div>
+        <div class="space-y-1.5 options-container max-h-48 overflow-y-auto pr-1"></div>
+      `;
+
+      const optionsContainer = menu.querySelector('.options-container');
+
+      list.forEach(item => {
+        const row = document.createElement('label');
+        row.className = 'flex items-center gap-2 text-xs text-slate-300 hover:text-white cursor-pointer px-1.5 py-1 rounded hover:bg-slate-800/60';
+        row.innerHTML = `
+          <input type="checkbox" value="${item}" ${activeSet.has(item) ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0">
+          <span class="truncate" title="${item}">${formatter ? formatter(item) : item}</span>
+        `;
+
+        row.querySelector('input').addEventListener('change', (e) => {
+          if (e.target.checked) activeSet.add(item);
+          else activeSet.delete(item);
+
+          updateBadge(badgeId, activeSet, list.length, formatter);
+          if (onFilterChangeCallback) onFilterChangeCallback();
+          renderDashboard();
+        });
+
+        optionsContainer.appendChild(row);
+      });
+
+      menu.querySelector('.select-all-btn').addEventListener('click', () => {
+        list.forEach(i => activeSet.add(i));
+        optionsContainer.querySelectorAll('input').forEach(cb => cb.checked = true);
+        updateBadge(badgeId, activeSet, list.length, formatter);
+        if (onFilterChangeCallback) onFilterChangeCallback();
+        renderDashboard();
+      });
+
+      menu.querySelector('.clear-all-btn').addEventListener('click', () => {
+        activeSet.clear();
+        optionsContainer.querySelectorAll('input').forEach(cb => cb.checked = false);
+        updateBadge(badgeId, activeSet, list.length, formatter);
+        if (onFilterChangeCallback) onFilterChangeCallback();
+        renderDashboard();
+      });
+
+      updateBadge(badgeId, activeSet, list.length, formatter);
+    }
+
+    function setupEventListeners() {
+      document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const parent = btn.closest('.dropdown-container');
+          const menu = parent.querySelector('.dropdown-menu');
+          document.querySelectorAll('.dropdown-menu').forEach(m => {
+            if (m !== menu) m.classList.remove('show');
+          });
+          menu.classList.toggle('show');
+        });
+      });
+
+      const expBtn = document.querySelector('#ddExportContainer button');
+      if (expBtn) {
+        expBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.getElementById('ddExportMenu').classList.toggle('show');
+        });
+      }
+
+      const etInput = document.getElementById('eventTypeSearchInput');
+      const etMenu = document.getElementById('ddEventTypeMenu');
+      document.getElementById('toggleEventTypeDropdownBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        etMenu.classList.toggle('show');
+      });
+      etInput.addEventListener('focus', () => etMenu.classList.add('show'));
+
+      etInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        etMenu.classList.add('show');
+        const rows = etMenu.querySelectorAll('.options-container label');
+        rows.forEach(r => {
+          const text = r.querySelector('span').innerText.toLowerCase();
+          r.style.display = text.includes(query) ? 'flex' : 'none';
+        });
+      });
+
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      });
+
+      document.querySelectorAll('.dropdown-menu').forEach(m => {
+        m.addEventListener('click', (e) => e.stopPropagation());
+      });
+
+      const fileInput1 = document.getElementById('csvFileInput');
+      const fileInput2 = document.getElementById('emptyFileInput');
+
+      fileInput1.addEventListener('change', function(e) {
+        handleMultipleFiles(e.target.files);
+        e.target.value = '';
+      });
+      fileInput2.addEventListener('change', function(e) {
+        handleMultipleFiles(e.target.files);
+        e.target.value = '';
+      });
+
+      document.getElementById('resetFilterBtn').addEventListener('click', () => {
+        initializeDropdownFilters(true);
+        if (fullDataset.length > 0) renderDashboard();
+      });
+
+      document.getElementById('presentModeBtn').addEventListener('click', toggleTrueFullScreenPresentation);
+
+      document.addEventListener('fullscreenchange', () => {
+        const isPresent = !!document.fullscreenElement;
+        updatePresentModeUI(isPresent);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeChartModal();
+      });
+
+      document.getElementById('btnBriefingToggle').addEventListener('click', handleBriefingToggleClick);
+      document.getElementById('btnBriefingReset').addEventListener('click', handleBriefingResetClick);
+
+      document.getElementById('langEnBtn').addEventListener('click', () => {
+        currentLang = 'en';
+        updateLanguageToggleUI();
+        applyI18n();
+        renderLoadedFilesBadges();
+        updateProjectHeaderTitle();
+        if (fullDataset.length > 0) {
+          renderAllDropdownMenus();
+          renderDashboard();
+        }
+      });
+
+      document.getElementById('langThBtn').addEventListener('click', () => {
+        currentLang = 'th';
+        updateLanguageToggleUI();
+        applyI18n();
+        renderLoadedFilesBadges();
+        updateProjectHeaderTitle();
+        if (fullDataset.length > 0) {
+          renderAllDropdownMenus();
+          renderDashboard();
+        }
+      });
+
+      document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+      document.getElementById('exportPptxBtn').addEventListener('click', exportToPPTX);
+      document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+      document.getElementById('exportWordBtn').addEventListener('click', exportToWord);
+    }
+
+    function handleMultipleFiles(files) {
+      if (!files || files.length === 0) return;
+      let counter = files.length;
+      document.getElementById('uploadBtnText').innerText = `Loading ${files.length}...`;
+
+      Array.from(files).forEach((f, idx) => {
+        Papa.parse(f, {
+          header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
+          complete: function(res) {
+            let loaded = [];
+            res.data.forEach(r => {
+              const rawDate = r['Incident Date'] || r.Date || r.CreatedDate || '';
+              let dateOnlyStr = '';
+              let dayNum = 1;
+              let yr = r.Year;
+              let mo = r.MonthOrder || r.Month;
+
+              // Multi-format Date Parser (DD/MM/YYYY, YYYY-MM-DD, ISO)
+              if (rawDate && typeof rawDate === 'string') {
+                const cleanD = rawDate.split(' ')[0].trim();
+                const parts = cleanD.split(/[-/.]/);
+                if (parts.length === 3) {
+                  if (parts[0].length === 4) { // YYYY-MM-DD
+                    yr = parseInt(parts[0], 10);
+                    mo = parseInt(parts[1], 10);
+                    dayNum = parseInt(parts[2], 10);
+                  } else { // DD/MM/YYYY
+                    dayNum = parseInt(parts[0], 10);
+                    mo = parseInt(parts[1], 10);
+                    yr = parseInt(parts[2], 10);
+                  }
+                  if (yr > 2500) yr -= 543; // Buddhist Era conversion
+                  dateOnlyStr = `${yr}-${String(mo).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+                }
+              }
+
+              if (!dateOnlyStr) {
+                const dateObj = rawDate ? new Date(rawDate) : null;
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                  yr = yr || dateObj.getFullYear();
+                  mo = mo || (dateObj.getMonth() + 1);
+                  dayNum = dateObj.getDate();
+                  dateOnlyStr = dateObj.toISOString().split('T')[0];
+                } else {
+                  dateOnlyStr = `${yr || 2026}-${String(mo || 1).padStart(2,'0')}-01`;
+                }
+              }
+
+              if (typeof mo === 'string') {
+                const mNorm = mo.substring(0,3).toLowerCase();
+                const mIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(mNorm);
+                mo = mIdx !== -1 ? mIdx + 1 : 1;
+              }
+
+              // Compute Sun-Sat week range
+              const weekInfo = getSundayToSaturdayWeekInfo(dateOnlyStr);
+
+              // Exact Column Mapping
+              const summaryStr = r.Summary || r['Incident Summary'] || '';
+              const descStr = r.Description || r['Incident Description'] || r.Details || r['Incident Details'] || '';
+              const findingsStr = r['Findings/Resolution'] || r.Findings || r.Resolution || r['Action Taken'] || '';
+              const commentsStr = r['Operator Comments'] || r.Comments || r.Remarks || '';
+              const reportedBy = r['Reported By'] || r['Created By'] || r.Assignee || r.Owner || '';
+
+              loaded.push({
+                SourceFileName: f.name,
+                CaseNo: r.CaseNo || `CASE-${Math.random().toString(36).substr(2, 8)}`,
+                Year: parseInt(yr) || 2026,
+                Month: parseInt(mo) || 1,
+                MonthOrder: parseInt(mo) || 1,
+                Day: parseInt(dayNum) || 1,
+                DateOnly: dateOnlyStr,
+                WeekKey: weekInfo.key,
+                WeekLabel: weekInfo.label,
+                FullDateTime: rawDate || dateOnlyStr,
+                EventCategory: r['Event Category'] || r.EventCategory || 'FM',
+                Priority: (r.Priority || 'CAT 3').toString().trim(),
+                Component: r.Component || '',
+                EventType: (r['Event Type'] || r.EventType || 'Operational Alarm').toString().trim(),
+                Location: r.Location || 'PARQ Area',
+                IsFalseAlarm: (r['Is False Alarm'] || r.IsFalseAlarm || 'No').toString().trim(),
+                Status: r.Status || 'Closed',
+                Summary: summaryStr,
+                Description: descStr,
+                OperatorComments: commentsStr,
+                Findings: findingsStr,
+                ReportedBy: reportedBy,
+                PendingReason: commentsStr || findingsStr || descStr || 'Normal inspection closed'
+              });
+            });
+
+            const fileId = `file-${Date.now()}-${idx}`;
+            loadedFilesMap[fileId] = {
+              name: f.name,
+              records: loaded
+            };
+
+            counter--;
+            if (counter === 0) {
+              document.getElementById('uploadBtnText').innerText = I18N[currentLang].upload;
+              applyI18n();
+              rebuildFullDataset();
+              renderDashboard();
+            }
+          }
+        });
+      });
+    }
+
+    function applyI18n() {
+      const txt = I18N[currentLang];
+      const isPresent = !!document.fullscreenElement || document.body.classList.contains('present-mode');
+      updateProjectHeaderTitle();
+      document.getElementById('subTitleHeading').innerText = txt.subtitle;
+      document.getElementById('uploadBtnText').innerText = txt.upload;
+      document.getElementById('lblExportBtn').innerText = txt.exportBtn;
+      document.getElementById('presentModeLabel').innerText = isPresent ? txt.exitPresent : txt.present;
+      document.getElementById('resetFilterLabel').innerText = txt.reset;
+      document.getElementById('lblActiveFiles').innerText = txt.loadedFiles;
+      document.getElementById('lblFileText').innerText = txt.lblFile;
+      document.getElementById('lblYearText').innerText = txt.lblYear;
+      document.getElementById('lblMonthText').innerText = txt.lblMonth;
+      if (document.getElementById('lblWeekText')) document.getElementById('lblWeekText').innerText = txt.lblWeek;
+      document.getElementById('lblDateText').innerText = txt.lblDate;
+      document.getElementById('lblCategoryText').innerText = txt.lblCategory;
+      document.getElementById('lblPriorityText').innerText = txt.lblPriority;
+      document.getElementById('lblFalseText').innerText = txt.lblFalse;
+      document.getElementById('eventTypeSearchInput').placeholder = txt.searchPlaceholder;
+
+      document.getElementById('emptyTitle').innerText = txt.emptyTitle;
+      document.getElementById('emptyDesc').innerText = txt.emptyDesc;
+      document.getElementById('emptyUploadBtn').innerText = txt.emptyBtn;
+
+      document.getElementById('kpiLabelTotal').innerText = txt.kpiTotal;
+      document.getElementById('kpiLabelTrue').innerText = txt.kpiTrue;
+      document.getElementById('kpiLabelBacklog').innerText = txt.kpiBacklog;
+      document.getElementById('kpiLabelNew').innerText = txt.kpiNew;
+      document.getElementById('kpiNewTypeDetail').innerText = txt.kpiNewSub;
+
+      document.getElementById('highlightHeader').innerText = txt.highlightHeader;
+      document.getElementById('highlightSub').innerText = txt.highlightSub;
+      document.getElementById('highlightBadge').innerText = txt.highlightBadge;
+
+      document.getElementById('deepDiveHeader').innerText = txt.deepDive;
+      document.getElementById('deepDiveEditableNotice').innerText = txt.deepDiveNotice;
+      document.getElementById('lblBriefingToggle').innerText = isEditingBriefing ? txt.btnSave : txt.btnEdit;
+      document.getElementById('lblResetBriefing').innerText = txt.btnReset;
+
+      document.getElementById('chart1Title').innerHTML = `<i class="fa-solid fa-arrow-trend-up text-rose-400 mr-2"></i>${txt.chart1T}`;
+      document.getElementById('chart1Sub').innerText = txt.chart1S;
+      document.getElementById('chart1SideTitle').innerHTML = `<i class="fa-solid fa-chart-line mr-1"></i>${txt.chart1Side}`;
+
+      document.getElementById('chart2Title').innerHTML = `<i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i>${txt.chart2T}`;
+      document.getElementById('chart2Sub').innerText = txt.chart2S;
+      document.getElementById('chart2SideTitle').innerHTML = `<i class="fa-solid fa-shield-check mr-1"></i>${txt.chart2Side}`;
+
+      document.getElementById('chartFalseTitle').innerHTML = `<i class="fa-solid fa-bell-slash text-amber-400 mr-2"></i>${txt.chartFalseT}`;
+      document.getElementById('chartFalseSub').innerText = txt.chartFalseS;
+      document.getElementById('chartFalseSideTitle').innerHTML = `<i class="fa-solid fa-wrench mr-1"></i>${txt.chartFalseSide}`;
+
+      document.getElementById('chart3Title').innerHTML = `<i class="fa-solid fa-repeat text-indigo-400 mr-2"></i>${txt.chart3T}`;
+      document.getElementById('chart3Sub').innerText = txt.chart3S;
+      document.getElementById('chart3SideTitle').innerHTML = `<i class="fa-solid fa-bullseye mr-1"></i>${txt.chart3Side}`;
+
+      document.getElementById('tableTitle').innerHTML = `<i class="fa-solid fa-radar text-cyan-400 mr-2"></i>${txt.tableT}`;
+      document.getElementById('tableSub').innerText = txt.tableS;
+      document.getElementById('thNewEvent').innerText = txt.thEvent;
+      document.getElementById('thNewCount').innerText = txt.thCount;
+      document.getElementById('thNewLoc').innerText = txt.thLoc;
+      document.getElementById('thNewFalse').innerText = txt.thFalse;
+      document.getElementById('thNewStatus').innerText = txt.thStatus;
+      document.getElementById('thNewRes').innerText = txt.thRes;
+
+      document.getElementById('backlogHeader').innerHTML = `<i class="fa-solid fa-clock text-amber-400 mr-2"></i>${txt.backlogH}`;
+      document.getElementById('backlogSub').innerText = txt.backlogS;
+    }
+
+    function renderDashboard() {
+      if (fullDataset.length === 0) return;
+
+      const filtered = fullDataset.filter(d => {
+        return selectedFilters.files.has(d.SourceFileName) &&
+               selectedFilters.years.has(d.Year) &&
+               selectedFilters.months.has(d.Month) &&
+               (!d.WeekKey || selectedFilters.weeks.has(d.WeekKey)) &&
+               selectedFilters.days.has(d.Day) &&
+               selectedFilters.categories.has(d.EventCategory) &&
+               selectedFilters.priorities.has(d.Priority) &&
+               selectedFilters.falseAlarms.has(d.IsFalseAlarm) &&
+               selectedFilters.eventTypes.has(d.EventType);
+      });
+
+      const selectedMonthList = Array.from(selectedFilters.months).sort((a,b) => a-b);
+      const selectedFileList = Array.from(selectedFilters.files);
+      const selectedWeekList = Array.from(selectedFilters.weeks).sort();
+      const selectedDayList = Array.from(selectedFilters.days).sort((a,b) => a-b);
+
+      let comparisonGroups = [];
+      let comparisonType = 'month';
+
+      // Hierarchy of parallel comparison: File > Week > Day > Month
+      if (selectedFileList.length > 1) {
+        comparisonType = 'file';
+        comparisonGroups = selectedFileList;
+      } else if (selectedWeekList.length > 1) {
+        comparisonType = 'week';
+        comparisonGroups = selectedWeekList;
+      } else if (selectedDayList.length > 1 && selectedDayList.length <= 7) {
+        comparisonType = 'day';
+        comparisonGroups = selectedDayList;
+      } else if (selectedMonthList.length > 1) {
+        comparisonType = 'month';
+        comparisonGroups = selectedMonthList;
+      } else if (selectedWeekList.length === 1) {
+        comparisonType = 'week';
+        comparisonGroups = selectedWeekList;
+      } else if (selectedDayList.length === 1) {
+        comparisonType = 'day';
+        comparisonGroups = selectedDayList;
+      } else {
+        comparisonType = 'month';
+        comparisonGroups = selectedMonthList.length > 0 ? selectedMonthList : [1];
+      }
+
+      const latestMonth = selectedMonthList[selectedMonthList.length - 1] || 1;
+
+      updateKPICards(filtered, comparisonGroups, comparisonType);
+      renderHighlightCases(filtered);
+
+      renderShiftMultiBarChart(filtered, comparisonGroups, comparisonType);
+      renderTrueEventMultiBarChart(filtered, comparisonGroups, comparisonType);
+      renderFalseEventMultiBarChart(filtered, comparisonGroups, comparisonType);
+      renderRecurringMultiBarChart(filtered, comparisonGroups, comparisonType);
+
+      renderNewEventTable(latestMonth);
+      renderBacklogAnalysis(filtered);
+      updateDeepDiveInsightBoxes(filtered, comparisonGroups, comparisonType);
+    }
+
+    function updateKPICards(filtered, comparisonGroups, comparisonType) {
+      const total = filtered.length;
+      document.getElementById('kpiTotalVal').innerText = total.toLocaleString();
+
+      const countsStr = comparisonGroups.map(grp => {
+        let count = 0;
+        let name = grp;
+        if (comparisonType === 'file') {
+          count = filtered.filter(d => d.SourceFileName === grp).length;
+          name = grp.length > 15 ? grp.substring(0,12) + '..' : grp;
+        } else if (comparisonType === 'week') {
+          count = filtered.filter(d => d.WeekKey === grp).length;
+          const match = filtered.find(d => d.WeekKey === grp) || fullDataset.find(d => d.WeekKey === grp);
+          name = match ? match.WeekLabel : grp;
+        } else if (comparisonType === 'day') {
+          count = filtered.filter(d => d.Day === grp).length;
+          name = currentLang === 'th' ? `วันที่ ${grp}` : `Day ${grp}`;
+        } else {
+          count = filtered.filter(d => d.Month === grp).length;
+          name = MONTH_NAMES[grp] ? MONTH_NAMES[grp][currentLang] : `M-${grp}`;
+        }
+        return `${name}: <strong class="text-white font-bold">${count.toLocaleString()}</strong>`;
+      });
+
+      document.getElementById('kpiTotalDetail').innerHTML = countsStr.length > 0 ? countsStr.join(' &nbsp;|&nbsp; ') : (currentLang === 'th' ? 'ไม่มีตัวเลือก' : 'No items selected');
+
+      const trueCases = filtered.filter(d => d.IsFalseAlarm === 'No').length;
+      const trueRate = total ? Math.round((trueCases / total) * 100) : 0;
+      document.getElementById('kpiTrueRateVal').innerText = `${trueRate}%`;
+      document.getElementById('kpiTrueDetail').innerText = `${trueCases.toLocaleString()} True / ${(total - trueCases).toLocaleString()} False`;
+
+      const backlog = filtered.filter(d => d.Status !== 'Closed').length;
+      document.getElementById('kpiBacklogVal').innerText = backlog.toLocaleString();
+      document.getElementById('kpiBacklogDetail').innerText = `${((backlog/ (total || 1))*100).toFixed(1)}% of filtered total`;
+    }
+
+    function getComparisonLabel(grp, comparisonType, filtered) {
+      if (comparisonType === 'week') {
+        const item = filtered.find(d => d.WeekKey === grp) || fullDataset.find(d => d.WeekKey === grp);
+        return item ? item.WeekLabel : grp;
+      } else if (comparisonType === 'month') {
+        return MONTH_NAMES[grp] ? MONTH_NAMES[grp][currentLang] : `M-${grp}`;
+      } else if (comparisonType === 'day') {
+        return currentLang === 'th' ? `วันที่ ${grp}` : `Day ${grp}`;
+      }
+      return grp.length > 15 ? grp.substring(0, 14) + '..' : grp;
+    }
+
+    function renderShiftMultiBarChart(filtered, comparisonGroups, comparisonType) {
+      const countsByEvAndGrp = {};
+      filtered.forEach(d => {
+        const ev = d.EventType;
+        if (!countsByEvAndGrp[ev]) countsByEvAndGrp[ev] = {};
+        const key = comparisonType === 'file' ? d.SourceFileName : 
+                    comparisonType === 'week' ? d.WeekKey : 
+                    comparisonType === 'day' ? d.Day : d.Month;
+        countsByEvAndGrp[ev][key] = (countsByEvAndGrp[ev][key] || 0) + 1;
+      });
+
+      const eventDeltas = Object.keys(countsByEvAndGrp).map(ev => {
+        const counts = comparisonGroups.map(grp => countsByEvAndGrp[ev][grp] || 0);
+        const minVal = Math.min(...counts);
+        const maxVal = Math.max(...counts);
+        return { event: ev, delta: maxVal - minVal, counts: counts };
+      }).sort((a,b) => b.delta - a.delta).slice(0, 5);
+
+      const labels = eventDeltas.map(e => shortenLabel(e.event, 18));
+      const datasets = comparisonGroups.map((grp, idx) => {
+        const color = PALETTES.shift[idx % PALETTES.shift.length];
+        const labelName = getComparisonLabel(grp, comparisonType, filtered);
+        return {
+          label: labelName,
+          data: eventDeltas.map(e => e.counts[idx]),
+          backgroundColor: color.fill,
+          borderColor: color.stroke,
+          borderWidth: 1,
+          borderRadius: 6
+        };
+      });
+
+      const ctx = document.getElementById('shiftChart').getContext('2d');
+      if (charts.shiftChart) charts.shiftChart.destroy();
+
+      charts.shiftChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: (e, activeEls) => handleChartClickDrillDown(activeEls, eventDeltas.map(d => d.event)),
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#fb7185',
+              font: { size: 10, weight: 'bold' },
+              formatter: (val) => val > 0 ? val : ''
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { 
+                color: '#cbd5e1', 
+                font: { size: 10, weight: '600' },
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false
+              }, 
+              grid: { display: false } 
+            },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' }, grace: '15%' }
+          }
+        }
+      });
+
+      const top5List = eventDeltas.map(e => ({ name: e.event, total: e.delta }));
+      document.getElementById('chart1AnalysisBox').innerHTML = buildCleanExecutiveFlashcardHTML(top5List, 'shift');
+    }
+
+    function renderTrueEventMultiBarChart(filtered, comparisonGroups, comparisonType) {
+      const countsByEvAndGrp = {};
+      const totalCounts = {};
+      filtered.forEach(d => {
+        if (d.IsFalseAlarm !== 'No') return;
+        const ev = d.EventType;
+        totalCounts[ev] = (totalCounts[ev] || 0) + 1;
+        if (!countsByEvAndGrp[ev]) countsByEvAndGrp[ev] = {};
+        const key = comparisonType === 'file' ? d.SourceFileName : 
+                    comparisonType === 'week' ? d.WeekKey : 
+                    comparisonType === 'day' ? d.Day : d.Month;
+        countsByEvAndGrp[ev][key] = (countsByEvAndGrp[ev][key] || 0) + 1;
+      });
+
+      const topTrueEvents = Object.keys(totalCounts).sort((a,b) => totalCounts[b] - totalCounts[a]).slice(0, 5);
+      const labels = topTrueEvents.map(e => shortenLabel(e, 18));
+      const datasets = comparisonGroups.map((grp, idx) => {
+        const color = PALETTES.trueEv[idx % PALETTES.trueEv.length];
+        const labelName = getComparisonLabel(grp, comparisonType, filtered);
+        return {
+          label: labelName,
+          data: topTrueEvents.map(ev => countsByEvAndGrp[ev]?.[grp] || 0),
+          backgroundColor: color.fill,
+          borderColor: color.stroke,
+          borderWidth: 1,
+          borderRadius: 6
+        };
+      });
+
+      const ctx = document.getElementById('trueEventChart').getContext('2d');
+      if (charts.trueChart) charts.trueChart.destroy();
+
+      charts.trueChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: (e, activeEls) => handleChartClickDrillDown(activeEls, topTrueEvents),
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#34d399',
+              font: { size: 10, weight: 'bold' },
+              formatter: (val) => val > 0 ? val : ''
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { 
+                color: '#cbd5e1', 
+                font: { size: 10, weight: '600' },
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false
+              }, 
+              grid: { display: false } 
+            },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' }, grace: '15%' }
+          }
+        }
+      });
+
+      const top5List = topTrueEvents.map(ev => ({ name: ev, total: totalCounts[ev] }));
+      document.getElementById('chart2AnalysisBox').innerHTML = buildCleanExecutiveFlashcardHTML(top5List, 'true');
+    }
+
+    function renderFalseEventMultiBarChart(filtered, comparisonGroups, comparisonType) {
+      const countsByEvAndGrp = {};
+      const totalCounts = {};
+      filtered.forEach(d => {
+        if (d.IsFalseAlarm !== 'Yes') return;
+        const ev = d.EventType;
+        totalCounts[ev] = (totalCounts[ev] || 0) + 1;
+        if (!countsByEvAndGrp[ev]) countsByEvAndGrp[ev] = {};
+        const key = comparisonType === 'file' ? d.SourceFileName : 
+                    comparisonType === 'week' ? d.WeekKey : 
+                    comparisonType === 'day' ? d.Day : d.Month;
+        countsByEvAndGrp[ev][key] = (countsByEvAndGrp[ev][key] || 0) + 1;
+      });
+
+      const topFalseEvents = Object.keys(totalCounts).sort((a,b) => totalCounts[b] - totalCounts[a]).slice(0, 5);
+      const labels = topFalseEvents.map(e => shortenLabel(e, 18));
+      const datasets = comparisonGroups.map((grp, idx) => {
+        const color = PALETTES.falseEv[idx % PALETTES.falseEv.length];
+        const labelName = getComparisonLabel(grp, comparisonType, filtered);
+        return {
+          label: labelName,
+          data: topFalseEvents.map(ev => countsByEvAndGrp[ev]?.[grp] || 0),
+          backgroundColor: color.fill,
+          borderColor: color.stroke,
+          borderWidth: 1,
+          borderRadius: 6
+        };
+      });
+
+      const ctx = document.getElementById('falseEventChart').getContext('2d');
+      if (charts.falseChart) charts.falseChart.destroy();
+
+      charts.falseChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: (e, activeEls) => handleChartClickDrillDown(activeEls, topFalseEvents),
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#facc15',
+              font: { size: 10, weight: 'bold' },
+              formatter: (val) => val > 0 ? val : ''
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { 
+                color: '#cbd5e1', 
+                font: { size: 10, weight: '600' },
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false
+              }, 
+              grid: { display: false } 
+            },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' }, grace: '15%' }
+          }
+        }
+      });
+
+      const top5List = topFalseEvents.map(ev => ({ name: ev, total: totalCounts[ev] }));
+      document.getElementById('chartFalseAnalysisBox').innerHTML = buildCleanExecutiveFlashcardHTML(top5List, 'false');
+    }
+
+    function renderRecurringMultiBarChart(filtered, comparisonGroups, comparisonType) {
+      const countsByPairAndGrp = {};
+      const totalPairsCount = {};
+
+      filtered.forEach(d => {
+        const key = `${d.Location} | ${d.EventType}`;
+        totalPairsCount[key] = (totalPairsCount[key] || 0) + 1;
+        if (!countsByPairAndGrp[key]) countsByPairAndGrp[key] = {};
+        const grpKey = comparisonType === 'file' ? d.SourceFileName : 
+                       comparisonType === 'week' ? d.WeekKey : 
+                       comparisonType === 'day' ? d.Day : d.Month;
+        countsByPairAndGrp[key][grpKey] = (countsByPairAndGrp[key][grpKey] || 0) + 1;
+      });
+
+      const topPairs = Object.keys(totalPairsCount).sort((a,b) => totalPairsCount[b] - totalPairsCount[a]).slice(0, 5);
+
+      function shortLabel(s, len) {
+        return s.length > len ? s.substring(0, len-1) + '..' : s;
+      }
+
+      const labels = topPairs.map(p => {
+        const [loc, ev] = p.split(' | ');
+        const cleanLoc = loc.replace('PARQ.', '').replace('One Bangkok.', '').trim();
+        return `${shortLabel(cleanLoc, 9)}:${shortLabel(ev, 9)}`;
+      });
+
+      const datasets = comparisonGroups.map((grp, idx) => {
+        const color = PALETTES.recurring[idx % PALETTES.recurring.length];
+        const labelName = getComparisonLabel(grp, comparisonType, filtered);
+        return {
+          label: labelName,
+          data: topPairs.map(p => countsByPairAndGrp[p]?.[grp] || 0),
+          backgroundColor: color.fill,
+          borderColor: color.stroke,
+          borderWidth: 1,
+          borderRadius: 6
+        };
+      });
+
+      const ctx = document.getElementById('recurringChart').getContext('2d');
+      if (charts.recChart) charts.recChart.destroy();
+
+      charts.recChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: (e, activeEls) => {
+            if (!activeEls || activeEls.length === 0) return;
+            const clickedIdx = activeEls[0].index;
+            const selectedPair = topPairs[clickedIdx];
+            if (selectedPair) {
+              const [, ev] = selectedPair.split(' | ');
+              selectedFilters.eventTypes = new Set([ev]);
+              const etInputs = document.querySelectorAll('#ddEventTypeMenu input');
+              etInputs.forEach(cb => cb.checked = (cb.value === ev));
+              updateBadge('badgeEventType', selectedFilters.eventTypes, [...new Set(fullDataset.map(d => d.EventType))].length);
+              renderDashboard();
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#38bdf8',
+              font: { size: 10, weight: 'bold' },
+              formatter: (val) => val > 0 ? val : ''
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { 
+                color: '#cbd5e1', 
+                font: { size: 9, weight: '600' },
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false
+              }, 
+              grid: { display: false } 
+            },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' }, grace: '15%' }
+          }
+        }
+      });
+
+      const top5List = topPairs.map(p => ({ name: p, total: totalPairsCount[p] }));
+      document.getElementById('chart3AnalysisBox').innerHTML = buildCleanExecutiveFlashcardHTML(top5List, 'recurring');
+    }
+
+    function updateDeepDiveInsightBoxes(filtered, comparisonGroups, comparisonType) {
+      const container = document.getElementById('deepDiveDynamicGrid');
+      if (!container) return;
+
+      const stateKey = getFilterStateKey();
+      const cached = briefingStateCache[stateKey];
+
+      // Determine target topics (max 3 comparison groups/topics based on active selection)
+      const targetGroups = comparisonGroups.slice(0, 3);
+      const isMultiBar = targetGroups.length > 1;
+
+      let html = '';
+
+      targetGroups.forEach((grp, idx) => {
+        let grpCases = [];
+        let groupLabel = '';
+
+        if (comparisonType === 'file') {
+          grpCases = filtered.filter(d => d.SourceFileName === grp);
+          groupLabel = grp;
+        } else if (comparisonType === 'week') {
+          grpCases = filtered.filter(d => d.WeekKey === grp);
+          const sample = grpCases[0] || fullDataset.find(d => d.WeekKey === grp);
+          groupLabel = sample ? sample.WeekLabel : grp;
+        } else if (comparisonType === 'day') {
+          grpCases = filtered.filter(d => d.Day === grp);
+          groupLabel = currentLang === 'th' ? `วันที่ ${grp}` : `Day ${grp}`;
+        } else {
+          grpCases = filtered.filter(d => d.Month === grp);
+          groupLabel = MONTH_NAMES[grp] ? MONTH_NAMES[grp][currentLang] : `Month ${grp}`;
+        }
+
+        // If single group, but multiple event types exist, allow drill down up to 3 top event types
+        if (!isMultiBar && targetGroups.length === 1) {
+          const evFreq = {};
+          filtered.forEach(d => evFreq[d.EventType] = (evFreq[d.EventType] || 0) + 1);
+          const topEvs = Object.keys(evFreq).sort((a,b) => evFreq[b] - evFreq[a]).slice(0, 3);
+          
+          if (topEvs.length > 1) {
+            topEvs.forEach((evName, evIdx) => {
+              const evCases = filtered.filter(d => d.EventType === evName);
+              const cardId = `dd-card-${evIdx}`;
+              renderSingleDeepDiveCard(evCases, evName, `${groupLabel} • Top #${evIdx+1}`, cardId, cached);
+            });
+            updateBriefingUIState(!!cached);
+            return;
+          }
+        }
+
+        const cardId = `dd-card-${idx}`;
+        renderSingleDeepDiveCard(grpCases, null, groupLabel, cardId, cached);
+      });
+
+      function renderSingleDeepDiveCard(caseList, fixedEvent, headerTag, cardId, cachedData) {
+        if (!caseList || caseList.length === 0) {
+          html += `
+            <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-center text-center text-xs text-slate-500">
+              <i class="fa-solid fa-folder-open text-2xl mb-1 text-slate-600"></i>
+              <span>${headerTag}: ${currentLang === 'th' ? 'ไม่มีข้อมูลเคสในรอบนี้' : 'No records under this filter'}</span>
+            </div>
+          `;
+          return;
+        }
+
+        // 1. Top Event Type
+        let topEvent = fixedEvent;
+        if (!topEvent) {
+          const evCount = {};
+          caseList.forEach(d => evCount[d.EventType] = (evCount[d.EventType] || 0) + 1);
+          topEvent = Object.entries(evCount).sort((a,b) => b[1] - a[1])[0][0];
+        }
+
+        const matchingCases = caseList.filter(d => d.EventType === topEvent);
+        const topEventCount = matchingCases.length;
+
+        // 2. Top Location for this event type
+        const locCount = {};
+        matchingCases.forEach(d => locCount[d.Location] = (locCount[d.Location] || 0) + 1);
+        const topLocation = Object.entries(locCount).sort((a,b) => b[1] - a[1])[0][0];
+        const topLocCount = locCount[topLocation];
+
+        // 3. Verbatim Summary (directly from CSV 'Summary', authentic numbers & raw text, NO translation)
+        const sampleCase = matchingCases.find(d => d.Location === topLocation && d.Summary && d.Summary.trim() !== '') ||
+                           matchingCases.find(d => d.Summary && d.Summary.trim() !== '') ||
+                           matchingCases[0];
+
+        let rawSummary = sampleCase?.Summary?.trim();
+        if (!rawSummary) {
+          rawSummary = sampleCase?.Description ? sanitizeDccAckText(sampleCase.Description) : '-';
+        }
+
+        // 4. Verbatim Finding (directly from CSV 'Findings/Resolution', NO translation; fallback to comment if empty)
+        let rawFinding = sampleCase?.Findings?.trim();
+        if (rawFinding) {
+          rawFinding = sanitizeDccAckText(rawFinding);
+        } else {
+          const fallbackComment = sampleCase?.OperatorComments || sampleCase?.PendingReason || '';
+          rawFinding = fallbackComment ? sanitizeDccAckText(fallbackComment) : (sampleCase?.Status === 'Closed' ? 'Normal inspection completed.' : 'Pending contractor follow-up.');
+        }
+
+        // Check if user edited and cached this card
+        const cardCache = cachedData && cachedData.cards ? cachedData.cards[cardId] : null;
+        const displaySummary = cardCache?.summary || rawSummary;
+        const displayFinding = cardCache?.finding || rawFinding;
+
+        html += `
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-md flex flex-col justify-between hover:border-indigo-500/40 transition">
+            <div class="space-y-3">
+              <!-- Card Header / Tag -->
+              <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold font-mono text-[11px] border border-indigo-500/30">
+                  <i class="fa-solid fa-chart-column"></i>
+                  <span>${headerTag}</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">
+                  ${matchingCases.length} / ${caseList.length} ${I18N[currentLang].casesUnit}
+                </span>
+              </div>
+
+              <!-- 1. Top Event Type -->
+              <div class="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider block mb-0.5">
+                  <i class="fa-solid fa-arrow-trend-up mr-1"></i>${currentLang === 'th' ? 'Event Type ที่เกิดมากที่สุด (Top Event):' : 'Top Event Type:'}
+                </span>
+                <div class="flex items-baseline justify-between gap-2">
+                  <strong class="text-white text-xs font-extrabold truncate" title="${topEvent}">${topEvent}</strong>
+                  <span class="text-rose-400 font-mono font-bold text-xs whitespace-nowrap">${topEventCount} ${I18N[currentLang].casesUnit}</span>
+                </div>
+              </div>
+
+              <!-- 2. Top Location -->
+              <div class="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-[10px] font-bold text-indigo-300 uppercase tracking-wider block mb-0.5">
+                  <i class="fa-solid fa-location-dot mr-1"></i>${currentLang === 'th' ? 'Location ที่เกิดบ่อยที่สุด (Top Location):' : 'Top Location Hotspot:'}
+                </span>
+                <div class="flex items-baseline justify-between gap-2">
+                  <strong class="text-indigo-200 text-xs font-semibold truncate" title="${topLocation}">${topLocation}</strong>
+                  <span class="text-indigo-400 font-mono font-bold text-xs whitespace-nowrap">${topLocCount} ${I18N[currentLang].casesUnit}</span>
+                </div>
+              </div>
+
+              <!-- 3. Verbatim Summary (Original authentic text & numbers, NO translation) -->
+              <div class="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block mb-1">
+                  <i class="fa-solid fa-clipboard-check mr-1"></i>${currentLang === 'th' ? 'Summary (ข้อมูลจริงจากช่อง Summary):' : 'Summary (Verbatim Raw):'}
+                </span>
+                <div contenteditable="${isEditingBriefing ? 'true' : 'false'}" data-card-id="${cardId}" data-field="summary" class="deep-dive-editable editable-panel text-xs text-slate-100 leading-relaxed p-2 rounded bg-slate-900/80 border border-slate-800 break-words ${isEditingBriefing ? 'editing-active' : ''}">
+                  ${displaySummary}
+                </div>
+              </div>
+
+              <!-- 4. Verbatim Finding (Original authentic text & numbers, NO translation) -->
+              <div class="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">
+                  <i class="fa-solid fa-wrench mr-1"></i>${currentLang === 'th' ? 'Finding (การตรวจสอบ/แก้ไขจาก Finding):' : 'Finding (Verbatim Raw):'}
+                </span>
+                <div contenteditable="${isEditingBriefing ? 'true' : 'false'}" data-card-id="${cardId}" data-field="finding" class="deep-dive-editable editable-panel text-xs text-slate-200 leading-relaxed p-2 rounded bg-slate-900/80 border border-slate-800 break-words ${isEditingBriefing ? 'editing-active' : ''}">
+                  ${displayFinding}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      updateBriefingUIState(!!cached);
+    }
+
+    function handleBriefingToggleClick() {
+      const deepDiveBoxes = document.querySelectorAll('.deep-dive-editable');
+      const criticalBoxes = document.querySelectorAll('.crit-field-box');
+
+      if (!isEditingBriefing) {
+        isEditingBriefing = true;
+        deepDiveBoxes.forEach(b => {
+          b.contentEditable = "true";
+          b.classList.add('editing-active');
+        });
+        criticalBoxes.forEach(b => {
+          b.contentEditable = "true";
+          b.classList.add('editing-active');
+        });
+
+        document.getElementById('lblBriefingToggle').innerText = I18N[currentLang].btnSave;
+        document.getElementById('iconBriefingToggle').className = "fa-solid fa-floppy-disk";
+        document.getElementById('btnBriefingToggle').className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow shadow-emerald-600/30";
+      } else {
+        isEditingBriefing = false;
+        deepDiveBoxes.forEach(b => {
+          b.contentEditable = "false";
+          b.classList.remove('editing-active');
+        });
+        criticalBoxes.forEach(b => {
+          b.contentEditable = "false";
+          b.classList.remove('editing-active');
+        });
+
+        const key = getFilterStateKey();
+
+        // Save deep dive cards
+        const cardData = {};
+        deepDiveBoxes.forEach(b => {
+          const cid = b.getAttribute('data-card-id');
+          const fld = b.getAttribute('data-field');
+          if (!cardData[cid]) cardData[cid] = {};
+          cardData[cid][fld] = b.innerHTML;
+        });
+
+        // Save critical cards
+        const caseGroups = {};
+        criticalBoxes.forEach(b => {
+          const cid = b.getAttribute('data-case-id');
+          const fld = b.getAttribute('data-field');
+          if (!caseGroups[cid]) caseGroups[cid] = { caseId: cid };
+          caseGroups[cid][fld] = b.innerHTML;
+        });
+
+        briefingStateCache[key] = {
+          cards: cardData,
+          critical: Object.values(caseGroups),
+          savedAt: new Date().toISOString()
+        };
+
+        try {
+          localStorage.setItem('dcc_briefing_state_cache', JSON.stringify(briefingStateCache));
+        } catch (e) {
+          console.warn("Local storage write error:", e);
+        }
+
+        document.getElementById('lblBriefingToggle').innerText = I18N[currentLang].btnEdit;
+        document.getElementById('iconBriefingToggle').className = "fa-solid fa-pen-to-square";
+        document.getElementById('btnBriefingToggle').className = "bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow shadow-indigo-600/30";
+
+        updateBriefingUIState(true);
+      }
+    }
+
+    function handleBriefingResetClick() {
+      const key = getFilterStateKey();
+      if (briefingStateCache[key]) {
+        delete briefingStateCache[key];
+        try {
+          localStorage.setItem('dcc_briefing_state_cache', JSON.stringify(briefingStateCache));
+        } catch (e) {}
+      }
+      isEditingBriefing = false;
+      document.querySelectorAll('.deep-dive-editable').forEach(b => {
+        b.contentEditable = "false";
+        b.classList.remove('editing-active');
+      });
+      document.querySelectorAll('.crit-field-box').forEach(b => {
+        b.contentEditable = "false";
+        b.classList.remove('editing-active');
+      });
+
+      document.getElementById('lblBriefingToggle').innerText = I18N[currentLang].btnEdit;
+      document.getElementById('iconBriefingToggle').className = "fa-solid fa-pen-to-square";
+      document.getElementById('btnBriefingToggle').className = "bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow shadow-indigo-600/30";
+
+      renderDashboard();
+    }
+
+    function updateBriefingUIState(isCached) {
+      const badge = document.getElementById('briefingStateBadge');
+      const resetBtn = document.getElementById('btnBriefingReset');
+
+      if (isCached) {
+        badge.innerText = I18N[currentLang].badgeCustom;
+        badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+        resetBtn.classList.remove('hidden');
+      } else {
+        badge.innerText = I18N[currentLang].badgeAuto;
+        badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-semibold bg-slate-800 text-slate-400 border border-slate-700";
+        resetBtn.classList.add('hidden');
+      }
+    }
+
+    function toggleTrueFullScreenPresentation() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          updatePresentModeUI(true);
+        }).catch(err => {
+          console.warn("Fullscreen error:", err);
+          document.body.classList.toggle('present-mode');
+          updatePresentModeUI(document.body.classList.contains('present-mode'));
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => updatePresentModeUI(false));
+        }
+      }
+    }
+
+    function updatePresentModeUI(isPresent) {
+      if (isPresent) document.body.classList.add('present-mode');
+      else document.body.classList.remove('present-mode');
+
+      const label = document.getElementById('presentModeLabel');
+      const icon = document.getElementById('presentModeIcon');
+      const btn = document.getElementById('presentModeBtn');
+
+      if (isPresent) {
+        label.innerText = I18N[currentLang].exitPresent;
+        icon.className = "fa-solid fa-compress";
+        btn.className = "bg-rose-600 hover:bg-rose-500 text-xs font-semibold px-3 py-1.5 rounded-lg text-white flex items-center gap-1.5 transition shadow";
+      } else {
+        label.innerText = I18N[currentLang].present;
+        icon.className = "fa-solid fa-expand";
+        btn.className = "bg-slate-800 hover:bg-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-200 border border-slate-700 flex items-center gap-1.5 transition";
+      }
+      window.dispatchEvent(new Event('resize'));
+    }
+
+    function updateLanguageToggleUI() {
+      const thBtn = document.getElementById('langThBtn');
+      const enBtn = document.getElementById('langEnBtn');
+      if (currentLang === 'en') {
+        enBtn.className = "px-2.5 py-1 rounded-md transition text-white bg-indigo-600 shadow";
+        thBtn.className = "px-2.5 py-1 rounded-md transition text-slate-400 hover:text-white";
+      } else {
+        thBtn.className = "px-2.5 py-1 rounded-md transition text-white bg-indigo-600 shadow";
+        enBtn.className = "px-2.5 py-1 rounded-md transition text-slate-400 hover:text-white";
+      }
+    }
+
+    function openChartModal(sourceChartId, title) {
+      const sourceChart = charts[sourceChartId] || (sourceChartId === 'shiftChart' ? charts.shiftChart : sourceChartId === 'trueEventChart' ? charts.trueChart : sourceChartId === 'falseEventChart' ? charts.falseChart : charts.recChart);
+      if (!sourceChart) return;
+
+      const modal = document.getElementById('chartModal');
+      document.getElementById('modalChartTitle').innerText = title;
+      modal.classList.add('active');
+
+      const modalCanvas = document.getElementById('modalCanvas');
+      if (modalChartInstance) modalChartInstance.destroy();
+
+      modalChartInstance = new Chart(modalCanvas.getContext('2d'), {
+        type: sourceChart.config.type,
+        data: JSON.parse(JSON.stringify(sourceChart.config.data)),
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#ffffff', font: { size: 14 } } },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#ffffff',
+              font: { size: 12, weight: 'bold' }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#ffffff', font: { size: 12, weight: '600' } }, grid: { display: false } },
+            y: { ticks: { color: '#ffffff', font: { size: 12 } }, grid: { color: '#334155' } }
+          }
+        }
+      });
+    }
+
+    function closeChartModal() {
+      const modal = document.getElementById('chartModal');
+      modal.classList.remove('active');
+      if (modalChartInstance) {
+        modalChartInstance.destroy();
+        modalChartInstance = null;
+      }
+    }
+
+    function exportToPDF() {
+      const element = document.getElementById('exportableArea');
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `DCC_Executive_Report_${new Date().toISOString().slice(0,10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#060a14' },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    function exportToPPTX() {
+      const pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_16x9';
+
+      let slide1 = pptx.addSlide();
+      slide1.background = { color: '060A14' };
+      slide1.addText("Command Centre Executive Incident Report", { x: 1, y: 2.5, fontSize: 32, color: 'FFFFFF', bold: true });
+      slide1.addText(`Generated on: ${new Date().toLocaleDateString()} | District Command Centre`, { x: 1, y: 3.5, fontSize: 16, color: '818CF8' });
+
+      let slide2 = pptx.addSlide();
+      slide2.background = { color: '0B1120' };
+      slide2.addText("Executive Incident KPI Overview", { x: 0.8, y: 0.6, fontSize: 22, color: 'FFFFFF', bold: true });
+
+      const totalVal = document.getElementById('kpiTotalVal').innerText;
+      const trueRate = document.getElementById('kpiTrueRateVal').innerText;
+      const backlog = document.getElementById('kpiBacklogVal').innerText;
+      const newType = document.getElementById('kpiNewTypeVal').innerText;
+
+      slide2.addTable([
+        [
+          { text: "Total Cases", options: { bold: true, color: "94A3B8" } },
+          { text: "True Incident Rate", options: { bold: true, color: "34D399" } },
+          { text: "Backlog / Pending", options: { bold: true, color: "FACC15" } },
+          { text: "New Event Types", options: { bold: true, color: "38BDF8" } }
+        ],
+        [
+          { text: totalVal, options: { fontSize: 24, bold: true, color: "FFFFFF" } },
+          { text: trueRate, options: { fontSize: 24, bold: true, color: "34D399" } },
+          { text: backlog, options: { fontSize: 24, bold: true, color: "FACC15" } },
+          { text: newType, options: { fontSize: 24, bold: true, color: "38BDF8" } }
+        ]
+      ], { x: 0.8, y: 1.5, w: 11.5, fill: { color: "1E293B" }, border: { pt: 1, color: "334155" } });
+
+      const chart1Canvas = document.getElementById('shiftChart');
+      if (chart1Canvas) {
+        const imgData = chart1Canvas.toDataURL("image/png");
+        let slide3 = pptx.addSlide();
+        slide3.background = { color: '0B1120' };
+        slide3.addText("Significant Delta Shifts (Top 5 Events)", { x: 0.8, y: 0.6, fontSize: 20, color: 'FFFFFF', bold: true });
+        slide3.addImage({ data: imgData, x: 0.8, y: 1.2, w: 11.5, h: 5.5 });
+      }
+
+      pptx.writeFile({ fileName: `DCC_Executive_Briefing_${new Date().toISOString().slice(0,10)}.pptx` });
+    }
+
+    function exportToExcel() {
+      const wb = XLSX.utils.book_new();
+
+      const exportData = fullDataset.map(d => ({
+        "Case No": d.CaseNo,
+        "Source File": d.SourceFileName,
+        "Date": d.DateOnly,
+        "Year": d.Year,
+        "Month": d.Month,
+        "Day": d.Day,
+        "Category": d.EventCategory,
+        "Priority": d.Priority,
+        "Event Type": d.EventType,
+        "Location": d.Location,
+        "False Alarm": d.IsFalseAlarm,
+        "Status": d.Status,
+        "Summary": d.Summary,
+        "Description": d.Description,
+        "Findings/Resolution": d.Findings,
+        "Operator Comments": d.OperatorComments
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, "Incident Records");
+      XLSX.writeFile(wb, `DCC_Incident_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function exportToWord() {
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } = docx;
+
+      const totalVal = document.getElementById('kpiTotalVal').innerText;
+      const trueRate = document.getElementById('kpiTrueRateVal').innerText;
+      const backlog = document.getElementById('kpiBacklogVal').innerText;
+
+      const deepDiveCards = document.querySelectorAll('#deepDiveDynamicGrid > div');
+      const deepDiveParagraphs = [];
+
+      deepDiveCards.forEach((card, idx) => {
+        const textContent = card.innerText.trim();
+        if (textContent) {
+          deepDiveParagraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Analysis Card #${idx + 1}:\n`, bold: true }),
+                new TextRun(textContent + "\n\n")
+              ]
+            })
+          );
+        }
+      });
+
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              text: "Command Centre Executive Incident Briefing",
+              heading: HeadingLevel.TITLE,
+              spacing: { after: 200 }
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Report Date: ${new Date().toLocaleDateString()}`, bold: true }),
+                new TextRun({ text: " | District Command Centre (DCC) Operations\n" })
+              ],
+              spacing: { after: 300 }
+            }),
+            new Paragraph({
+              text: "1. Executive KPI Summary",
+              heading: HeadingLevel.HEADING_1,
+              spacing: { after: 150 }
+            }),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph({ text: "Total Cases", bold: true })] }),
+                    new TableCell({ children: [new Paragraph({ text: "True Incident Rate", bold: true })] }),
+                    new TableCell({ children: [new Paragraph({ text: "Pending Backlog", bold: true })] })
+                  ]
+                }),
+                new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph(totalVal)] }),
+                    new TableCell({ children: [new Paragraph(trueRate)] }),
+                    new TableCell({ children: [new Paragraph(backlog)] })
+                  ]
+                })
+              ]
+            }),
+            new Paragraph({
+              text: "\n2. Executive Strategic Intelligence",
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: 300, after: 150 }
+            }),
+            ...deepDiveParagraphs
+          ]
+        }]
+      });
+
+      Packer.toBlob(doc).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `DCC_Executive_Summary_${new Date().toISOString().slice(0,10)}.docx`;
+        a.click();
+      });
+    }
+
+    function shortenLabel(str, maxLen = 18) {
+      if (!str) return '';
+      return str.length > maxLen ? str.substring(0, maxLen - 2) + '..' : str;
+    }
+
+    function buildCleanExecutiveFlashcardHTML(items, type) {
+      if (!items || items.length === 0) {
+        return `<div class="text-slate-400 py-6 text-center italic">${currentLang === 'th' ? 'ไม่มีข้อมูลเพียงพอสำหรับการวิเคราะห์' : 'Insufficient data for deep-dive analysis'}</div>`;
+      }
+
+      let html = '';
+      items.forEach((item, idx) => {
+        let rootCause = "", triggers = "", immediateAction = "", prevention = "";
+
+        if (currentLang === 'th') {
+          if (type === 'shift') {
+            rootCause = `พบความผันผวนของ <strong>${item.name}</strong> จากการตัดต่อวงจรและทดสอบระบบเซนเซอร์โดยไม่ผ่านการ Bypass`;
+            triggers = `ผู้รับเหมาเข้าพื้นที่ตกแต่งภายในและ <strong>ตัดต่อสายสัญญาณช่วงกะดึก</strong> โดยไม่มีการแจ้งล่วงหน้า`;
+            immediateAction = `ส่งทีมปฏิบัติการตรวจสอบพิกัด <strong>ระงับงานที่ไม่มีใบอนุญาต</strong> และรีเซ็ตระบบกลับสู่สถานะปกติ`;
+            prevention = `บังคับใช้ระเบียบ <strong>Digital Work Permit ล่วงหน้า 24 ชม.</strong> และกำหนดโซน Bypass สัญญาณชัดเจน`;
+          } else if (type === 'true') {
+            rootCause = `ความล้าสะสมของชิ้นส่วนฮาร์ดแวร์ในอุปกรณ์ <strong>${item.name}</strong> ที่ใช้งานต่อเนื่องเต็มขีดจำกัด`;
+            triggers = `ปริมาณทราฟฟิกผู้ใช้งานและ <strong>ยานพาหนะเข้าพื้นที่สูงเกินพิกัด</strong> ในชั่วโมงเร่งด่วน`;
+            immediateAction = `เข้ากั้นพื้นที่ ควบคุมจุดเกิดเหตุ และ <strong>เบิกอะไหล่สำรองเข้าเปลี่ยนทันที</strong> ภายในกรอบเวลา SLA`;
+            prevention = `ยกระดับตาราง <strong>Predictive Health Check</strong> ตรวจวัดความร้อนและการสั่นสะเทือนทุกสัปดาห์`;
+          } else if (type === 'false') {
+            rootCause = `ค่าความไว <strong>Sensitivity Threshold</strong> ของตัวตรวจจับสูงเกินไป ไม่สอดคล้องกับสภาพแวดล้อมหน้างาน`;
+            triggers = `<strong>ละอองฝุ่นจากงานขัดพื้น</strong> และสารเคมีทำความสะอาดระเหยเข้าไปสะสมในช่องเลนส์ตรวจจับ`;
+            immediateAction = `ใช้เครื่องเป่าลมแรงดันสูง <strong>ทำความสะอาดหัว Sensor</strong> และทดสอบส่งสัญญาณร่วมกับศูนย์ DCC`;
+            prevention = `<strong>ปรับลดค่า Sensitivity ลง 15%</strong> พร้อมจัดตารางล้าง Chamber ตรวจจับฝุ่นละอองทุก 30 วัน`;
+          } else if (type === 'recurring') {
+            rootCause = `ข้อจำกัดทางกายภาพและอุปกรณ์เดิมเป็น <strong>รุ่น Standard ไม่รองรับโหลด</strong> การใช้งานระดับ Commercial`;
+            triggers = `พฤติกรรมผู้เช่า <strong>ค้ำประตูเปิดทิ้งไว้</strong> และแรงกระแทกจากรถเข็นส่งของบริเวณจุดขนถ่าย`;
+            immediateAction = `ปรับตั้งระยะสปีดโช้คอัพประตู <strong>ติดป้ายเตือน</strong> และวางกำลัง รปภ. ประจำจุดเสี่ยงชั่วคราว`;
+            prevention = `เสนอของบปรับปรุงเป็นอุปกรณ์เกรด <strong>Heavy-Duty อุตสาหกรรม</strong> พร้อมปรับปรุง SOP ควบคุมการเข้าออก`;
+          }
+        } else {
+          if (type === 'shift') {
+            rootCause = `Sharp telemetry spikes in <strong>${item.name}</strong> due to unauthorized sensor isolation during fit-out.`;
+            triggers = `Contractor rewiring and <strong>dry testing detector heads</strong> during shift turnovers without pre-clearance.`;
+            immediateAction = `Dispatched field technicians to <strong>halt unpermitted activity</strong> and restore telemetry within SLA.`;
+            prevention = `Enforce mandatory <strong>24-hr advance Digital Work Permit</strong> with strictly isolated zonal bypass.`;
+          } else if (type === 'true') {
+            rootCause = `Hardware lifecycle fatigue and stress loading on <strong>${item.name}</strong> operating at peak throughput.`;
+            triggers = `Massive traffic volume of vehicles and pedestrians <strong>exceeding standard design ratings</strong>.`;
+            immediateAction = `Barricade affected area, stabilize hazard, and <strong>deploy hot-swap spare parts</strong> immediately.`;
+            prevention = `Establish weekly <strong>Predictive Health Check</strong> audits for vibration, temperature, and wear.`;
+          } else if (type === 'false') {
+            rootCause = `Over-calibrated optical <strong>sensitivity threshold</strong> on ${item.name} mismatched with ambient dust.`;
+            triggers = `<strong>Ambient fit-out particulates</strong> and aerosolized floor solvents reaching optical chambers.`;
+            immediateAction = `Execute <strong>compressed air cleaning</strong> of detector heads and coordinate live reset with DCC console.`;
+            prevention = `<strong>Recalibrate sensitivity downward by 15%</strong> and mandate 30-day sensor chamber maintenance.`;
+          } else if (type === 'recurring') {
+            rootCause = `Architectural pinch-point bottleneck where <strong>standard-duty hardware fails</strong> under commercial use.`;
+            triggers = `Tenants <strong>propping doors open</strong> and logistical trolley impacts along high-traffic corridors.`;
+            immediateAction = `<strong>Re-tension door closer hydraulics</strong>, place warning decals, and station spot security officers.`;
+            prevention = `Submit CapEx replacement for <strong>Industrial Heavy-Duty units</strong> and update operational SOP.`;
+          }
+        }
+
+        html += `
+          <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 shadow-sm space-y-2 hover:border-slate-700 transition">
+            <div class="flex items-start justify-between pb-1.5 border-b border-slate-800 gap-2">
+              <span class="font-bold text-white text-xs break-words leading-snug tracking-wide">
+                <span class="text-indigo-400 font-extrabold mr-1">#${idx+1}</span>${item.name}
+              </span>
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono text-[10px] font-bold whitespace-nowrap">
+                ${item.total ? item.total.toLocaleString() + ' ' + I18N[currentLang].casesUnit : ''}
+              </span>
+            </div>
+            <div class="flashcard-root text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
+              <span class="text-rose-400 font-bold uppercase tracking-wider text-[10px] block">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i>Primary Root Cause:
+              </span>
+              <span class="text-slate-100">${rootCause}</span>
+            </div>
+            <div class="flashcard-trigger text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
+              <span class="text-amber-400 font-bold uppercase tracking-wider text-[10px] block">
+                <i class="fa-solid fa-bolt-lightning mr-1"></i>Operational Trigger:
+              </span>
+              <span class="text-slate-100">${triggers}</span>
+            </div>
+            <div class="flashcard-action text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
+              <span class="text-emerald-400 font-bold uppercase tracking-wider text-[10px] block">
+                <i class="fa-solid fa-wrench mr-1"></i>Immediate Action:
+              </span>
+              <span class="text-slate-100">${immediateAction}</span>
+            </div>
+            <div class="flashcard-prevent text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
+              <span class="text-cyan-400 font-bold uppercase tracking-wider text-[10px] block">
+                <i class="fa-solid fa-shield-halved mr-1"></i>Predictive & SOP:
+              </span>
+              <span class="text-slate-100">${prevention}</span>
+            </div>
+          </div>
+        `;
+      });
+      return html;
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  </script>
+</body>
+</html>
