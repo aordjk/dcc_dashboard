@@ -881,66 +881,54 @@
                                 </div>
                             </div>
 
-                            <!-- Primary Action: Upload CSV -->
-                            <div>
-                                <label class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer transition shadow">
-                                    <i data-lucide="file-plus-2" class="w-4 h-4"></i>
-                                    <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
-                                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
-                                </label>
-                            </div>
-
                             <!-- Executive Export Suite -->
-                            <div class="space-y-1 pt-1 border-t border-slate-700/80">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1" data-i18n="export">Export Reports</span>
+                            <div class="space-y-1 pt-1">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1" data-i18n="export">Executive Export Suite</span>
                                 <div class="grid grid-cols-1 gap-1">
                                     <button onclick="exportToPDF()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                         <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-400"></i>
-                                        <span data-i18n="export_pdf">Dashboard PDF</span>
+                                        <span data-i18n="export_pdf">Dashboard PDF Report</span>
                                     </button>
                                     <button onclick="exportToPPTX()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                         <i data-lucide="file-output" class="w-3.5 h-3.5 text-amber-400"></i>
-                                        <span data-i18n="export_pptx">Dashboard Slides (.pptx)</span>
+                                        <span data-i18n="export_pptx">Dashboard Briefing (.pptx)</span>
                                     </button>
                                     <button onclick="exportCompareToWord()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                         <i data-lucide="file-check" class="w-3.5 h-3.5 text-sky-400"></i>
-                                        <span data-i18n="export_word">Compare Word (.docx)</span>
+                                        <span data-i18n="export_word">Compare Intelligence (.docx)</span>
                                     </button>
                                     <button onclick="exportCompareToPPTX()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                         <i data-lucide="presentation" class="w-3.5 h-3.5 text-purple-400"></i>
-                                        <span data-i18n="export_compare_pptx">Compare Slides (.pptx)</span>
+                                        <span data-i18n="export_compare_pptx">Compare Presentation (.pptx)</span>
                                     </button>
                                     <button onclick="exportAllRecordsToExcel()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                         <i data-lucide="table" class="w-3.5 h-3.5 text-teal-400"></i>
-                                        <span data-i18n="export_all_excel">All Cases to Excel (.xlsx)</span>
+                                        <span data-i18n="export_all_excel">All Records to Excel (.xlsx)</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- System Actions -->
-                            <div class="space-y-1 pt-1 border-t border-slate-700/80">
+                            <!-- Executive Presentation & System Tools -->
+                            <div class="space-y-1 pt-1.5 border-t border-slate-700/80">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Presentation & Control</span>
                                 <button onclick="togglePresentationMode()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                     <i data-lucide="presentation" class="w-3.5 h-3.5 text-indigo-400"></i>
-                                    <span data-i18n="present_mode">Presentation Mode</span>
-                                </button>
-                                <button onclick="loadDefaultDemoData()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
-                                    <i data-lucide="database" class="w-3.5 h-3.5 text-sky-400"></i>
-                                    <span data-i18n="load_demo_dataset">Load Live Demo (2026)</span>
-                                </button>
-                                <button onclick="resetDashboardState()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
-                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-amber-400"></i>
-                                    <span data-i18n="reset_dashboard_state">Reset Memory & State</span>
+                                    <span data-i18n="present_mode">Fullscreen Presentation Mode</span>
                                 </button>
                                 <button onclick="window.print()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-200 transition">
                                     <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span data-i18n="print_preview">Print Executive Brief</span>
                                 </button>
+                                <button onclick="resetDashboardState()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-rose-400 hover:text-rose-300 transition">
+                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-rose-400"></i>
+                                    <span data-i18n="reset_dashboard_state">Reset Memory & State</span>
+                                </button>
                             </div>
                             
                             <div class="pt-2 border-t border-slate-700/80 text-[10px] text-slate-400 text-center">
-                                DCC Platform &bull; v2026.4 Production
+                                Commander Session &bull; Active Duty
                             </div>
-                        </div>
+                        </div></div>
                     </div>
 
                 </div>
@@ -1229,16 +1217,16 @@
 <!-- Mobile Slide-Out Drawer (Hamburger Menu Overlay) -->
     <div id="mobileDrawerOverlay" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[9998] hidden transition-opacity" onclick="toggleMobileDrawer()"></div>
     <div id="mobileDrawer" class="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-slate-900 border-r border-slate-800 z-[9999] p-5 flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl custom-scrollbar overflow-y-auto">
-        <div class="space-y-4">
+        <div class="space-y-5">
             <!-- Drawer Header -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div class="flex items-center gap-2.5">
                     <div class="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
-                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                        <i data-lucide="compass" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="font-bold text-white text-sm block">Command Navigation</span>
-                        <span class="text-[10px] text-slate-400">District Cooling & Telemetry</span>
+                        <span class="font-bold text-white text-sm block">Navigation & Data</span>
+                        <span class="text-[10px] text-slate-400">Operations Control Center</span>
                     </div>
                 </div>
                 <button onclick="toggleMobileDrawer()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition" title="Close Menu">
@@ -1246,25 +1234,26 @@
                 </button>
             </div>
 
-            <!-- View Navigation -->
-            <div class="space-y-1.5">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">View Navigation</span>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="drawerTabDashboard" onclick="switchView('dashboard'); toggleMobileDrawer();" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow">
+            <!-- 1. View Navigation -->
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Select View</span>
+                <div class="grid grid-cols-1 gap-1.5">
+                    <button id="drawerTabDashboard" onclick="switchView('dashboard'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow transition">
                         <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                        <span data-i18n="nav_dashboard">Dashboard</span>
+                        <span data-i18n="nav_dashboard">Executive Dashboard</span>
                     </button>
-                    <button id="drawerTabCompare" onclick="switchView('compare'); toggleMobileDrawer();" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">
+                    <button id="drawerTabCompare" onclick="switchView('compare'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
                         <i data-lucide="git-compare" class="w-4 h-4"></i>
-                        <span data-i18n="nav_compare">Compare</span>
+                        <span data-i18n="nav_compare">Cross-Period & Case Compare</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Filters Quick Button -->
-            <div>
+            <!-- 2. Data Filtering -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Telemetry Filtering</span>
                 <button onclick="toggleMobileDrawer(); openFilterModal();" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2.5">
                         <i data-lucide="sliders-horizontal" class="w-4 h-4 text-indigo-400"></i>
                         <span data-i18n="filter_modal_title">Filters & Slicers Modal</span>
                     </div>
@@ -1272,86 +1261,26 @@
                 </button>
             </div>
 
-            <!-- Primary Action: Upload CSV -->
-            <div>
-                <label class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer transition shadow">
-                    <i data-lucide="file-plus-2" class="w-4 h-4"></i>
-                    <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
-                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event); toggleMobileDrawer();">
-                </label>
-            </div>
-
-            <!-- Export Reports -->
-            <div class="space-y-1.5 pt-2 border-t border-slate-800">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400" data-i18n="export">Export Reports</span>
-                <div class="space-y-1">
-                    <button onclick="exportToPDF(); toggleMobileDrawer();" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition">
-                        <i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i>
-                        <span data-i18n="export_pdf">Dashboard PDF</span>
+            <!-- 3. Dataset Input & Loading -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dataset Management</span>
+                <div class="space-y-1.5">
+                    <label class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer transition shadow">
+                        <i data-lucide="file-plus-2" class="w-4 h-4"></i>
+                        <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
+                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event); toggleMobileDrawer();">
+                    </label>
+                    <button onclick="loadDefaultDemoData(); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium transition border border-slate-700">
+                        <i data-lucide="database" class="w-4 h-4 text-sky-400"></i>
+                        <span data-i18n="load_demo_dataset">Load Live Demo (2026)</span>
                     </button>
-                    <button onclick="exportToPPTX(); toggleMobileDrawer();" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition">
-                        <i data-lucide="file-output" class="w-4 h-4 text-amber-400"></i>
-                        <span data-i18n="export_pptx">Dashboard PPTX</span>
-                    </button>
-                    <button onclick="exportCompareToWord(); toggleMobileDrawer();" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition">
-                        <i data-lucide="file-check" class="w-4 h-4 text-sky-400"></i>
-                        <span data-i18n="export_word">Compare Word (.docx)</span>
-                    </button>
-                    <button onclick="exportCompareToPPTX(); toggleMobileDrawer();" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition">
-                        <i data-lucide="presentation" class="w-4 h-4 text-purple-400"></i>
-                        <span data-i18n="export_compare_pptx">Compare PPTX</span>
-                    </button>
-                    <button onclick="exportAllRecordsToExcel(); toggleMobileDrawer();" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs transition">
-                        <i data-lucide="table" class="w-4 h-4 text-teal-400"></i>
-                        <span data-i18n="export_all_excel">All Records Excel</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Appearance & Language Settings -->
-            <div class="space-y-1.5 pt-2 border-t border-slate-800">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Settings</span>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="toggleTheme()" class="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold">
-                        <i data-lucide="sun-moon" class="w-4 h-4 text-amber-400"></i>
-                        <span id="drawerThemeText">Theme</span>
-                    </button>
-                    <div class="flex items-center justify-around bg-slate-800 border border-slate-700 rounded-xl p-1 text-xs font-bold">
-                        <button onclick="switchLanguage('EN')" class="px-2.5 py-1 rounded bg-indigo-600 text-white">EN</button>
-                        <button onclick="switchLanguage('TH')" class="px-2.5 py-1 rounded text-slate-400 hover:text-white">TH</button>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Drawer Footer: Profile & Session Info -->
-        <div class="pt-4 border-t border-slate-800 space-y-3">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-black text-white shadow">
-                    OC
-                </div>
-                <div>
-                    <div class="font-bold text-white text-xs" data-i18n="commander_name">Capt. Operations Lead</div>
-                    <div class="text-[10px] text-slate-400" data-i18n="commander_role">Executive Command Center</div>
-                    <div class="text-[9px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span data-i18n="commander_shift">Shift Alpha &bull; Active Duty</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 text-[11px]">
-                <button onclick="togglePresentationMode(); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-center font-medium transition" data-i18n="present_mode">
-                    Present
-                </button>
-                <button onclick="resetDashboardState(); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 text-center font-medium transition" data-i18n="reset_dashboard_state">
-                    Reset
-                </button>
-            </div>
-
-            <div class="text-[10px] text-slate-400 text-center">
-                DCC Platform &bull; v2026.4 Production
-            </div>
+        <!-- Drawer Footer -->
+        <div class="pt-4 border-t border-slate-800 text-[10px] text-slate-400 text-center">
+            DCC Platform &bull; v2026.4 Navigation
         </div>
     </div>
     <!-- /Mobile Drawer -->
