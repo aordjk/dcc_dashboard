@@ -832,6 +832,24 @@
         body.light-mode .topic-nav-item.active i {
             color: #4f46e5 !important;
         }
+
+        /* Fixed / Locked Left Sidebar on Desktop & Smooth Drawer on Mobile */
+        #leftSidebarNav {
+            scrollbar-width: thin;
+            scrollbar-color: #334155 transparent;
+        }
+        body.light-mode #leftSidebarNav {
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        @media (max-width: 1023px) {
+            body.light-mode #leftSidebarNav {
+                background-color: #ffffff !important;
+                border-color: #e2e8f0 !important;
+            }
+            body.light-mode #sidebarBackdrop {
+                background-color: rgba(15, 23, 42, 0.45) !important;
+            }
+        }
 </style>
 
 </head>
@@ -1099,20 +1117,49 @@
     <!-- Main Content Container -->
     <main id="mainContainer" class="flex-1 max-w-[1600px] mx-auto w-full px-3 sm:px-6 py-4 transition-all duration-300">
 
-        <!-- Mobile Quick Topic Bar (Only on <lg screens) -->
-        <div class="lg:hidden sticky top-14 z-30 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-2.5 py-1.5 mb-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shadow-lg">
-            <button onclick="scrollToTopic(event, 'sec-overall')" class="px-2.5 py-1 rounded-lg bg-indigo-600/25 text-indigo-300 text-xs font-bold whitespace-nowrap border border-indigo-500/30">overall</button>
-            <button onclick="scrollToTopic(event, 'sec-false-alarm')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap">false alarm</button>
-            <button onclick="scrollToTopic(event, 'sec-recurring')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap">recurring</button>
-            <button onclick="scrollToTopic(event, 'sec-sla-component')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap">SLA component</button>
-            <button onclick="scrollToTopic(event, 'sec-sla-team')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap">SLA team</button>
-            <button onclick="scrollToTopic(event, 'sec-pending-team')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold whitespace-nowrap">Pending team</button>
+        <!-- Mobile Backdrop for Sidebar Drawer (<lg screens) -->
+        <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9990] hidden lg:hidden transition-opacity" onclick="toggleSidebarDrawer()"></div>
+
+        <!-- Mobile Quick Action & Filter Bar (<lg screens) -->
+        <div class="lg:hidden sticky top-12 z-30 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-2.5 py-1.5 mb-3 flex items-center justify-between gap-2 shadow-lg">
+            <!-- Filter Toggle Button (Opens off-canvas drawer on mobile) -->
+            <button type="button" onclick="toggleSidebarDrawer()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow transition shrink-0" title="Open Telemetry & Slicer Filters">
+                <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                <span data-i18n="filters">Filters</span>
+                <span id="mobileActiveFilterCount" class="hidden px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-mono font-bold leading-none">0</span>
+            </button>
+
+            <!-- Quick Topic Jump Pills -->
+            <div id="mobileTopicJumpPills" class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-0.5 flex-1 min-w-0">
+                <button onclick="scrollToTopic(event, 'sec-overall')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">overall</button>
+                <button onclick="scrollToTopic(event, 'sec-false-alarm')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">false alarm</button>
+                <button onclick="scrollToTopic(event, 'sec-recurring')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">recurring</button>
+                <button onclick="scrollToTopic(event, 'sec-sla-component')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">SLA comp</button>
+                <button onclick="scrollToTopic(event, 'sec-sla-team')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">SLA team</button>
+                <button onclick="scrollToTopic(event, 'sec-pending-team')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">pending</button>
+            </div>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-5 items-start">
             
-            <!-- LEFT SIDEBAR TOPIC NAVIGATION (Desktop Sticky) -->
-            <aside id="leftSidebarNav" class="w-full lg:w-64 xl:w-72 shrink-0 lg:sticky lg:top-16 z-20 space-y-3.5">
+            <!-- LEFT SIDEBAR: Locked Dock on Desktop (lg:), Drawer on Mobile (<lg) -->
+            <aside id="leftSidebarNav" class="fixed inset-y-0 left-0 z-[9995] w-80 max-w-[88vw] bg-slate-900 border-r border-slate-800 p-4 shadow-2xl overflow-y-auto custom-scrollbar transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-14 lg:h-[calc(100vh-4.25rem)] lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none space-y-3 pb-8">
+                
+                <!-- Mobile Drawer Header with Close Button (<lg only) -->
+                <div class="lg:hidden flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <div class="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider block">Filters & Operations</span>
+                            <span class="text-[10px] text-slate-400">DCC Operations Center</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleSidebarDrawer()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow transition">
+                        Done
+                    </button>
+                </div>
                 
                 <!-- 1. Topic Navigation Menu -->
                 <div id="sidebarTopicCard" class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-2">
@@ -1301,11 +1348,28 @@
                         </button>
                     </div>
 
+                    <!-- Compare Dimension Selector (เกณฑ์เปรียบเทียบ) -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-semibold text-slate-400">
+                            <i class="fa-solid fa-code-compare text-indigo-400 mr-1"></i>
+                            <span>Compare By (เกณฑ์เปรียบเทียบ)</span>
+                        </label>
+                        <select id="compareDimensionSelect" onchange="renderCompareDashboard()" class="w-full bg-slate-950 border border-slate-700 text-indigo-400 font-bold text-xs rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="auto">⚡ Auto (ตามตัวกรองที่เลือก)</option>
+                            <option value="month">📅 By Month (เปรียบเทียบรายเดือน)</option>
+                            <option value="week">📆 By Week (เปรียบเทียบรายสัปดาห์)</option>
+                            <option value="day">🗓️ By Day (เปรียบเทียบรายวัน)</option>
+                            <option value="category">🏷️ By Category (เปรียบเทียบหมวดหมู่)</option>
+                            <option value="priority">🚨 By Priority (เปรียบเทียบความสำคัญ)</option>
+                            <option value="falseAlarm">🔔 True vs False (เคสจริง vs ลวง)</option>
+                        </select>
+                    </div>
+
                     <!-- 1. File Slicer -->
                     <div class="space-y-1 dropdown-container" id="ddFileContainer">
-                        <label class="block text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-file-lines text-indigo-400 mr-1"></i> <span id="lblFileText">File</span></label>
+                        <label class="block text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-file-lines text-indigo-400 mr-1"></i> <span id="lblFileText">Filter Files (เลือกไฟล์ที่รวม)</span></label>
                         <button type="button" class="dropdown-toggle w-full text-xs bg-slate-950 border border-slate-700 hover:border-slate-500 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-slate-200 font-medium">
-                            <span class="text-indigo-400 font-bold truncate" id="badgeFile">All</span>
+                            <span class="text-indigo-400 font-bold truncate" id="badgeFile">All Files (Merged)</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-2"></i>
                         </button>
                         <div class="dropdown-menu p-2.5 min-w-[240px] w-full" id="ddFileMenu"></div>
@@ -1373,7 +1437,7 @@
                         </div>
                         <div class="space-y-1 dropdown-container" id="ddFalseContainer">
                             <label class="block text-[11px] font-semibold text-slate-400" id="lblFalseText">False Alarm</label>
-                            <button type="button" class="dropdown-toggle w-full text-xs bg-slate-950 border border-slate-700 hover:border-slate-500 px-2 py-1.5 rounded-xl flex items-center justify-between text-slate-200 font-medium">
+                            <button type="button" class="dropdown-toggle w-full text-xs bg-slate-950 border border-slate-700 hover:border-slate-500 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-slate-200 font-medium">
                                 <span class="text-indigo-400 font-bold truncate" id="badgeFalse">All</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
                             </button>
@@ -1396,7 +1460,21 @@
                     </div>
                 </div>
 
-                <!-- 3. Dataset Operations Widget -->
+                <!-- 3. Loaded Files List & Instant [X] Delete -->
+                <div id="sidebarLoadedFilesCard" class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-2">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i data-lucide="files" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span>Loaded Files</span>
+                        </span>
+                        <button type="button" onclick="clearAllUploadedFiles()" class="text-[10px] text-rose-400 hover:text-rose-300 underline font-semibold" title="Clear all loaded files">
+                            Clear All
+                        </button>
+                    </div>
+                    <div id="sidebarLoadedFilesList" class="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar"></div>
+                </div>
+
+                <!-- 4. Dataset Operations Widget -->
                 <div class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-2.5">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
                         <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
@@ -1436,6 +1514,28 @@
 
                 <!-- VIEW 1: EXECUTIVE DASHBOARD -->
                 <div id="viewDashboard" class="space-y-6">
+
+                    <!-- Empty State Placeholder for Case Management (Shown when dataset count is 0) -->
+                    <div id="emptyDashboardPlaceholder" class="glass-card p-8 sm:p-10 text-center border-dashed border-2 border-slate-700 max-w-2xl mx-auto my-6">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-2xl mb-3">
+                            <i data-lucide="cloud-upload" class="w-8 h-8"></i>
+                        </div>
+                        <h2 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="empty_dash_title">Ready for Incident Dataset</h2>
+                        <p class="text-xs text-slate-400 max-w-md mx-auto mb-5 leading-relaxed" data-i18n="empty_dash_desc">
+                            Upload your CSV files to analyze telemetry cases, or click below to load One Bangkok 2026 data.
+                        </p>
+                        <div class="flex flex-wrap items-center justify-center gap-3">
+                            <button onclick="loadOBKDataset(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow shadow-indigo-600/30">
+                                <i data-lucide="building-2" class="w-4 h-4"></i>
+                                <span>Load One Bangkok 2026 (164k)</span>
+                            </button>
+                            <label class="cursor-pointer inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs px-4 py-2 rounded-xl shadow transition">
+                                <i data-lucide="folder-open" class="w-4 h-4 text-emerald-400"></i>
+                                <span>Browse CSV File(s)</span>
+                                <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
+                            </label>
+                        </div>
+                    </div>
 
                     <!-- Section 1: overall -->
                     <section id="sec-overall" class="scroll-mt-20 space-y-4">
@@ -1858,10 +1958,10 @@
                 <p id="emptyDesc" class="text-xs text-slate-400 max-w-md mx-auto mb-5 leading-relaxed" data-i18n="emptyDesc">
                     System supports multi-file cross-year comparison, Sunday-to-Saturday weekly slicer, and deep root-cause intelligence.
                 </p>
-                <div class="flex items-center justify-center gap-3">
-                    <button onclick="triggerMozartSync(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow shadow-indigo-600/30">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        <span data-i18n="sync_now_btn">Sync Latest Dataset</span>
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button onclick="loadOBKDataset(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow shadow-indigo-600/30">
+                        <i data-lucide="building-2" class="w-4 h-4"></i>
+                        <span>Load One Bangkok 2026 (164k)</span>
                     </button>
                     <label class="cursor-pointer inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs px-4 py-2 rounded-xl shadow transition">
                         <i class="fa-solid fa-folder-open text-sky-400"></i>
@@ -2825,6 +2925,57 @@
             return s;
         }
 
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        function escapeQuotes(str) {
+            if (!str) return '';
+            return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function toggleSidebarDrawer() {
+            const sidebar = document.getElementById('leftSidebarNav');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar) return;
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                if (backdrop) backdrop.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+                if (backdrop) backdrop.classList.add('hidden');
+            }
+        }
+
+        function scrollToTopic(e, sectionId) {
+            if (e && e.preventDefault) e.preventDefault();
+            const el = document.getElementById(sectionId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            document.querySelectorAll('#sidebarTopicLinks .topic-nav-item').forEach(link => {
+                if (link.getAttribute('data-topic') === sectionId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            const sidebar = document.getElementById('leftSidebarNav');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar && sidebar.classList.contains('translate-x-0')) {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+                if (backdrop) backdrop.classList.add('hidden');
+            }
+        }
+
         function showToastNotification(msg) {
             const toast = document.getElementById('globalToast');
             const toastMsg = document.getElementById('globalToastMsg');
@@ -2963,6 +3114,7 @@
                             name: "OBK_Case_2026.csv",
                             records: compareRows
                         };
+                        renderUploadedFilesChips();
                         rebuildFullDataset();
                         renderCompareDashboard();
                         if (showToast) {
@@ -3047,6 +3199,7 @@
                                         : `Imported ${files.length} file(s) into Case Management (${totalRowsImported.toLocaleString()} records)`;
                                     showToastNotification(successMsg);
                                 } else {
+                                    renderUploadedFilesChips();
                                     rebuildFullDataset();
                                     renderCompareDashboard();
                                     const successMsg = (CURRENT_LANG === 'TH')
@@ -3195,33 +3348,82 @@
             return list;
         }
 
-        // Render Uploaded Files Bar with [X]
+        // Render Uploaded Files Bar and Sidebar Loaded Files List with [X] delete button
         function renderUploadedFilesChips() {
             const bar = document.getElementById('uploadedFilesBar');
             const container = document.getElementById('uploadedFilesContainer');
+            const sidebarList = document.getElementById('sidebarLoadedFilesList');
 
-            if (UPLOADED_FILES_MAP.size === 0) {
-                bar.classList.add('hidden');
-                container.innerHTML = '';
-                return;
+            const isDashboard = (CURRENT_VIEW === 'dashboard');
+            const filesList = [];
+
+            if (isDashboard) {
+                if (typeof UPLOADED_FILES_MAP !== 'undefined') {
+                    UPLOADED_FILES_MAP.forEach((records, fileName) => {
+                        filesList.push({ name: fileName, count: (records || []).length });
+                    });
+                }
+            } else {
+                if (typeof loadedFilesMap !== 'undefined') {
+                    Object.values(loadedFilesMap).forEach(fileObj => {
+                        if (fileObj && fileObj.name) {
+                            filesList.push({ name: fileObj.name, count: (fileObj.records || []).length });
+                        }
+                    });
+                }
             }
 
-            bar.classList.remove('hidden');
-            let html = '';
-            UPLOADED_FILES_MAP.forEach((records, fileName) => {
-                html += `
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200 shrink-0 shadow-sm text-[11px] group hover:border-indigo-500/50 transition">
-                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
-                        <span class="font-medium truncate max-w-[160px]" title="${fileName}">${fileName}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">(${records.length.toLocaleString()})</span>
-                        <button type="button" onclick="removeUploadedFile('${fileName}')" class="text-slate-400 hover:text-rose-400 ml-0.5 p-0.5 rounded hover:bg-slate-800 transition" title="Remove ${fileName}">
-                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-            lucide.createIcons();
+            // 1. Render Top Chips Bar
+            if (bar && container) {
+                if (filesList.length === 0) {
+                    bar.classList.add('hidden');
+                    container.innerHTML = '';
+                } else {
+                    bar.classList.remove('hidden');
+                    let html = '';
+                    filesList.forEach(f => {
+                        html += `
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200 shrink-0 shadow-sm text-[11px] group hover:border-indigo-500/50 transition">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+                                <span class="font-medium truncate max-w-[160px]" title="${escapeHTML(f.name)}">${escapeHTML(f.name)}</span>
+                                <span class="text-[10px] text-slate-400 font-mono">(${f.count.toLocaleString()})</span>
+                                <button type="button" onclick="removeUploadedFile('${escapeQuotes(f.name)}')" class="text-slate-400 hover:text-rose-400 ml-0.5 p-0.5 rounded hover:bg-slate-800 transition" title="Delete ${escapeHTML(f.name)}">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            }
+
+            // 2. Render Left Sidebar Loaded Files List
+            if (sidebarList) {
+                if (filesList.length === 0) {
+                    sidebarList.innerHTML = `<div class="text-[11px] text-slate-500 italic py-1 px-1">${CURRENT_LANG === 'TH' ? 'ยังไม่มีไฟล์ที่โหลด' : 'No files uploaded'}</div>`;
+                } else {
+                    let html = '';
+                    filesList.forEach(f => {
+                        html += `
+                            <div class="flex items-center justify-between gap-1.5 px-2 py-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-[11px] text-slate-200 hover:border-slate-700 transition">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+                                    <span class="truncate font-medium text-slate-300" title="${escapeHTML(f.name)}">${escapeHTML(f.name)}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <span class="text-[10px] font-mono text-slate-400">(${f.count.toLocaleString()})</span>
+                                    <button type="button" onclick="removeUploadedFile('${escapeQuotes(f.name)}')" class="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition" title="Delete file">
+                                        <i data-lucide="x" class="w-3.5 h-3.5 text-rose-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    sidebarList.innerHTML = html;
+                }
+            }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function removeUploadedFile(fileName) {
@@ -3230,15 +3432,21 @@
                     UPLOADED_FILES_MAP.delete(fileName);
                     renderUploadedFilesChips();
                     rebuildUnifiedDataset();
+                    showToastNotification(CURRENT_LANG === 'TH' ? `ลบไฟล์ ${fileName} เรียบร้อย` : `Removed ${fileName}`);
                 }
             } else {
+                let deleted = false;
                 for (const [key, val] of Object.entries(loadedFilesMap)) {
-                    if (val.name === fileName) {
+                    if (val && val.name === fileName) {
                         delete loadedFilesMap[key];
+                        deleted = true;
                     }
                 }
-                rebuildFullDataset();
-                renderCompareDashboard();
+                if (deleted) {
+                    renderUploadedFilesChips();
+                    rebuildFullDataset();
+                    showToastNotification(CURRENT_LANG === 'TH' ? `ลบไฟล์ ${fileName} เรียบร้อย` : `Removed ${fileName}`);
+                }
             }
             updateDataStatusBadge();
         }
@@ -3252,10 +3460,11 @@
                     rebuildUnifiedDataset();
                 } else {
                     loadedFilesMap = {};
+                    renderUploadedFilesChips();
                     rebuildFullDataset();
-                    renderCompareDashboard();
                 }
                 updateDataStatusBadge();
+                showToastNotification(CURRENT_LANG === 'TH' ? "ลบไฟล์ทั้งหมดเรียบร้อย" : "Cleared all uploaded files");
             }
         }
 
@@ -3372,6 +3581,7 @@
             const badge = document.getElementById('dataStatusBadge');
             if (TOTAL_DATASET_COUNT === 0) {
                 document.getElementById('uploadPrompt')?.classList.remove('hidden');
+                document.getElementById('emptyDashboardPlaceholder')?.classList.remove('hidden');
                 if (badge) {
                     badge.textContent = (CURRENT_LANG === 'TH') ? "พร้อมรับไฟล์ CSV" : "READY FOR CSV";
                     badge.className = "px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap shrink-0 inline-flex items-center";
@@ -3385,6 +3595,7 @@
             }
 
             document.getElementById('uploadPrompt')?.classList.add('hidden');
+            document.getElementById('emptyDashboardPlaceholder')?.classList.add('hidden');
             if (badge) {
                 badge.textContent = (CURRENT_LANG === 'TH')
                     ? `${TOTAL_DATASET_COUNT.toLocaleString()} รายการ (${UPLOADED_FILES_MAP.size} ไฟล์)`
@@ -5063,24 +5274,54 @@
                 { fill: 'rgba(244, 63, 94, 0.85)', stroke: '#fb7185' },
                 { fill: 'rgba(217, 70, 239, 0.85)', stroke: '#e879f9' },
                 { fill: 'rgba(251, 113, 133, 0.85)', stroke: '#fda4af' },
-                { fill: 'rgba(225, 29, 72, 0.85)', stroke: '#f43f5e' }
+                { fill: 'rgba(225, 29, 72, 0.85)', stroke: '#f43f5e' },
+                { fill: 'rgba(168, 85, 247, 0.85)', stroke: '#c084fc' },
+                { fill: 'rgba(236, 72, 153, 0.85)', stroke: '#f472b6' },
+                { fill: 'rgba(244, 114, 182, 0.85)', stroke: '#f9a8d4' },
+                { fill: 'rgba(192, 132, 252, 0.85)', stroke: '#d8b4fe' }
             ],
             trueEv: [
                 { fill: 'rgba(16, 185, 129, 0.85)', stroke: '#34d399' },
                 { fill: 'rgba(20, 184, 166, 0.85)', stroke: '#2dd4bf' },
-                { fill: 'rgba(5, 150, 105, 0.85)', stroke: '#10b981' }
+                { fill: 'rgba(5, 150, 105, 0.85)', stroke: '#10b981' },
+                { fill: 'rgba(13, 148, 136, 0.85)', stroke: '#14b8a6' },
+                { fill: 'rgba(52, 211, 153, 0.85)', stroke: '#6ee7b7' },
+                { fill: 'rgba(45, 212, 191, 0.85)', stroke: '#99f6e4' },
+                { fill: 'rgba(16, 185, 129, 0.85)', stroke: '#6ee7b7' },
+                { fill: 'rgba(34, 197, 94, 0.85)', stroke: '#86efac' }
             ],
             falseEv: [
                 { fill: 'rgba(245, 158, 11, 0.85)', stroke: '#fbbf24' },
                 { fill: 'rgba(234, 179, 8, 0.85)', stroke: '#facc15' },
-                { fill: 'rgba(249, 115, 22, 0.85)', stroke: '#fb923c' }
+                { fill: 'rgba(249, 115, 22, 0.85)', stroke: '#fb923c' },
+                { fill: 'rgba(251, 146, 60, 0.85)', stroke: '#fdba74' },
+                { fill: 'rgba(217, 119, 6, 0.85)', stroke: '#f59e0b' },
+                { fill: 'rgba(253, 186, 116, 0.85)', stroke: '#fed7aa' },
+                { fill: 'rgba(234, 88, 12, 0.85)', stroke: '#fb923c' },
+                { fill: 'rgba(252, 211, 77, 0.85)', stroke: '#fde68a' }
             ],
             recurring: [
                 { fill: 'rgba(99, 102, 241, 0.85)', stroke: '#818cf8' },
                 { fill: 'rgba(14, 165, 233, 0.85)', stroke: '#38bdf8' },
-                { fill: 'rgba(6, 182, 212, 0.85)', stroke: '#22d3ee' }
+                { fill: 'rgba(6, 182, 212, 0.85)', stroke: '#22d3ee' },
+                { fill: 'rgba(59, 130, 246, 0.85)', stroke: '#60a5fa' },
+                { fill: 'rgba(99, 102, 241, 0.85)', stroke: '#a5b4fc' },
+                { fill: 'rgba(79, 70, 229, 0.85)', stroke: '#818cf8' },
+                { fill: 'rgba(129, 140, 248, 0.85)', stroke: '#c7d2fe' },
+                { fill: 'rgba(56, 189, 248, 0.85)', stroke: '#bae6fd' }
             ]
         };
+
+        function getRecordComparisonKey(d, comparisonType) {
+            if (!d) return '';
+            if (comparisonType === 'file') return d.SourceFileName || '';
+            if (comparisonType === 'week') return d.WeekKey || '';
+            if (comparisonType === 'day') return d.Day !== undefined ? d.Day : '';
+            if (comparisonType === 'category') return d.EventCategory || '';
+            if (comparisonType === 'priority') return d.Priority || '';
+            if (comparisonType === 'falseAlarm') return d.IsFalseAlarm || '';
+            return d.Month !== undefined ? d.Month : '';
+        }
 
         function getSundayToSaturdayWeekInfo(dateStr) {
             if (!dateStr) return { key: '', label: '', startStr: '', endStr: '' };
@@ -5758,12 +5999,20 @@
 
             const optionsContainer = menu.querySelector('.options-container');
 
+            const isFileMenu = (menuId === 'ddFileMenu');
             list.forEach(item => {
-                const row = document.createElement('label');
-                row.className = 'flex items-center gap-2 text-xs text-slate-300 hover:text-white cursor-pointer px-1.5 py-1 rounded hover:bg-slate-800/60';
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between text-xs text-slate-300 hover:text-white px-1.5 py-1 rounded hover:bg-slate-800/60 group';
                 row.innerHTML = `
-                    <input type="checkbox" value="${item}" ${activeSet.has(item) ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0">
-                    <span class="truncate" title="${item}">${formatter ? formatter(item) : item}</span>
+                    <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1 truncate">
+                        <input type="checkbox" value="${item}" ${activeSet.has(item) ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0">
+                        <span class="truncate" title="${escapeHTML(item)}">${formatter ? formatter(item) : escapeHTML(item)}</span>
+                    </label>
+                    ${isFileMenu ? `
+                        <button type="button" onclick="event.stopPropagation(); removeUploadedFile('${escapeQuotes(item)}')" class="text-slate-500 hover:text-rose-400 p-0.5 rounded ml-1 opacity-70 group-hover:opacity-100 transition" title="Delete file">
+                            <i class="fa-solid fa-xmark text-rose-400"></i>
+                        </button>
+                    ` : ''}
                 `;
 
                 row.querySelector('input').addEventListener('change', (e) => {
@@ -5935,31 +6184,75 @@
             const selectedFileList = Array.from(selectedFilters.files);
             const selectedWeekList = Array.from(selectedFilters.weeks).sort();
             const selectedDayList = Array.from(selectedFilters.days).sort((a,b) => a-b);
+            const selectedCategoryList = Array.from(selectedFilters.categories).sort();
+            const selectedPriorityList = Array.from(selectedFilters.priorities).sort();
+            const selectedFalseAlarmList = Array.from(selectedFilters.falseAlarms);
+
+            const dimSelect = document.getElementById('compareDimensionSelect');
+            const chosenDim = dimSelect ? dimSelect.value : 'auto';
 
             let comparisonGroups = [];
             let comparisonType = 'month';
 
-            if (selectedFileList.length > 1) {
-                comparisonType = 'file';
-                comparisonGroups = selectedFileList;
-            } else if (selectedWeekList.length > 1) {
-                comparisonType = 'week';
-                comparisonGroups = selectedWeekList;
-            } else if (selectedDayList.length > 1 && selectedDayList.length <= 7) {
-                comparisonType = 'day';
-                comparisonGroups = selectedDayList;
-            } else if (selectedMonthList.length > 1) {
+            if (chosenDim === 'month') {
                 comparisonType = 'month';
-                comparisonGroups = selectedMonthList;
-            } else if (selectedWeekList.length === 1) {
+                comparisonGroups = selectedMonthList.length > 0 ? selectedMonthList : Array.from(new Set(filtered.map(d => d.Month))).sort((a,b)=>a-b);
+            } else if (chosenDim === 'week') {
                 comparisonType = 'week';
-                comparisonGroups = selectedWeekList;
-            } else if (selectedDayList.length === 1) {
+                comparisonGroups = selectedWeekList.length > 0 ? selectedWeekList : Array.from(new Set(filtered.map(d => d.WeekKey))).filter(Boolean).sort();
+            } else if (chosenDim === 'day') {
                 comparisonType = 'day';
-                comparisonGroups = selectedDayList;
+                comparisonGroups = selectedDayList.length > 0 ? selectedDayList : Array.from(new Set(filtered.map(d => d.Day))).filter(v => v !== undefined && v !== null).sort((a,b)=>a-b);
+            } else if (chosenDim === 'category') {
+                comparisonType = 'category';
+                comparisonGroups = selectedCategoryList.length > 0 ? selectedCategoryList : Array.from(new Set(filtered.map(d => d.EventCategory))).filter(Boolean).sort();
+            } else if (chosenDim === 'priority') {
+                comparisonType = 'priority';
+                comparisonGroups = selectedPriorityList.length > 0 ? selectedPriorityList : Array.from(new Set(filtered.map(d => d.Priority))).filter(Boolean).sort();
+            } else if (chosenDim === 'falseAlarm') {
+                comparisonType = 'falseAlarm';
+                comparisonGroups = ['No', 'Yes'];
             } else {
-                comparisonType = 'month';
-                comparisonGroups = selectedMonthList.length > 0 ? selectedMonthList : [1];
+                // Auto mode: Compare based on active filter selections!
+                // NOTE: Multiple uploaded files are merged into 1 dataset and NOT compared file-vs-file.
+                if (selectedMonthList.length > 1) {
+                    comparisonType = 'month';
+                    comparisonGroups = selectedMonthList;
+                } else if (selectedWeekList.length > 1) {
+                    comparisonType = 'week';
+                    comparisonGroups = selectedWeekList;
+                } else if (selectedDayList.length > 1 && selectedDayList.length <= 7) {
+                    comparisonType = 'day';
+                    comparisonGroups = selectedDayList;
+                } else if (selectedCategoryList.length > 1 && selectedCategoryList.length <= 6) {
+                    comparisonType = 'category';
+                    comparisonGroups = selectedCategoryList;
+                } else if (selectedPriorityList.length > 1 && selectedPriorityList.length <= 5) {
+                    comparisonType = 'priority';
+                    comparisonGroups = selectedPriorityList;
+                } else if (selectedWeekList.length === 1) {
+                    comparisonType = 'week';
+                    comparisonGroups = selectedWeekList;
+                } else if (selectedDayList.length === 1) {
+                    comparisonType = 'day';
+                    comparisonGroups = selectedDayList;
+                } else {
+                    comparisonType = 'month';
+                    comparisonGroups = selectedMonthList.length > 0 ? selectedMonthList : [1];
+                }
+            }
+
+            if (comparisonGroups.length === 0) {
+                if (comparisonType === 'month') comparisonGroups = [1];
+                else if (comparisonType === 'week') comparisonGroups = Array.from(new Set(filtered.map(d => d.WeekKey))).filter(Boolean).slice(0, 4);
+                else if (comparisonType === 'day') comparisonGroups = Array.from(new Set(filtered.map(d => d.Day))).filter(v => v !== undefined && v !== null).slice(0, 7);
+                else if (comparisonType === 'category') comparisonGroups = Array.from(new Set(filtered.map(d => d.EventCategory))).filter(Boolean).slice(0, 5);
+                else if (comparisonType === 'priority') comparisonGroups = Array.from(new Set(filtered.map(d => d.Priority))).filter(Boolean).slice(0, 4);
+                else if (comparisonType === 'falseAlarm') comparisonGroups = ['No', 'Yes'];
+            }
+
+            if (comparisonGroups.length > 8) {
+                comparisonGroups = comparisonGroups.slice(0, 8);
             }
 
             const latestMonth = selectedMonthList[selectedMonthList.length - 1] || 1;
@@ -5997,6 +6290,15 @@
                 } else if (comparisonType === 'day') {
                     count = filtered.filter(d => d.Day === grp).length;
                     name = currentLang === 'th' ? `วันที่ ${grp}` : `Day ${grp}`;
+                } else if (comparisonType === 'category') {
+                    count = filtered.filter(d => d.EventCategory === grp).length;
+                    name = grp || (currentLang === 'th' ? 'ไม่มีหมวด' : 'Uncategorized');
+                } else if (comparisonType === 'priority') {
+                    count = filtered.filter(d => d.Priority === grp).length;
+                    name = grp || (currentLang === 'th' ? 'ไม่ระบุ' : 'Normal');
+                } else if (comparisonType === 'falseAlarm') {
+                    count = filtered.filter(d => d.IsFalseAlarm === grp).length;
+                    name = grp === 'No' ? (currentLang === 'th' ? 'เคสจริง' : 'True') : (currentLang === 'th' ? 'ลวง' : 'False');
                 } else {
                     count = filtered.filter(d => d.Month === grp).length;
                     name = MONTH_NAMES[grp] ? MONTH_NAMES[grp][currentLang] : `M-${grp}`;
@@ -6031,6 +6333,12 @@
                 return MONTH_NAMES[grp] ? MONTH_NAMES[grp][currentLang] : `M-${grp}`;
             } else if (comparisonType === 'day') {
                 return currentLang === 'th' ? `วันที่ ${grp}` : `Day ${grp}`;
+            } else if (comparisonType === 'category') {
+                return grp || (currentLang === 'th' ? 'ไม่มีหมวด' : 'Uncategorized');
+            } else if (comparisonType === 'priority') {
+                return grp || (currentLang === 'th' ? 'ไม่ระบุ' : 'Normal');
+            } else if (comparisonType === 'falseAlarm') {
+                return grp === 'No' ? (currentLang === 'th' ? 'เคสจริง (True)' : 'True Event') : (currentLang === 'th' ? 'แจ้งเตือนลวง (False)' : 'False Alarm');
             }
             return grp.length > 15 ? grp.substring(0, 14) + '..' : grp;
         }
@@ -6040,9 +6348,7 @@
             filtered.forEach(d => {
                 const ev = d.EventType;
                 if (!countsByEvAndGrp[ev]) countsByEvAndGrp[ev] = {};
-                const key = comparisonType === 'file' ? d.SourceFileName : 
-                            comparisonType === 'week' ? d.WeekKey : 
-                            comparisonType === 'day' ? d.Day : d.Month;
+                const key = getRecordComparisonKey(d, comparisonType);
                 countsByEvAndGrp[ev][key] = (countsByEvAndGrp[ev][key] || 0) + 1;
             });
 
@@ -6116,9 +6422,7 @@
             trueCases.forEach(d => {
                 const ev = d.EventType;
                 if (!countsByEvAndGrp[ev]) countsByEvAndGrp[ev] = {};
-                const key = comparisonType === 'file' ? d.SourceFileName : 
-                            comparisonType === 'week' ? d.WeekKey : 
-                            comparisonType === 'day' ? d.Day : d.Month;
+                const key = getRecordComparisonKey(d, comparisonType);
                 countsByEvAndGrp[ev][key] = (countsByEvAndGrp[ev][key] || 0) + 1;
             });
 
@@ -6191,9 +6495,7 @@
             falseCases.forEach(d => {
                 const ev = d.EventType;
                 if (!countsByEvAndGrp[ev]) countsByEvAndGrp[ev] = {};
-                const key = comparisonType === 'file' ? d.SourceFileName : 
-                            comparisonType === 'week' ? d.WeekKey : 
-                            comparisonType === 'day' ? d.Day : d.Month;
+                const key = getRecordComparisonKey(d, comparisonType);
                 countsByEvAndGrp[ev][key] = (countsByEvAndGrp[ev][key] || 0) + 1;
             });
 
@@ -6265,9 +6567,7 @@
             filtered.forEach(d => {
                 const pair = `${d.Location || 'Area'} - ${d.EventType}`;
                 if (!countsByPairAndGrp[pair]) countsByPairAndGrp[pair] = {};
-                const key = comparisonType === 'file' ? d.SourceFileName : 
-                            comparisonType === 'week' ? d.WeekKey : 
-                            comparisonType === 'day' ? d.Day : d.Month;
+                const key = getRecordComparisonKey(d, comparisonType);
                 countsByPairAndGrp[pair][key] = (countsByPairAndGrp[pair][key] || 0) + 1;
             });
 
@@ -7052,6 +7352,7 @@
                 }
             }
 
+            renderUploadedFilesChips();
             updateDataStatusBadge();
             updateActiveFilterSummary();
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -7229,6 +7530,15 @@
                     modalBadge.classList.remove('hidden');
                 } else {
                     modalBadge.classList.add('hidden');
+                }
+            }
+            const mobCount = document.getElementById('mobileActiveFilterCount');
+            if (mobCount) {
+                if (activeCount > 0) {
+                    mobCount.textContent = activeCount;
+                    mobCount.classList.remove('hidden');
+                } else {
+                    mobCount.classList.add('hidden');
                 }
             }
 
