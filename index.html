@@ -834,6 +834,13 @@
                         <span data-i18n="filters" class="hidden sm:inline">Filters</span>
                         <span id="activeFilterBadge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-600 text-white font-bold">0</span>
                     </button>
+
+                    <!-- Upload CSV Button in Top Navbar -->
+                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition shadow-sm shrink-0 cursor-pointer" title="Upload CSV Dataset">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span data-i18n="nav_upload" class="hidden sm:inline">Upload</span>
+                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
+                    </label>
                     
                     <!-- Active Cross Filter Badge -->
                     <div id="activeCrossFilterBadge" class="hidden items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[11px] font-semibold shrink-0">
@@ -879,6 +886,24 @@
                                         <span data-i18n="commander_shift">Shift Alpha &bull; Active Duty</span>
                                     </span>
                                 </div>
+                            </div>
+
+                            <!-- Dataset Management & Quick Switcher -->
+                            <div class="space-y-1 pb-2 border-b border-slate-700/80">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1" data-i18n="dataset_mgmt">Dataset Operations</span>
+                                <label class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-emerald-400 hover:text-emerald-300 transition cursor-pointer">
+                                    <i data-lucide="file-plus-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                    <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
+                                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
+                                </label>
+                                <button onclick="loadOBKDataset()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-indigo-300 hover:text-white transition">
+                                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                    <span data-i18n="load_obk">One Bangkok 2026 (164k)</span>
+                                </button>
+                                <button onclick="loadDefaultDemoData()" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-slate-300 hover:text-white transition">
+                                    <i data-lucide="database" class="w-3.5 h-3.5 text-sky-400"></i>
+                                    <span data-i18n="load_tpq">The PARQ 2026 (Demo)</span>
+                                </button>
                             </div>
 
                             <!-- Executive Export Suite -->
@@ -1270,9 +1295,13 @@
                         <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
                         <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event); toggleMobileDrawer();">
                     </label>
+                    <button onclick="loadOBKDataset(); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-indigo-900/50 hover:bg-indigo-800/70 text-indigo-300 hover:text-white text-xs font-semibold transition border border-indigo-700/60">
+                        <i data-lucide="building-2" class="w-4 h-4 text-indigo-400"></i>
+                        <span data-i18n="load_obk">One Bangkok 2026 (164k)</span>
+                    </button>
                     <button onclick="loadDefaultDemoData(); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium transition border border-slate-700">
                         <i data-lucide="database" class="w-4 h-4 text-sky-400"></i>
-                        <span data-i18n="load_demo_dataset">Load Live Demo (2026)</span>
+                        <span data-i18n="load_tpq">The PARQ 2026 (Demo)</span>
                     </button>
                 </div>
             </div>
@@ -2040,6 +2069,10 @@
                 show_filters: "Show Filters",
                 exit_present: "Exit Present",
                 sync_csv: "Upload CSV(s)",
+                nav_upload: "Upload",
+                dataset_mgmt: "Dataset Operations",
+                load_obk: "One Bangkok 2026 (164k)",
+                load_tpq: "The PARQ 2026 (Demo)",
                 present_mode: "Present Mode",
                 export: "Export",
                 export_pdf: "Export Dashboard as PDF",
@@ -2126,6 +2159,10 @@
                 show_filters: "แสดงตัวกรอง",
                 exit_present: "ออกจากโหมดนำเสนอ",
                 sync_csv: "อัปโหลดไฟล์ CSV",
+                nav_upload: "อัปโหลด",
+                dataset_mgmt: "จัดการชุดข้อมูล",
+                load_obk: "วัน แบงค็อก 2026 (1.6 แสนเคส)",
+                load_tpq: "เดอะ ปาร์ค 2026 (ข้อมูลตัวอย่าง)",
                 present_mode: "โหมดนำเสนอเต็มจอ",
                 export: "ส่งออกไฟล์",
                 export_pdf: "ส่งออกรายงานเป็น PDF",
@@ -2580,6 +2617,81 @@
             }
         }
 
+        // Upfront Column Resolver: Maps candidate headers to exact column keys in 1 step
+        function resolveColumnKey(sampleRow, candidates) {
+            if (!sampleRow) return null;
+            const keys = Object.keys(sampleRow);
+            for (const c of candidates) {
+                if (sampleRow[c] !== undefined) return c;
+            }
+            const cleanCand = candidates.map(c => c.toLowerCase().replace(/[^a-z0-9]/g, ''));
+            for (const k of keys) {
+                const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const idx = cleanCand.indexOf(cleanK);
+                if (idx !== -1) return k;
+            }
+            return null;
+        }
+
+        function extractZoneFromLocation(loc) {
+            if (!loc) return 'CI (Common Infra)';
+            const l = loc.toString();
+            if (l.includes('Zone 1')) return 'Zone 1 (Office)';
+            if (l.includes('Zone 2')) return 'Zone 2 (Tower 4)';
+            if (l.includes('Zone 3')) return 'Zone 3 (Tower 3)';
+            if (l.includes('Zone 4')) return 'Zone 4 (Retail/Hotel)';
+            if (l.includes('Zone 5')) return 'Zone 5 (Tower 5)';
+            if (l.includes('CUP')) return 'CUP (Central Utility Plant)';
+            if (l.includes('CI') || l.includes('Common Infra')) return 'CI (Common Infra)';
+            if (l.includes('Park')) return 'One Bangkok Park';
+            return 'Common Infra';
+        }
+
+        function cleanLocation(loc) {
+            if (!loc) return 'General';
+            const parts = loc.split('.').map(p => p.trim()).filter(Boolean);
+            if (parts.length === 0) return 'General';
+            let last = parts[parts.length - 1];
+            last = last.replace(/^One Bangkok Tower \d+ \([^)]+\) -\s*/i, '');
+            last = last.replace(/^One Bangkok\s*/i, '');
+            return last || parts[0];
+        }
+
+        function cleanEventType(ev) {
+            if (!ev) return 'Operational Alarm';
+            let s = ev.replace(/\?+/g, '').replace(/-\s*$/, '').trim();
+            s = s.replace(/\s*-\s*\(CAT\s*\d+\)$/i, '');
+            if (!s) return 'Operational Alarm';
+            return s;
+        }
+
+        function showToastNotification(msg) {
+            const toast = document.getElementById('globalToast');
+            const toastMsg = document.getElementById('globalToastMsg');
+            if (!toast || !toastMsg) return;
+            toastMsg.textContent = msg;
+            toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 4000);
+        }
+
+        function resetActiveFiltersToAll() {
+            CROSS_FILTER_TEAM = null;
+            CROSS_FILTER_EVENT = null;
+            const badge = document.getElementById('activeCrossFilterBadge');
+            if (badge) badge.classList.add('hidden');
+
+            const ids = ['filterMonth', 'filterCategory', 'filterPriority', 'filterZone', 'filterFA'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = 'ALL';
+            });
+            updateActiveFilterSummary();
+        }
+
         // Auto Fetch CSV or fallback to Demo Data
         function autoFetchCSV() {
             const badge = document.getElementById('dataStatusBadge');
@@ -2587,8 +2699,8 @@
             badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30";
 
             const candidateFiles = [
-                { file: 'TPQ_Case_2026.csv', name: 'The PARQ' },
                 { file: 'OBK_Case_2026.csv', name: 'One Bangkok' },
+                { file: 'TPQ_Case_2026.csv', name: 'The PARQ' },
                 { file: 'FYI_Case_2026.csv', name: 'FYI Center' },
                 { file: 'SYMT_Case_2026.csv', name: 'Samyan Mitrtown Tower' },
                 { file: 'SYMR_Case_2026.csv', name: 'Samyan Mitstown Retail' }
@@ -2597,11 +2709,11 @@
             let attempt = 0;
             function tryNext() {
                 if (attempt >= candidateFiles.length) {
-                    // Try auto loading demo data so users immediately see a working dashboard!
                     loadDefaultDemoData();
                     return;
                 }
                 const cand = candidateFiles[attempt++];
+                badge.textContent = (CURRENT_LANG === 'TH') ? `กำลังโหลด ${cand.name}...` : `LOADING ${cand.name.toUpperCase()}...`;
                 fetch(cand.file)
                     .then(res => {
                         if (!res.ok) throw new Error("not found");
@@ -2615,13 +2727,16 @@
                             transformHeader: h => (h || '').trim().replace(/^\ufeff/, '')
                         });
                         if (parsedResults.data && parsedResults.data.length > 0) {
-                            const parsed = convertRawRowsToModel(parsedResults.data);
+                            const parsed = convertRawRowsToModel(parsedResults.data, cand.file);
                             const compareRows = convertRawRowsToCompareModel(parsedResults.data, cand.file);
+                            UPLOADED_FILES_MAP.clear();
+                            loadedFilesMap = {};
                             UPLOADED_FILES_MAP.set(cand.file, parsed);
-                            loadedFilesMap['file-cand'] = {
+                            loadedFilesMap['file-' + cand.name.toLowerCase().replace(/[^a-z0-9]/g,'')] = {
                                 name: cand.file,
                                 records: compareRows
                             };
+                            resetActiveFiltersToAll();
                             renderUploadedFilesChips();
                             rebuildUnifiedDataset();
                             rebuildFullDataset();
@@ -2635,6 +2750,45 @@
                     .catch(() => tryNext());
             }
             tryNext();
+        }
+
+        function loadOBKDataset() {
+            const badge = document.getElementById('dataStatusBadge');
+            badge.textContent = (CURRENT_LANG === 'TH') ? "กำลังโหลด One Bangkok..." : "LOADING ONE BANGKOK...";
+            badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
+            fetch('OBK_Case_2026.csv')
+                .then(res => {
+                    if (!res.ok) throw new Error("File not found");
+                    return res.text();
+                })
+                .then(csv => {
+                    const parsedResults = Papa.parse(csv, { 
+                        header: true, 
+                        skipEmptyLines: 'greedy', 
+                        transformHeader: h => (h || '').trim().replace(/^\ufeff/, '') 
+                    });
+                    const parsed = convertRawRowsToModel(parsedResults.data, 'OBK_Case_2026.csv');
+                    const compareRows = convertRawRowsToCompareModel(parsedResults.data, 'OBK_Case_2026.csv');
+                    updateProjectBranding("One Bangkok");
+                    UPLOADED_FILES_MAP.clear();
+                    loadedFilesMap = {};
+                    UPLOADED_FILES_MAP.set("OBK_Case_2026.csv", parsed);
+                    loadedFilesMap['file-obk'] = {
+                        name: "OBK_Case_2026.csv",
+                        records: compareRows
+                    };
+                    resetActiveFiltersToAll();
+                    renderUploadedFilesChips();
+                    rebuildUnifiedDataset();
+                    rebuildFullDataset();
+                    if (CURRENT_VIEW === 'compare') {
+                        renderCompareDashboard();
+                    }
+                    showToastNotification(CURRENT_LANG === 'TH' ? `โหลดข้อมูล One Bangkok สำเร็จ (${parsed.length.toLocaleString()} รายการ)` : `Loaded One Bangkok (${parsed.length.toLocaleString()} records)`);
+                })
+                .catch(err => {
+                    alert('Error loading One Bangkok dataset: ' + err.message);
+                });
         }
 
         // Handle multiple file upload from input[type=file]
@@ -2658,10 +2812,12 @@
 
         function processFileList(files) {
             const badge = document.getElementById('dataStatusBadge');
-            badge.textContent = (CURRENT_LANG === 'TH') ? "กำลังประมวลผลไฟล์..." : "PARSING CSV(S)...";
+            badge.textContent = (CURRENT_LANG === 'TH') ? `กำลังประมวลผล ${files.length} ไฟล์...` : `PARSING ${files.length} FILE(S)...`;
             badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
 
             let processed = 0;
+            let totalRowsImported = 0;
+
             files.forEach(file => {
                 detectProjectFromFilename(file.name);
                 Papa.parse(file, {
@@ -2669,24 +2825,34 @@
                     skipEmptyLines: 'greedy',
                     transformHeader: h => (h || '').trim().replace(/^\ufeff/, ''),
                     complete: function(results) {
-                        const parsedRecords = convertRawRowsToModel(results.data);
-                        UPLOADED_FILES_MAP.set(file.name, parsedRecords);
+                        try {
+                            const parsedRecords = convertRawRowsToModel(results.data, file.name);
+                            UPLOADED_FILES_MAP.set(file.name, parsedRecords);
 
-                        const compareRecords = convertRawRowsToCompareModel(results.data, file.name);
-                        const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-                        loadedFilesMap[fileId] = {
-                            name: file.name,
-                            records: compareRecords
-                        };
+                            const compareRecords = convertRawRowsToCompareModel(results.data, file.name);
+                            const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+                            loadedFilesMap[fileId] = {
+                                name: file.name,
+                                records: compareRecords
+                            };
+                            totalRowsImported += parsedRecords.length;
+                        } catch (err) {
+                            console.error(`Error processing rows for ${file.name}:`, err);
+                        }
 
                         processed++;
                         if (processed === files.length) {
+                            resetActiveFiltersToAll();
                             renderUploadedFilesChips();
                             rebuildUnifiedDataset();
                             rebuildFullDataset();
                             if (CURRENT_VIEW === 'compare') {
                                 renderCompareDashboard();
                             }
+                            const successMsg = (CURRENT_LANG === 'TH')
+                                ? `นำเข้า ${files.length} ไฟล์สำเร็จ (${totalRowsImported.toLocaleString()} รายการ)`
+                                : `Imported ${files.length} file(s) successfully (${totalRowsImported.toLocaleString()} records)`;
+                            showToastNotification(successMsg);
                         }
                     },
                     error: function(err) {
@@ -2710,63 +2876,76 @@
             return convertRawRowsToModel(res.data);
         }
 
-        function findFieldValue(row, possibleHeaders, defaultVal = '') {
-            const rowKeys = Object.keys(row);
-            for (const target of possibleHeaders) {
-                const exact = row[target];
-                if (exact !== undefined && exact !== null && String(exact).trim() !== '') {
-                    return String(exact).trim();
-                }
-                const cleanTarget = target.toLowerCase().replace(/[^a-z0-9]/g, '');
-                for (const k of rowKeys) {
-                    const cleanKey = k.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    if (cleanKey === cleanTarget && row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
-                        return String(row[k]).trim();
-                    }
-                }
-            }
-            return defaultVal;
-        }
+        function convertRawRowsToModel(rows, fileName = '') {
+            if (!rows || rows.length === 0) return [];
+            const sampleRow = rows.find(r => r && Object.keys(r).length > 0) || rows[0];
+            if (!sampleRow) return [];
 
-        function convertRawRowsToModel(rows) {
+            const colCaseNo = resolveColumnKey(sampleRow, ['Case No', 'CaseNo', 'Case_No', 'Incident ID', 'Work Order']);
+            const colCreated = resolveColumnKey(sampleRow, ['Created on', 'Created On', 'CreatedDate', 'Incident Date', 'Date']);
+            const colResolved = resolveColumnKey(sampleRow, ['Resolved on', 'Resolved On', 'Completed On', 'Closed Date', 'Closed On']);
+            const colCat = resolveColumnKey(sampleRow, ['Event Category', 'Category', 'System']);
+            const colPrio = resolveColumnKey(sampleRow, ['Priority', 'Severity', 'Level']);
+            const colZone = resolveColumnKey(sampleRow, ['Zone', 'Site', 'Building Zone', 'Component', 'Building']);
+            const colLoc = resolveColumnKey(sampleRow, ['Location', 'Area', 'Room']);
+            const colEvType = resolveColumnKey(sampleRow, ['Event type', 'Event Type', 'EventType', 'Incident Type']);
+            const colCreatedBy = resolveColumnKey(sampleRow, ['Created by', 'Created By', 'Team', 'Created by Team', 'Assignee']);
+            const colStatus = resolveColumnKey(sampleRow, ['Status', 'State', 'Case Status']);
+            const colWOStatus = resolveColumnKey(sampleRow, ['Work Order Status', 'WO Status']);
+            const colFA = resolveColumnKey(sampleRow, ['is false alarm', 'Is False Alarm', 'False Alarm', 'IsFA']);
+            const colCompSLA = resolveColumnKey(sampleRow, ['Meet SLA Completion', 'MeetSLACompletion', 'CompletionSLA']);
+            const colRespSLA = resolveColumnKey(sampleRow, ['SLA Response Time', 'SLAResponseTime', 'ResponseSLA']);
+
             const list = [];
             let autoIdCounter = 1;
+            const isOBK = (fileName || '').toLowerCase().includes('obk') || (sampleRow['Location'] && sampleRow['Location'].includes('One Bangkok'));
 
-            rows.forEach(r => {
-                if (!r || Object.values(r).every(v => !v || String(v).trim() === '')) return;
+            for (let i = 0; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r || Object.values(r).every(v => !v || String(v).trim() === '')) continue;
 
-                const caseNo = findFieldValue(r, [
-                    'Case No', 'CaseNo', 'Case_No', 'Incident ID', 'Work Order'
-                ], `CASE-${String(autoIdCounter++).padStart(5, '0')}`);
-
-                const createdOnStr = findFieldValue(r, ['Created on', 'Created On', 'Created Date', 'Date'], '-');
-                const resolvedOnStr = findFieldValue(r, ['Resolved on', 'Resolved On', 'Completed On', 'Closed Date'], '-');
+                const caseNo = (colCaseNo && r[colCaseNo]) ? String(r[colCaseNo]).trim() : `CASE-${String(autoIdCounter++).padStart(5, '0')}`;
+                const createdOnStr = (colCreated && r[colCreated]) ? String(r[colCreated]).trim() : '-';
+                const resolvedOnStr = (colResolved && r[colResolved]) ? String(r[colResolved]).trim() : '-';
                 const month = extractMonthFromDate(createdOnStr);
 
-                const faRaw = findFieldValue(r, ['is false alarm', 'Is False Alarm', 'False Alarm', 'IsFA'], 'No').toLowerCase();
+                const faRaw = (colFA && r[colFA]) ? String(r[colFA]).trim().toLowerCase() : 'no';
                 const isFA = (faRaw === 'yes' || faRaw === 'true' || faRaw === '1' || faRaw === 'y');
 
-                const compSLARaw = findFieldValue(r, ['Meet SLA Completion', 'MeetSLACompletion', 'CompletionSLA'], '').toLowerCase();
+                const compSLARaw = (colCompSLA && r[colCompSLA]) ? String(r[colCompSLA]).trim().toLowerCase() : '';
                 const compSLA = compSLARaw.includes('pass');
 
-                const respSLARaw = findFieldValue(r, ['SLA Response Time', 'SLAResponseTime', 'ResponseSLA'], '').toLowerCase();
+                const respSLARaw = (colRespSLA && r[colRespSLA]) ? String(r[colRespSLA]).trim().toLowerCase() : '';
                 const respSLA = respSLARaw.includes('pass');
 
                 const mttrMins = calculateMTTRMinutes(createdOnStr, resolvedOnStr);
                 const hasMTTR = mttrMins > 0;
 
-                const status = findFieldValue(r, ['Status', 'State', 'Case Status'], 'Open');
-                const woStatus = findFieldValue(r, ['Work Order Status', 'WO Status'], '');
-                const locStr = findFieldValue(r, ['Location', 'Area', 'Room'], 'General');
-                const cat = findFieldValue(r, ['Event Category', 'Category', 'System'], 'General');
+                const status = (colStatus && r[colStatus]) ? String(r[colStatus]).trim() : 'Open';
+                const woStatus = (colWOStatus && r[colWOStatus]) ? String(r[colWOStatus]).trim() : '';
+                
+                const rawLoc = (colLoc && r[colLoc]) ? String(r[colLoc]).trim() : 'General';
+                const locStr = cleanLocation(rawLoc);
 
-                const rawCreatedBy = findFieldValue(r, ['Created by', 'Created By', 'Team', 'Created by Team'], 'Others');
+                let cat = (colCat && r[colCat]) ? String(r[colCat]).trim().replace(/^FM_/, '') : 'General';
+                if (!cat) cat = 'General';
+
+                const rawCreatedBy = (colCreatedBy && r[colCreatedBy]) ? String(r[colCreatedBy]).trim() : 'Others';
                 const team = mapCreatedByTeam(rawCreatedBy);
 
-                const siteZone = findFieldValue(r, ['Site', 'Component', 'Building Zone', 'Zone', 'Building'], 'The PARQ');
-                const evType = findFieldValue(r, ['Event type', 'Event Type', 'EventType', 'Incident Type'], 'Others');
+                let siteZone = (colZone && r[colZone]) ? String(r[colZone]).trim() : '';
+                if (!siteZone || siteZone === 'General' || siteZone === 'The PARQ') {
+                    if (isOBK || rawLoc.includes('One Bangkok') || rawLoc.includes('Zone') || rawLoc.includes('CI')) {
+                        siteZone = extractZoneFromLocation(rawLoc);
+                    } else if (!siteZone) {
+                        siteZone = 'The PARQ';
+                    }
+                }
 
-                const prio = findFieldValue(r, ['Priority', 'Severity', 'Level'], 'CAT 3');
+                const rawEvType = (colEvType && r[colEvType]) ? String(r[colEvType]).trim() : 'Others';
+                const evType = cleanEventType(rawEvType);
+
+                const prio = (colPrio && r[colPrio]) ? String(r[colPrio]).trim() : 'CAT 3';
                 const agingDays = calculateDaysAging(createdOnStr);
 
                 list.push({
@@ -2789,7 +2968,7 @@
                     hasMTTR: hasMTTR,
                     loc: locStr
                 });
-            });
+            }
             return list;
         }
 
@@ -3053,7 +3232,11 @@
                 opt.title = v;
                 sel.appendChild(opt);
             });
-            if (values.includes(current)) sel.value = current;
+            if (values.includes(current)) {
+                sel.value = current;
+            } else {
+                sel.value = 'ALL';
+            }
         }
 
         function renderStatusMultiSelect() {
@@ -3900,7 +4083,13 @@
 
             document.getElementById('teamsCountBadge').textContent = `${sorted.length} Teams`;
 
-            const requiredHeight = Math.max(250, sorted.length * 28);
+            const displayTeams = sorted.slice(0, 15);
+            const otherCount = sorted.slice(15).reduce((acc, curr) => acc + curr[1], 0);
+            if (otherCount > 0) {
+                displayTeams.push([(CURRENT_LANG === 'TH') ? 'ทีมอื่นๆ' : 'Other Teams', otherCount]);
+            }
+
+            const requiredHeight = Math.max(220, displayTeams.length * 28);
             const wrapper = document.getElementById('teamCanvasWrapper');
             wrapper.style.height = `${requiredHeight}px`;
 
@@ -3910,10 +4099,10 @@
             createdByChart = new Chart(document.getElementById('createdByChart').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: sorted.map(s => s[0]),
+                    labels: displayTeams.map(s => s[0]),
                     datasets: [{
-                        data: sorted.map(s => s[1]),
-                        backgroundColor: sorted.map(s => (CROSS_FILTER_TEAM === s[0]) ? (theme.isLight ? '#0284c7' : '#38bdf8') : (theme.isLight ? '#4f46e5' : '#6366f1')),
+                        data: displayTeams.map(s => s[1]),
+                        backgroundColor: displayTeams.map(s => (CROSS_FILTER_TEAM === s[0]) ? (theme.isLight ? '#0284c7' : '#38bdf8') : (theme.isLight ? '#4f46e5' : '#6366f1')),
                         borderRadius: 4,
                         barPercentage: 0.65,
                         categoryPercentage: 0.8
@@ -3925,9 +4114,11 @@
                     maintainAspectRatio: false,
                     onClick: (e, els) => {
                         if (els.length > 0) {
-                            const clickedTeam = sorted[els[0].index][0];
-                            CROSS_FILTER_TEAM = (CROSS_FILTER_TEAM === clickedTeam) ? null : clickedTeam;
-                            runFilterPipeline();
+                            const clickedTeam = displayTeams[els[0].index][0];
+                            if (clickedTeam !== 'Other Teams' && clickedTeam !== 'ทีมอื่นๆ') {
+                                CROSS_FILTER_TEAM = (CROSS_FILTER_TEAM === clickedTeam) ? null : clickedTeam;
+                                runFilterPipeline();
+                            }
                         }
                     },
                     layout: { padding: { right: 60 } },
@@ -4933,17 +5124,40 @@
         }
 
         function convertRawRowsToCompareModel(rows, fileName) {
-            const loaded = [];
-            rows.forEach((r, idx) => {
-                if (!r || Object.values(r).every(v => !v || String(v).trim() === '')) return;
+            if (!rows || rows.length === 0) return [];
+            const sampleRow = rows.find(r => r && Object.keys(r).length > 0) || rows[0];
+            if (!sampleRow) return [];
 
-                const rawDate = r['Incident Date'] || r.Date || r.CreatedDate || r['Created on'] || r['Created On'] || '';
+            const colCaseNo = resolveColumnKey(sampleRow, ['Case No', 'CaseNo', 'Case_No', 'Incident ID', 'Work Order']);
+            const colCreated = resolveColumnKey(sampleRow, ['Incident Date', 'Created on', 'Created On', 'CreatedDate', 'Date']);
+            const colResolved = resolveColumnKey(sampleRow, ['Resolved on', 'Resolved On', 'Completed On', 'Closed Date', 'Closed On']);
+            const colCat = resolveColumnKey(sampleRow, ['Event Category', 'EventCategory', 'Category', 'System']);
+            const colPrio = resolveColumnKey(sampleRow, ['Priority', 'Priority Level', 'Severity', 'Level']);
+            const colZone = resolveColumnKey(sampleRow, ['Zone', 'Component', 'Sub-System', 'Site', 'Building']);
+            const colLoc = resolveColumnKey(sampleRow, ['Location', 'Site', 'Area', 'Room']);
+            const colEvType = resolveColumnKey(sampleRow, ['Event Type', 'EventType', 'Event type', 'Incident Type']);
+            const colCreatedBy = resolveColumnKey(sampleRow, ['Reported By', 'Created By', 'Created by', 'Assignee', 'Owner']);
+            const colFA = resolveColumnKey(sampleRow, ['Is False Alarm', 'IsFalseAlarm', 'False Alarm', 'is false alarm']);
+            const colStatus = resolveColumnKey(sampleRow, ['Status', 'Case Status', 'State']);
+            const colSummary = resolveColumnKey(sampleRow, ['Summary', 'Incident Summary']);
+            const colDesc = resolveColumnKey(sampleRow, ['Description', 'Incident Description', 'Details']);
+            const colFindings = resolveColumnKey(sampleRow, ['Findings/Resolution', 'Findings', 'Resolution', 'Action Taken']);
+            const colComments = resolveColumnKey(sampleRow, ['Operator Comments', 'Comments', 'Remarks']);
+
+            const isOBK = (fileName || '').toLowerCase().includes('obk') || (sampleRow['Location'] && sampleRow['Location'].includes('One Bangkok'));
+            const loaded = [];
+
+            for (let idx = 0; idx < rows.length; idx++) {
+                const r = rows[idx];
+                if (!r || Object.values(r).every(v => !v || String(v).trim() === '')) continue;
+
+                const rawDate = (colCreated && r[colCreated]) ? String(r[colCreated]).trim() : '';
                 let dateOnlyStr = '';
                 let dayNum = 1;
                 let yr = r.Year;
                 let mo = r.MonthOrder || r.Month;
 
-                if (rawDate && typeof rawDate === 'string') {
+                if (rawDate) {
                     const cleanD = rawDate.split(' ')[0].trim();
                     const parts = cleanD.split(/[-/.]/);
                     if (parts.length === 3) {
@@ -4962,15 +5176,7 @@
                 }
 
                 if (!dateOnlyStr) {
-                    const dateObj = rawDate ? new Date(rawDate) : null;
-                    if (dateObj && !isNaN(dateObj.getTime())) {
-                        yr = yr || dateObj.getFullYear();
-                        mo = mo || (dateObj.getMonth() + 1);
-                        dayNum = dateObj.getDate();
-                        dateOnlyStr = dateObj.toISOString().split('T')[0];
-                    } else {
-                        dateOnlyStr = `${yr || 2026}-${String(mo || 1).padStart(2,'0')}-01`;
-                    }
+                    dateOnlyStr = `${yr || 2026}-${String(mo || 1).padStart(2,'0')}-01`;
                 }
 
                 if (typeof mo === 'string') {
@@ -4981,23 +5187,37 @@
 
                 const weekInfo = getSundayToSaturdayWeekInfo(dateOnlyStr);
 
-                const summaryStr = r.Summary || r['Incident Summary'] || '';
-                const descStr = r.Description || r['Incident Description'] || r.Details || r['Incident Details'] || '';
-                const findingsStr = r['Findings/Resolution'] || r.Findings || r.Resolution || r['Action Taken'] || '';
-                const commentsStr = r['Operator Comments'] || r.Comments || r.Remarks || '';
-                const reportedBy = r['Reported By'] || r['Created By'] || r.Assignee || r.Owner || '';
+                const summaryStr = (colSummary && r[colSummary]) ? String(r[colSummary]).trim() : '';
+                const descStr = (colDesc && r[colDesc]) ? String(r[colDesc]).trim() : '';
+                const findingsStr = (colFindings && r[colFindings]) ? String(r[colFindings]).trim() : '';
+                const commentsStr = (colComments && r[colComments]) ? String(r[colComments]).trim() : '';
+                const rawCreatedBy = (colCreatedBy && r[colCreatedBy]) ? String(r[colCreatedBy]).trim() : '';
+                const reportedBy = mapCreatedByTeam(rawCreatedBy);
 
-                const cat = r['Event Category'] || r.EventCategory || r.Category || 'FM';
-                const prio = (r.Priority || r['Priority Level'] || 'CAT 3').toString().trim();
-                const comp = r.Component || r['Sub-System'] || '';
-                const evType = (r['Event Type'] || r.EventType || r['Incident Type'] || 'Operational Alarm').toString().trim();
-                const loc = r.Location || r.Site || r.Zone || 'PARQ Area';
-                const isFA = (r['Is False Alarm'] || r.IsFalseAlarm || r['False Alarm'] || 'No').toString().trim();
-                const status = r.Status || r['Case Status'] || 'Closed';
+                let cat = (colCat && r[colCat]) ? String(r[colCat]).trim().replace(/^FM_/, '') : 'General';
+                const prio = (colPrio && r[colPrio]) ? String(r[colPrio]).trim() : 'CAT 3';
+                
+                const rawLoc = (colLoc && r[colLoc]) ? String(r[colLoc]).trim() : '';
+                let comp = (colZone && r[colZone]) ? String(r[colZone]).trim() : '';
+                if (!comp || comp === 'PARQ Area') {
+                    if (isOBK || rawLoc.includes('One Bangkok') || rawLoc.includes('Zone') || rawLoc.includes('CI')) {
+                        comp = extractZoneFromLocation(rawLoc);
+                    } else {
+                        comp = 'PARQ Area';
+                    }
+                }
+
+                const rawEvType = (colEvType && r[colEvType]) ? String(r[colEvType]).trim() : 'Operational Alarm';
+                const evType = cleanEventType(rawEvType);
+                const loc = cleanLocation(rawLoc);
+                
+                const faRaw = (colFA && r[colFA]) ? String(r[colFA]).trim().toLowerCase() : 'no';
+                const isFA = (faRaw === 'yes' || faRaw === 'true' || faRaw === '1' || faRaw === 'y') ? 'Yes' : 'No';
+                const status = (colStatus && r[colStatus]) ? String(r[colStatus]).trim() : 'Closed';
 
                 loaded.push({
                     SourceFileName: fileName,
-                    CaseNo: r.CaseNo || r['Case No'] || `CASE-${String(idx + 1).padStart(5, '0')}`,
+                    CaseNo: (colCaseNo && r[colCaseNo]) ? String(r[colCaseNo]).trim() : `CASE-${String(idx + 1).padStart(5, '0')}`,
                     Year: parseInt(yr) || 2026,
                     Month: parseInt(mo) || 1,
                     MonthOrder: parseInt(mo) || 1,
@@ -5011,7 +5231,7 @@
                     Component: comp,
                     EventType: evType,
                     Location: loc,
-                    IsFalseAlarm: (isFA.toLowerCase() === 'yes' || isFA.toLowerCase() === 'true' || isFA === '1') ? 'Yes' : 'No',
+                    IsFalseAlarm: isFA,
                     Status: status,
                     Summary: summaryStr,
                     Description: descStr,
@@ -5020,7 +5240,7 @@
                     ReportedBy: reportedBy,
                     PendingReason: commentsStr || findingsStr || descStr || 'Normal inspection closed'
                 });
-            });
+            }
             return loaded;
         }
 
@@ -5066,7 +5286,11 @@
         function rebuildFullDataset() {
             fullDataset = [];
             Object.values(loadedFilesMap).forEach(fileObj => {
-                fullDataset.push(...fileObj.records);
+                if (fileObj && fileObj.records) {
+                    for (let i = 0; i < fileObj.records.length; i++) {
+                        fullDataset.push(fileObj.records[i]);
+                    }
+                }
             });
 
             if (fullDataset.length === 0) {
@@ -5083,7 +5307,9 @@
             const isInitial = selectedFilters.files.size === 0 && selectedFilters.years.size === 0;
             initializeDropdownFilters(isInitial);
             renderAllDropdownMenus();
-            renderCompareDashboard();
+            if (CURRENT_VIEW === 'compare') {
+                renderCompareDashboard();
+            }
         }
 
         function initializeDropdownFilters(selectAll = true) {
@@ -6768,6 +6994,13 @@
         <div class="flex-grow p-4 relative h-[78vh]">
             <canvas id="modalCanvas"></canvas>
         </div>
+    </div>
+    <!-- Global Notification Toast -->
+    <div id="globalToast" class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 border border-emerald-500/50 text-emerald-300 shadow-2xl text-xs font-semibold backdrop-blur max-w-md">
+        <div class="p-1 rounded-lg bg-emerald-500/20 text-emerald-400">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+        </div>
+        <span id="globalToastMsg">Notification message</span>
     </div>
 </body>
 </html>
