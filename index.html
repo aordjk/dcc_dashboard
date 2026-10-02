@@ -198,6 +198,17 @@
         body.light-mode .text-purple-400 {
             color: #6b21a8 !important; /* Deep Purple 800 */
         }
+        body.light-mode .text-cyan-200,
+        body.light-mode .text-cyan-300,
+        body.light-mode .text-cyan-400,
+        body.light-mode .text-cyan-500 {
+            color: #0e7490 !important; /* Deep Cyan 700 */
+        }
+        body.light-mode .bg-cyan-500\/20 {
+            background-color: #ecfeff !important;
+            border-color: #a5f3fc !important;
+            color: #0e7490 !important;
+        }
 
         /* Scrollbars in Day Mode */
         body.light-mode .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -858,7 +869,7 @@
     <!-- ======================================================== -->
     <!-- COMBINED LOCKED WRAPPER: HEADER + SLICERS STICKY TOGETHER -->
     <!-- ======================================================== -->
-    <div id="stickyControlBar" class="w-full bg-[#0b1120]">
+    <div id="stickyControlBar" class="sticky top-0 z-50 w-full bg-[#0b1120]/95 backdrop-blur-md border-b border-slate-800 shadow-md">
         
         <!-- Top Compact Navigation Bar (Header: strictly ~50px height) -->
         <header id="mainHeader" class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-2 sm:px-4 py-2 w-full transition-all">
@@ -908,21 +919,33 @@
                     </div>
                 </div>
 
-                <!-- Right: Sleek Profile & Controls (Day/Night, EN/TH, DCC Menu) -->
+                <!-- Right: Sleek Profile & Controls (Sync/Upload -> Present -> Day/Night -> EN/TH -> DCC) -->
                 <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                     
-                    <!-- Day / Night Mode Toggle Button -->
+                    <!-- 1. Sync / Upload Button -->
+                    <label class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition shadow-md shrink-0">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                        <span data-i18n="sync_upload">Sync / Upload</span>
+                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
+                    </label>
+
+                    <!-- 2. Present Mode Icon Button -->
+                    <button onclick="togglePresentationMode()" class="p-1.5 sm:p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-purple-400 hover:text-purple-300 transition border border-slate-700/80 shadow-sm shrink-0" title="Presentation Mode">
+                        <i data-lucide="presentation" class="w-4 h-4"></i>
+                    </button>
+
+                    <!-- 3. Day / Night Mode Toggle Button -->
                     <button onclick="toggleTheme()" id="themeToggleBtn" class="p-1.5 sm:p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700/80 shadow-sm shrink-0" title="Toggle Day / Night Mode">
                         <i id="themeIcon" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
                     </button>
 
-                    <!-- Language Switcher (EN / TH) -->
+                    <!-- 4. Language Switcher (EN / TH) -->
                     <div class="flex items-center bg-slate-800/90 border border-slate-700/80 rounded-xl p-0.5 text-[11px] font-bold shadow-sm shrink-0">
                         <button onclick="switchLanguage('EN')" id="btnLangEN" class="px-2 py-1 rounded-lg bg-indigo-600 text-white transition">EN</button>
                         <button onclick="switchLanguage('TH')" id="btnLangTH" class="px-2 py-1 rounded-lg text-slate-400 hover:text-white transition">TH</button>
                     </div>
 
-                    <!-- Consolidated DCC Operations Dropdown -->
+                    <!-- 5. Consolidated DCC Operations Dropdown -->
                     <div class="relative shrink-0" onclick="event.stopPropagation()">
                         <button onclick="toggleCustomDropdown('dropdownProfileMenu')" class="flex items-center gap-2 p-1 sm:p-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition shadow-sm" title="DCC Operations">
                             <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-sky-400 flex items-center justify-center text-[10px] font-black text-white shadow">
@@ -947,7 +970,7 @@
                                 </div>
                             </div>
 
-                            <!-- Dataset Management & Quick Switcher -->
+                            <!-- Dataset Management -->
                             <div class="space-y-1 pb-2 border-b border-slate-700/80">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1" data-i18n="dataset_mgmt">Dataset Operations</span>
                                 <label class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-emerald-400 hover:text-emerald-300 transition cursor-pointer">
@@ -955,10 +978,6 @@
                                     <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
                                     <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
                                 </label>
-                                <button onclick="loadOBKDataset(true)" class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-indigo-300 hover:text-white transition">
-                                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-indigo-400"></i>
-                                    <span data-i18n="load_obk">One Bangkok 2026 (164k)</span>
-                                </button>
                             </div>
 
                             <!-- Executive Export Suite -->
@@ -1076,19 +1095,6 @@
                 </div>
             </div>
 
-            <!-- 2. Section Jump Links (Topics) -->
-            <div class="space-y-2 pt-2 border-t border-slate-800">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Jump to Section</span>
-                <div class="grid grid-cols-2 gap-1.5 text-xs">
-                    <button onclick="scrollToTopic(event, 'sec-overall'); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-left truncate">Overall</button>
-                    <button onclick="scrollToTopic(event, 'sec-false-alarm'); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-left truncate">False Alarm</button>
-                    <button onclick="scrollToTopic(event, 'sec-recurring'); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-left truncate">Recurring</button>
-                    <button onclick="scrollToTopic(event, 'sec-sla-component'); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-left truncate">SLA Comp</button>
-                    <button onclick="scrollToTopic(event, 'sec-sla-team'); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-left truncate">SLA Team</button>
-                    <button onclick="scrollToTopic(event, 'sec-pending-team'); toggleMobileDrawer();" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-left truncate">Pending Team</button>
-                </div>
-            </div>
-
             <!-- 3. Dataset Management -->
             <div class="space-y-2 pt-2 border-t border-slate-800">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dataset Management</span>
@@ -1121,29 +1127,25 @@
         <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9990] hidden lg:hidden transition-opacity" onclick="toggleSidebarDrawer()"></div>
 
         <!-- Mobile Quick Action & Filter Bar (<lg screens) -->
-        <div class="lg:hidden sticky top-12 z-30 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-2.5 py-1.5 mb-3 flex items-center justify-between gap-2 shadow-lg">
+        <div class="lg:hidden sticky top-12 z-30 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 mb-3 flex items-center justify-between gap-2 shadow-lg">
             <!-- Filter Toggle Button (Opens off-canvas drawer on mobile) -->
             <button type="button" onclick="toggleSidebarDrawer()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow transition shrink-0" title="Open Telemetry & Slicer Filters">
                 <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
                 <span data-i18n="filters">Filters</span>
                 <span id="mobileActiveFilterCount" class="hidden px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] font-mono font-bold leading-none">0</span>
             </button>
-
-            <!-- Quick Topic Jump Pills -->
-            <div id="mobileTopicJumpPills" class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-0.5 flex-1 min-w-0">
-                <button onclick="scrollToTopic(event, 'sec-overall')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">overall</button>
-                <button onclick="scrollToTopic(event, 'sec-false-alarm')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">false alarm</button>
-                <button onclick="scrollToTopic(event, 'sec-recurring')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">recurring</button>
-                <button onclick="scrollToTopic(event, 'sec-sla-component')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">SLA comp</button>
-                <button onclick="scrollToTopic(event, 'sec-sla-team')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">SLA team</button>
-                <button onclick="scrollToTopic(event, 'sec-pending-team')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium whitespace-nowrap">pending</button>
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="if (CURRENT_VIEW === 'dashboard') { resetAllFilters(); updateActiveFilterSummary(); } else { resetCompareFilters(); }" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold flex items-center gap-1 transition">
+                    <i data-lucide="rotate-ccw" class="w-3 h-3 text-rose-400"></i>
+                    <span data-i18n="reset">Reset</span>
+                </button>
             </div>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-5 items-start">
             
             <!-- LEFT SIDEBAR: Locked Dock on Desktop (lg:), Drawer on Mobile (<lg) -->
-            <aside id="leftSidebarNav" class="fixed inset-y-0 left-0 z-[9995] w-80 max-w-[88vw] bg-slate-900 border-r border-slate-800 p-4 shadow-2xl overflow-y-auto custom-scrollbar transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-14 lg:h-[calc(100vh-4.25rem)] lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none space-y-3 pb-8">
+            <aside id="leftSidebarNav" class="fixed inset-y-0 left-0 z-[9995] w-80 max-w-[88vw] bg-slate-900 border-r border-slate-800 p-4 shadow-2xl overflow-y-auto custom-scrollbar transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:overflow-y-auto lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none space-y-3 pb-8">
                 
                 <!-- Mobile Drawer Header with Close Button (<lg only) -->
                 <div class="lg:hidden flex items-center justify-between pb-3 border-b border-slate-800">
@@ -1152,7 +1154,7 @@
                             <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-white uppercase tracking-wider block">Filters & Operations</span>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider block">Filters & Slicers</span>
                             <span class="text-[10px] text-slate-400">DCC Operations Center</span>
                         </div>
                     </div>
@@ -1160,63 +1162,8 @@
                         Done
                     </button>
                 </div>
-                
-                <!-- 1. Topic Navigation Menu -->
-                <div id="sidebarTopicCard" class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-2">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                            <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-400"></i>
-                            <span data-i18n="sidebar_topics">Topics & Sections</span>
-                        </span>
-                        <span class="text-[10px] text-indigo-400 font-mono font-bold">6 TOPICS</span>
-                    </div>
-                    <nav class="space-y-1" id="sidebarTopicLinks">
-                        <a href="#sec-overall" onclick="scrollToTopic(event, 'sec-overall')" class="topic-nav-item flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition group active" data-topic="sec-overall">
-                            <span class="flex items-center gap-2.5">
-                                <i data-lucide="layout-dashboard" class="w-4 h-4 text-indigo-400 group-hover:scale-110 transition"></i>
-                                <span>overall</span>
-                            </span>
-                            <span class="text-[10px] font-mono opacity-60">01</span>
-                        </a>
-                        <a href="#sec-false-alarm" onclick="scrollToTopic(event, 'sec-false-alarm')" class="topic-nav-item flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition group" data-topic="sec-false-alarm">
-                            <span class="flex items-center gap-2.5">
-                                <i data-lucide="bell-off" class="w-4 h-4 text-amber-400 group-hover:scale-110 transition"></i>
-                                <span>false alarm</span>
-                            </span>
-                            <span class="text-[10px] font-mono opacity-60">02</span>
-                        </a>
-                        <a href="#sec-recurring" onclick="scrollToTopic(event, 'sec-recurring')" class="topic-nav-item flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition group" data-topic="sec-recurring">
-                            <span class="flex items-center gap-2.5">
-                                <i data-lucide="repeat" class="w-4 h-4 text-rose-400 group-hover:scale-110 transition"></i>
-                                <span>recurring</span>
-                            </span>
-                            <span class="text-[10px] font-mono opacity-60">03</span>
-                        </a>
-                        <a href="#sec-sla-component" onclick="scrollToTopic(event, 'sec-sla-component')" class="topic-nav-item flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition group" data-topic="sec-sla-component">
-                            <span class="flex items-center gap-2.5">
-                                <i data-lucide="layers" class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition"></i>
-                                <span>SLA by component</span>
-                            </span>
-                            <span class="text-[10px] font-mono opacity-60">04</span>
-                        </a>
-                        <a href="#sec-sla-team" onclick="scrollToTopic(event, 'sec-sla-team')" class="topic-nav-item flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition group" data-topic="sec-sla-team">
-                            <span class="flex items-center gap-2.5">
-                                <i data-lucide="users" class="w-4 h-4 text-sky-400 group-hover:scale-110 transition"></i>
-                                <span>SLA by team</span>
-                            </span>
-                            <span class="text-[10px] font-mono opacity-60">05</span>
-                        </a>
-                        <a href="#sec-pending-team" onclick="scrollToTopic(event, 'sec-pending-team')" class="topic-nav-item flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition group" data-topic="sec-pending-team">
-                            <span class="flex items-center gap-2.5">
-                                <i data-lucide="clock-alert" class="w-4 h-4 text-purple-400 group-hover:scale-110 transition"></i>
-                                <span>Pending by team</span>
-                            </span>
-                            <span class="text-[10px] font-mono opacity-60">06</span>
-                        </a>
-                    </nav>
-                </div>
 
-                <!-- 2. Filters & Slicers (Case Management) -->
+                <!-- 1. Filters & Slicers (Case Management) -->
                 <div id="sidebarFiltersDashboard" class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-3">
                     <!-- Header with Reset Button -->
                     <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
@@ -1233,7 +1180,7 @@
                     <!-- Year & Month (2 cols) -->
                     <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1">
-                            <label class="block text-[11px] font-semibold text-slate-400" data-i18n="lbl_year">Year (ปี)</label>
+                            <label class="block text-[11px] font-semibold text-slate-400" data-i18n="lbl_year">Year</label>
                             <select id="filterYear" onchange="runFilterPipeline(); updateActiveFilterSummary();" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                                 <option value="ALL">All Years</option>
                             </select>
@@ -1249,7 +1196,7 @@
                     <!-- Week Slicer (Sunday - Saturday) -->
                     <div class="space-y-1">
                         <div class="flex items-center justify-between">
-                            <label class="block text-[11px] font-semibold text-slate-400" data-i18n="lbl_week">Week (อาทิตย์ - เสาร์)</label>
+                            <label class="block text-[11px] font-semibold text-slate-400" data-i18n="lbl_week">Week (Sun - Sat)</label>
                             <span id="activeWeekBadge" class="text-[10px] font-mono text-indigo-400 font-bold truncate max-w-[110px]">All Weeks</span>
                         </div>
                         <select id="filterWeek" onchange="runFilterPipeline(); updateActiveFilterSummary();" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none truncate">
@@ -1269,7 +1216,7 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div class="space-y-1">
                             <label class="block text-[11px] font-semibold text-slate-400" data-i18n="lbl_priority">Priority</label>
-                            <select id="filterPriority" onchange="runFilterPipeline(); updateActiveFilterSummary();" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <select id="filterPriority" onchange="runFilterPipeline(); updateActiveFilterSummary();" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                                 <option value="ALL" data-i18n="all_priorities">All Priorities</option>
                             </select>
                         </div>
@@ -1334,7 +1281,7 @@
                     </div>
                 </div>
 
-                <!-- 2.5 Filters & Slicers (Case Comparison - visible in compare view) -->
+                <!-- 2. Filters & Slicers (Case Comparison - visible in compare view) -->
                 <div id="sidebarFiltersCompare" class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-3 hidden">
                     <!-- Header with Reset Button -->
                     <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
@@ -1348,26 +1295,9 @@
                         </button>
                     </div>
 
-                    <!-- Compare Dimension Selector (เกณฑ์เปรียบเทียบ) -->
-                    <div class="space-y-1">
-                        <label class="block text-[11px] font-semibold text-slate-400">
-                            <i class="fa-solid fa-code-compare text-indigo-400 mr-1"></i>
-                            <span>Compare By (เกณฑ์เปรียบเทียบ)</span>
-                        </label>
-                        <select id="compareDimensionSelect" onchange="renderCompareDashboard()" class="w-full bg-slate-950 border border-slate-700 text-indigo-400 font-bold text-xs rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="auto">⚡ Auto (ตามตัวกรองที่เลือก)</option>
-                            <option value="month">📅 By Month (เปรียบเทียบรายเดือน)</option>
-                            <option value="week">📆 By Week (เปรียบเทียบรายสัปดาห์)</option>
-                            <option value="day">🗓️ By Day (เปรียบเทียบรายวัน)</option>
-                            <option value="category">🏷️ By Category (เปรียบเทียบหมวดหมู่)</option>
-                            <option value="priority">🚨 By Priority (เปรียบเทียบความสำคัญ)</option>
-                            <option value="falseAlarm">🔔 True vs False (เคสจริง vs ลวง)</option>
-                        </select>
-                    </div>
-
                     <!-- 1. File Slicer -->
                     <div class="space-y-1 dropdown-container" id="ddFileContainer">
-                        <label class="block text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-file-lines text-indigo-400 mr-1"></i> <span id="lblFileText">Filter Files (เลือกไฟล์ที่รวม)</span></label>
+                        <label class="block text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-file-lines text-indigo-400 mr-1"></i> <span id="lblFileText" data-i18n="filter_files_lbl">Filter Files (Merged)</span></label>
                         <button type="button" class="dropdown-toggle w-full text-xs bg-slate-950 border border-slate-700 hover:border-slate-500 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-slate-200 font-medium">
                             <span class="text-indigo-400 font-bold truncate" id="badgeFile">All Files (Merged)</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-2"></i>
@@ -1459,54 +1389,6 @@
                         <div class="dropdown-menu p-2.5 w-full min-w-[250px]" id="ddEventTypeMenu"></div>
                     </div>
                 </div>
-
-                <!-- 3. Loaded Files List & Instant [X] Delete -->
-                <div id="sidebarLoadedFilesCard" class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-2">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                            <i data-lucide="files" class="w-3.5 h-3.5 text-indigo-400"></i>
-                            <span>Loaded Files</span>
-                        </span>
-                        <button type="button" onclick="clearAllUploadedFiles()" class="text-[10px] text-rose-400 hover:text-rose-300 underline font-semibold" title="Clear all loaded files">
-                            Clear All
-                        </button>
-                    </div>
-                    <div id="sidebarLoadedFilesList" class="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar"></div>
-                </div>
-
-                <!-- 4. Dataset Operations Widget -->
-                <div class="glass-sidebar rounded-2xl p-3.5 shadow-xl space-y-2.5">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 px-1">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                            <i data-lucide="database" class="w-3.5 h-3.5 text-emerald-400"></i>
-                            <span data-i18n="dataset_mgmt">Dataset Operations</span>
-                        </span>
-                    </div>
-
-                    <div class="pt-1 flex flex-col gap-1.5">
-                        <label class="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition shadow-sm">
-                            <i data-lucide="file-plus-2" class="w-4 h-4 text-white"></i>
-                            <span data-i18n="sync_csv">Upload CSV File(s)</span>
-                            <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
-                        </label>
-                        <label class="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition border border-slate-700">
-                            <i data-lucide="folder-input" class="w-3.5 h-3.5 text-amber-400"></i>
-                            <span>Upload Folder</span>
-                            <input type="file" webkitdirectory directory multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 4. Quick View Switcher & Day/Night Toggle -->
-                <div class="glass-sidebar rounded-2xl p-3 shadow-xl flex items-center justify-between gap-2">
-                    <button onclick="toggleTheme()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700 flex-1">
-                        <i data-lucide="sun-moon" class="w-4 h-4 text-amber-400"></i>
-                        <span id="sidebarThemeText">Day / Night</span>
-                    </button>
-                    <button onclick="togglePresentationMode()" class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="Presentation Mode">
-                        <i data-lucide="presentation" class="w-4 h-4 text-indigo-400"></i>
-                    </button>
-                </div>
             </aside>
 
             <!-- MAIN DASHBOARD CONTENT AREA -->
@@ -1522,16 +1404,12 @@
                         </div>
                         <h2 class="text-base sm:text-lg font-bold text-white mb-1.5" data-i18n="empty_dash_title">Ready for Incident Dataset</h2>
                         <p class="text-xs text-slate-400 max-w-md mx-auto mb-5 leading-relaxed" data-i18n="empty_dash_desc">
-                            Upload your CSV files to analyze telemetry cases, or click below to load One Bangkok 2026 data.
+                            Upload your CSV files to analyze telemetry cases.
                         </p>
                         <div class="flex flex-wrap items-center justify-center gap-3">
-                            <button onclick="loadOBKDataset(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow shadow-indigo-600/30">
-                                <i data-lucide="building-2" class="w-4 h-4"></i>
-                                <span>Load One Bangkok 2026 (164k)</span>
-                            </button>
-                            <label class="cursor-pointer inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs px-4 py-2 rounded-xl shadow transition">
-                                <i data-lucide="folder-open" class="w-4 h-4 text-emerald-400"></i>
-                                <span>Browse CSV File(s)</span>
+                            <label class="cursor-pointer inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow shadow-indigo-600/30 transition">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                                <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
                                 <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
                             </label>
                         </div>
@@ -1547,7 +1425,7 @@
                                 <div>
                                     <h2 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                         <span>Overall</span>
-                                        <span class="text-[10px] text-slate-400 font-normal lowercase">(ภาพรวม KPI และบทวิเคราะห์)</span>
+                                        <span id="overallSubHeader" class="text-[10px] text-slate-400 font-normal" data-i18n="overall_subtitle">Executive Overview</span>
                                     </h2>
                                     <p class="text-[11px] text-slate-400">Executive KPIs, Telemetry Briefing & Trend Performance</p>
                                 </div>
@@ -1959,13 +1837,9 @@
                     System supports multi-file cross-year comparison, Sunday-to-Saturday weekly slicer, and deep root-cause intelligence.
                 </p>
                 <div class="flex flex-wrap items-center justify-center gap-3">
-                    <button onclick="loadOBKDataset(true)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow shadow-indigo-600/30">
-                        <i data-lucide="building-2" class="w-4 h-4"></i>
-                        <span>Load One Bangkok 2026 (164k)</span>
-                    </button>
-                    <label class="cursor-pointer inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs px-4 py-2 rounded-xl shadow transition">
-                        <i class="fa-solid fa-folder-open text-sky-400"></i>
-                        <span id="emptyUploadBtn" data-i18n="emptyBtn">Browse CSV File(s)</span>
+                    <label class="cursor-pointer inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow shadow-indigo-600/30 transition">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span id="emptyUploadBtn" data-i18n="emptyBtn">Upload CSV Dataset(s)</span>
                         <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
                     </label>
                 </div>
@@ -2223,13 +2097,13 @@
                     <div class="glass-card p-4 sm:p-5 lg:col-span-4 flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <h3 id="backlogHeader" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="backlogH">
-                                    <i class="fa-solid fa-clock text-amber-400"></i> Top 2 Pending Backlog Root Causes
+                                <h3 id="topLocationsHeader" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="topLocationsH">
+                                    <i class="fa-solid fa-location-dot text-indigo-400"></i> Top 5 Incident Locations
                                 </h3>
-                                <span id="backlogTotalLabel" class="text-xs font-semibold text-amber-400"></span>
+                                <span id="topLocationsTotalLabel" class="text-xs font-semibold text-indigo-400"></span>
                             </div>
-                            <p id="backlogSub" class="text-xs text-slate-400 mb-4" data-i18n="backlogS">Primary 1st and 2nd bottlenecks preventing SLA closure</p>
-                            <div id="backlogListContainer" class="space-y-3"></div>
+                            <p id="topLocationsSub" class="text-xs text-slate-400 mb-3" data-i18n="topLocationsS">Concentration hotspots and spatial telemetry analysis</p>
+                            <div id="topLocationsListContainer" class="space-y-2.5 max-h-[360px] overflow-y-auto custom-scrollbar"></div>
                         </div>
                     </div>
                 </div>
@@ -2387,7 +2261,12 @@
                 commander_role: "Central Operations & Telemetry",
                 commander_shift: "Shift Alpha • Active Duty",
                 reset_dashboard_state: "Reset Memory & State",
-                footer_sub: "Telemetry & Cross-Platform Incident Intelligence"
+                footer_sub: "Telemetry & Cross-Platform Incident Intelligence",
+                sync_upload: "Sync / Upload",
+                lbl_year: "Year",
+                lbl_week: "Week (Sun - Sat)",
+                overall_subtitle: "Executive Overview",
+                filter_files_lbl: "Filter Files (Merged)"
             },
             TH: {
                 header_subtitle: "ระบบโทรมาตรและข้อมูลเชิงโต้ตอบ • ตัวกรองข้ามระบบและข่าวกรองปฏิบัติการ",
@@ -2398,6 +2277,11 @@
                 show_filters: "แสดงตัวกรอง",
                 exit_present: "ออกจากโหมดนำเสนอ",
                 sync_csv: "อัปโหลดไฟล์ CSV",
+                sync_upload: "ซิงค์ / อัปโหลด",
+                lbl_year: "ปี",
+                lbl_week: "สัปดาห์ (อาทิตย์ - เสาร์)",
+                overall_subtitle: "ภาพรวม KPI และบทวิเคราะห์",
+                filter_files_lbl: "เลือกไฟล์ที่รวม",
                 sync_now_btn: "ซิงค์ข้อมูลล่าสุด",
                 nav_upload: "อัปโหลด",
                 dataset_mgmt: "จัดการชุดข้อมูล",
@@ -2995,11 +2879,23 @@
             const badge = document.getElementById('activeCrossFilterBadge');
             if (badge) badge.classList.add('hidden');
 
-            const ids = ['filterMonth', 'filterCategory', 'filterPriority', 'filterZone', 'filterFA'];
+            const ids = ['filterYear', 'filterMonth', 'filterWeek', 'filterCategory', 'filterPriority', 'filterZone', 'filterFA'];
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = 'ALL';
             });
+
+            if (ALL_STATUSES && ALL_STATUSES.length > 0) {
+                SELECTED_STATUSES = new Set(ALL_STATUSES);
+            }
+            if (ALL_EVENT_TYPES && ALL_EVENT_TYPES.length > 0) {
+                SELECTED_EVENT_TYPES = new Set(ALL_EVENT_TYPES);
+            }
+            const weekBadge = document.getElementById('activeWeekBadge');
+            if (weekBadge) weekBadge.textContent = 'All Weeks';
+
+            updateStatusDropdownLabel();
+            updateEventTypeDropdownLabel();
             updateActiveFilterSummary();
         }
 
@@ -3160,7 +3056,6 @@
 
             let processed = 0;
             let totalRowsImported = 0;
-            const targetView = CURRENT_VIEW;
 
             files.forEach(file => {
                 detectProjectFromFilename(file.name);
@@ -3170,19 +3065,16 @@
                     transformHeader: h => (h || '').trim().replace(/^\ufeff/, ''),
                     complete: function(results) {
                         try {
-                            if (targetView === 'dashboard') {
-                                const parsedRecords = convertRawRowsToModel(results.data, file.name);
-                                UPLOADED_FILES_MAP.set(file.name, parsedRecords);
-                                totalRowsImported += parsedRecords.length;
-                            } else {
-                                const compareRecords = convertRawRowsToCompareModel(results.data, file.name);
-                                const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-                                loadedFilesMap[fileId] = {
-                                    name: file.name,
-                                    records: compareRecords
-                                };
-                                totalRowsImported += compareRecords.length;
-                            }
+                            const parsedRecords = convertRawRowsToModel(results.data, file.name);
+                            UPLOADED_FILES_MAP.set(file.name, parsedRecords);
+
+                            const compareRecords = convertRawRowsToCompareModel(results.data, file.name);
+                            const fileId = 'file-' + encodeURIComponent(file.name);
+                            loadedFilesMap[fileId] = {
+                                name: file.name,
+                                records: compareRecords
+                            };
+                            totalRowsImported += parsedRecords.length;
                         } catch (err) {
                             console.error(`Error processing rows for ${file.name}:`, err);
                         }
@@ -3190,23 +3082,19 @@
                         processed++;
                         if (processed === files.length) {
                             try {
-                                if (targetView === 'dashboard') {
-                                    resetActiveFiltersToAll();
-                                    renderUploadedFilesChips();
-                                    rebuildUnifiedDataset();
-                                    const successMsg = (CURRENT_LANG === 'TH')
-                                        ? `นำเข้า ${files.length} ไฟล์สำเร็จ (${totalRowsImported.toLocaleString()} รายการ)`
-                                        : `Imported ${files.length} file(s) into Case Management (${totalRowsImported.toLocaleString()} records)`;
-                                    showToastNotification(successMsg);
-                                } else {
-                                    renderUploadedFilesChips();
-                                    rebuildFullDataset();
+                                resetActiveFiltersToAll();
+                                renderUploadedFilesChips();
+                                rebuildUnifiedDataset();
+                                rebuildFullDataset();
+
+                                if (CURRENT_VIEW === 'compare') {
                                     renderCompareDashboard();
-                                    const successMsg = (CURRENT_LANG === 'TH')
-                                        ? `นำเข้า ${files.length} ไฟล์สำเร็จ (${totalRowsImported.toLocaleString()} รายการ)`
-                                        : `Imported ${files.length} file(s) into Case Comparison (${totalRowsImported.toLocaleString()} records)`;
-                                    showToastNotification(successMsg);
                                 }
+
+                                const successMsg = (CURRENT_LANG === 'TH')
+                                    ? `นำเข้า ${files.length} ไฟล์สำเร็จ (${totalRowsImported.toLocaleString()} รายการ)`
+                                    : `Imported ${files.length} file(s) successfully (${totalRowsImported.toLocaleString()} records)`;
+                                showToastNotification(successMsg);
                                 updateDataStatusBadge();
                             } catch (err) {
                                 console.error('Error during post-upload rebuild:', err);
@@ -3222,11 +3110,10 @@
                         processed++;
                         if (processed === files.length) {
                             try {
-                                if (targetView === 'dashboard') {
-                                    renderUploadedFilesChips();
-                                    rebuildUnifiedDataset();
-                                } else {
-                                    rebuildFullDataset();
+                                renderUploadedFilesChips();
+                                rebuildUnifiedDataset();
+                                rebuildFullDataset();
+                                if (CURRENT_VIEW === 'compare') {
                                     renderCompareDashboard();
                                 }
                                 updateDataStatusBadge();
@@ -3427,41 +3314,39 @@
         }
 
         function removeUploadedFile(fileName) {
-            if (CURRENT_VIEW === 'dashboard') {
-                if (UPLOADED_FILES_MAP.has(fileName)) {
-                    UPLOADED_FILES_MAP.delete(fileName);
-                    renderUploadedFilesChips();
-                    rebuildUnifiedDataset();
-                    showToastNotification(CURRENT_LANG === 'TH' ? `ลบไฟล์ ${fileName} เรียบร้อย` : `Removed ${fileName}`);
-                }
-            } else {
-                let deleted = false;
-                for (const [key, val] of Object.entries(loadedFilesMap)) {
-                    if (val && val.name === fileName) {
-                        delete loadedFilesMap[key];
-                        deleted = true;
-                    }
-                }
-                if (deleted) {
-                    renderUploadedFilesChips();
-                    rebuildFullDataset();
-                    showToastNotification(CURRENT_LANG === 'TH' ? `ลบไฟล์ ${fileName} เรียบร้อย` : `Removed ${fileName}`);
+            let deleted = false;
+            if (UPLOADED_FILES_MAP.has(fileName)) {
+                UPLOADED_FILES_MAP.delete(fileName);
+                deleted = true;
+            }
+            for (const [key, val] of Object.entries(loadedFilesMap)) {
+                if (val && val.name === fileName) {
+                    delete loadedFilesMap[key];
+                    deleted = true;
                 }
             }
-            updateDataStatusBadge();
+            if (deleted) {
+                renderUploadedFilesChips();
+                rebuildUnifiedDataset();
+                rebuildFullDataset();
+                if (CURRENT_VIEW === 'compare') {
+                    renderCompareDashboard();
+                }
+                updateDataStatusBadge();
+                showToastNotification(CURRENT_LANG === 'TH' ? `ลบไฟล์ ${fileName} เรียบร้อย` : `Removed ${fileName}`);
+            }
         }
 
         function clearAllUploadedFiles() {
             const confirmMsg = (CURRENT_LANG === 'TH') ? "ต้องการลบไฟล์ที่อัปโหลดทั้งหมดหรือไม่?" : "Remove all uploaded files?";
             if (confirm(confirmMsg)) {
-                if (CURRENT_VIEW === 'dashboard') {
-                    UPLOADED_FILES_MAP.clear();
-                    renderUploadedFilesChips();
-                    rebuildUnifiedDataset();
-                } else {
-                    loadedFilesMap = {};
-                    renderUploadedFilesChips();
-                    rebuildFullDataset();
+                UPLOADED_FILES_MAP.clear();
+                loadedFilesMap = {};
+                renderUploadedFilesChips();
+                rebuildUnifiedDataset();
+                rebuildFullDataset();
+                if (CURRENT_VIEW === 'compare') {
+                    renderCompareDashboard();
                 }
                 updateDataStatusBadge();
                 showToastNotification(CURRENT_LANG === 'TH' ? "ลบไฟล์ทั้งหมดเรียบร้อย" : "Cleared all uploaded files");
@@ -3560,19 +3445,10 @@
         // Rebuild aggregated RAW_DATA from all uploaded files
         function rebuildUnifiedDataset() {
             const combined = [];
-            const seenCaseNos = new Set();
-
             UPLOADED_FILES_MAP.forEach(records => {
-                records.forEach(item => {
-                    if (item.caseNo && !item.caseNo.startsWith('CASE-')) {
-                        if (!seenCaseNos.has(item.caseNo)) {
-                            seenCaseNos.add(item.caseNo);
-                            combined.push(item);
-                        }
-                    } else {
-                        combined.push(item);
-                    }
-                });
+                for (let i = 0; i < records.length; i++) {
+                    combined.push(records[i]);
+                }
             });
 
             RAW_DATA = combined;
@@ -3778,13 +3654,16 @@
             const searchVal = (document.getElementById('inputSearchEventType').value || '').toLowerCase();
             
             const filteredEvents = eventList.filter(ev => ev.toLowerCase().includes(searchVal));
-            const countLabel = (CURRENT_LANG === 'TH') ? `แสดง ${filteredEvents.length} รายการ` : `Showing ${filteredEvents.length} items`;
+            const displaySlice = filteredEvents.slice(0, 100);
+            const countLabel = (CURRENT_LANG === 'TH') 
+                ? (filteredEvents.length > 100 ? `แสดง 100 จาก ${filteredEvents.length} รายการ (พิมพ์เพื่อค้นหา)` : `แสดง ${filteredEvents.length} รายการ`) 
+                : (filteredEvents.length > 100 ? `Showing 100 of ${filteredEvents.length} items (type to filter)` : `Showing ${filteredEvents.length} items`);
             document.getElementById('eventTypesVisibleCount').textContent = countLabel;
 
-            container.innerHTML = filteredEvents.length > 0 ? filteredEvents.map(ev => `
+            container.innerHTML = displaySlice.length > 0 ? displaySlice.map(ev => `
                 <label class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-slate-700/60 cursor-pointer select-none text-slate-200">
-                    <input type="checkbox" value="${ev}" ${SELECTED_EVENT_TYPES.has(ev) ? 'checked' : ''} onchange="onEventTypeCheckboxChange(event)" class="ev-checkbox rounded bg-slate-900 border-slate-600 text-indigo-600 focus:ring-0 shrink-0">
-                    <span class="truncate" title="${ev}">${ev}</span>
+                    <input type="checkbox" value="${escapeHTML(ev)}" ${SELECTED_EVENT_TYPES.has(ev) ? 'checked' : ''} onchange="onEventTypeCheckboxChange(event)" class="ev-checkbox rounded bg-slate-900 border-slate-600 text-indigo-600 focus:ring-0 shrink-0">
+                    <span class="truncate" title="${escapeHTML(ev)}">${escapeHTML(ev)}</span>
                 </label>
             `).join('') : `<div class="text-slate-500 text-center py-3 text-xs">No matching event types</div>`;
 
@@ -3809,16 +3688,16 @@
         }
 
         function selectAllEventTypes(selectAll) {
-            const checkboxes = document.querySelectorAll('#eventTypeCheckboxesContainer .ev-checkbox');
-            checkboxes.forEach(cb => {
-                cb.checked = selectAll;
-                if (selectAll) {
-                    SELECTED_EVENT_TYPES.add(cb.value);
-                } else {
-                    SELECTED_EVENT_TYPES.delete(cb.value);
-                }
-            });
-            updateEventTypeDropdownLabel();
+            const selectedCat = document.getElementById('filterCategory').value;
+            let currentScope = (selectedCat === 'ALL') ? ALL_EVENT_TYPES : Array.from(CATEGORY_EVENT_MAP[selectedCat] || []).sort();
+            const searchVal = (document.getElementById('inputSearchEventType').value || '').toLowerCase();
+            const filteredEvents = currentScope.filter(ev => ev.toLowerCase().includes(searchVal));
+            if (selectAll) {
+                filteredEvents.forEach(ev => SELECTED_EVENT_TYPES.add(ev));
+            } else {
+                filteredEvents.forEach(ev => SELECTED_EVENT_TYPES.delete(ev));
+            }
+            renderEventTypeMultiSelect(currentScope);
             runFilterPipeline();
         }
 
@@ -5131,8 +5010,11 @@
                 thFalse: "False Alarm",
                 thStatus: "Status",
                 thRes: "Resolution / Findings",
-                backlogH: "Top 2 Pending Backlog Root Causes",
-                backlogS: "Primary 1st and 2nd bottlenecks preventing SLA closure",
+                topLocationsH: "Top 5 Incident Locations",
+                topLocationsS: "Concentration hotspots and spatial telemetry analysis",
+                topLocationsEmpty: "No incident locations recorded under current filters.",
+                backlogH: "Top 5 Incident Locations",
+                backlogS: "Concentration hotspots and spatial telemetry analysis",
                 noNewEvents: "No emerging/unseen event types detected in this baseline month.",
                 noBacklog: "No pending backlog under active filter criteria.",
                 closedStatus: "Resolved (Closed 100%)",
@@ -5207,8 +5089,11 @@
                 thFalse: "False Alarm",
                 thStatus: "สถานะ",
                 thRes: "วิธีการแก้ไข (Resolution / Findings)",
-                backlogH: "Top 2 สาเหตุที่ทำให้เคสค้าง (Pending Root Causes)",
-                backlogS: "อุปสรรคสำคัญอันดับ 1 และ 2 ที่ทำให้ไม่สามารถปิดเคสได้ตาม SLA",
+                topLocationsH: "จุดเกิดเหตุสูงสุด 5 อันดับแรก (Top 5 Locations)",
+                topLocationsS: "วิเคราะห์พื้นที่เกิดเหตุซ้ำซ้อนและพิกัดเสี่ยงเชิงพื้นที่",
+                topLocationsEmpty: "ไม่พบข้อมูลสถานที่เกิดเหตุภายใต้ตัวกรองปัจจุบัน",
+                backlogH: "จุดเกิดเหตุสูงสุด 5 อันดับแรก (Top 5 Locations)",
+                backlogS: "วิเคราะห์พื้นที่เกิดเหตุซ้ำซ้อนและพิกัดเสี่ยงเชิงพื้นที่",
                 noNewEvents: "ไม่มีเคสแปลกใหม่ที่ไม่เคยเกิดขึ้นมาก่อนในรอบเดือนนี้",
                 noBacklog: "ไม่มีเคสค้างสะสมในเงื่อนไขตัวกรองนี้",
                 closedStatus: "จบแล้ว (Closed 100%)",
@@ -5824,8 +5709,7 @@
             document.getElementById('dashboardContent')?.classList.remove('hidden');
             document.getElementById('filterRow')?.classList.remove('opacity-60', 'pointer-events-none');
 
-            const isInitial = selectedFilters.files.size === 0 && selectedFilters.years.size === 0;
-            initializeDropdownFilters(isInitial);
+            initializeDropdownFilters(true);
             renderAllDropdownMenus();
             if (CURRENT_VIEW === 'compare') {
                 renderCompareDashboard();
@@ -5966,8 +5850,12 @@
             const el = document.getElementById(badgeId);
             if (!el) return;
 
-            if (activeSet.size === total && total > 0) {
-                el.innerText = 'All';
+            if (total === 0 || activeSet.size === total) {
+                if (badgeId === 'badgeFile') {
+                    el.innerText = 'All Files (Merged)';
+                } else {
+                    el.innerText = 'All';
+                }
                 el.title = 'All selected';
             } else if (activeSet.size === 0) {
                 el.innerText = 'None';
@@ -6133,7 +6021,8 @@
                 'thNewFalse': txt.thFalse,
                 'thNewStatus': txt.thStatus,
                 'thNewRes': txt.thRes,
-                'backlogSub': txt.backlogS
+                'backlogSub': txt.backlogS,
+                'topLocationsSub': txt.topLocationsS || txt.backlogS
             };
 
             for (const [id, val] of Object.entries(elMap)) {
@@ -6154,6 +6043,8 @@
             if (tblTitle) tblTitle.innerHTML = `<i class="fa-solid fa-radar text-cyan-400 mr-2"></i>${txt.tableT}`;
             const bLogH = document.getElementById('backlogHeader');
             if (bLogH) bLogH.innerHTML = `<i class="fa-solid fa-clock text-amber-400 mr-2"></i>${txt.backlogH}`;
+            const locH = document.getElementById('topLocationsHeader');
+            if (locH) locH.innerHTML = `<i class="fa-solid fa-location-dot text-indigo-400 mr-2"></i>${txt.topLocationsH || 'Top 5 Incident Locations'}`;
 
             const s1 = document.getElementById('chart1SideTitle');
             if (s1) s1.innerHTML = `<i class="fa-solid fa-chart-line mr-1"></i>${txt.chart1Side}`;
@@ -6266,7 +6157,7 @@
             renderRecurringMultiBarChart(filtered, comparisonGroups, comparisonType);
 
             renderNewEventTable(latestMonth);
-            renderBacklogAnalysis(filtered);
+            renderTop5LocationsAnalysis(filtered);
             updateDeepDiveInsightBoxes(filtered, comparisonGroups, comparisonType);
         }
 
@@ -6725,56 +6616,102 @@
             }).join('');
         }
 
-        function renderBacklogAnalysis(filtered) {
-            const container = document.getElementById('backlogListContainer');
-            const labelTotal = document.getElementById('backlogTotalLabel');
+        function renderTop5LocationsAnalysis(filtered) {
+            const container = document.getElementById('topLocationsListContainer') || document.getElementById('backlogListContainer');
+            const labelTotal = document.getElementById('topLocationsTotalLabel') || document.getElementById('backlogTotalLabel');
             if (!container) return;
 
-            const pending = filtered.filter(d => (d.Status || '').toLowerCase() !== 'closed');
-            if (labelTotal) {
-                labelTotal.innerText = `${pending.length.toLocaleString()} ${I18N_COMPARE[currentLang].casesUnit}`;
-            }
-
-            if (pending.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs italic">${I18N_COMPARE[currentLang].noBacklog}</div>`;
+            const totalFiltered = (filtered || []).length;
+            if (totalFiltered === 0) {
+                if (labelTotal) labelTotal.innerText = `0 ${I18N_COMPARE[currentLang]?.casesUnit || 'cases'}`;
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs italic">${I18N_COMPARE[currentLang]?.topLocationsEmpty || 'No incident locations recorded.'}</div>`;
                 return;
             }
 
-            const reasonCounts = {};
-            pending.forEach(d => {
-                let reason = (d.PendingReason || d.OperatorComments || d.Findings || d.EventType || 'Pending Technical Inspection').trim();
-                reason = sanitizeDccAckText(reason);
-                if (!reason || reason === '-') reason = d.EventType || 'Pending Technical Inspection';
-                reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+            // Aggregate by Location
+            const locMap = {};
+            filtered.forEach(d => {
+                const loc = (d.Location || 'Common Area').trim();
+                if (!locMap[loc]) {
+                    locMap[loc] = { name: loc, count: 0, trueCount: 0, falseCount: 0, events: {} };
+                }
+                locMap[loc].count++;
+                if (d.IsFalseAlarm === 'No') {
+                    locMap[loc].trueCount++;
+                } else {
+                    locMap[loc].falseCount++;
+                }
+                const ev = d.EventType || 'Operational Alarm';
+                locMap[loc].events[ev] = (locMap[loc].events[ev] || 0) + 1;
             });
 
-            const sortedReasons = Object.entries(reasonCounts)
-                .sort((a,b) => b[1] - a[1])
-                .slice(0, 2);
+            const sortedLocs = Object.values(locMap)
+                .sort((a,b) => b.count - a.count)
+                .slice(0, 5);
 
-            container.innerHTML = sortedReasons.map(([reason, count], idx) => {
-                const pct = Math.round((count / pending.length) * 100);
+            const maxCount = sortedLocs[0] ? sortedLocs[0].count : 1;
+            if (labelTotal) {
+                labelTotal.innerText = `${sortedLocs.length} ${currentLang === 'th' ? 'จุดเสี่ยงหลัก' : 'Top Hotspots'}`;
+            }
+
+            const colors = [
+                { bar: 'bg-rose-500', text: 'text-rose-400', badge: 'bg-rose-500/20 text-rose-300' },
+                { bar: 'bg-amber-500', text: 'text-amber-400', badge: 'bg-amber-500/20 text-amber-300' },
+                { bar: 'bg-indigo-500', text: 'text-indigo-400', badge: 'bg-indigo-500/20 text-indigo-300' },
+                { bar: 'bg-cyan-500', text: 'text-cyan-400', badge: 'bg-cyan-500/20 text-cyan-300' },
+                { bar: 'bg-emerald-500', text: 'text-emerald-400', badge: 'bg-emerald-500/20 text-emerald-300' }
+            ];
+
+            container.innerHTML = sortedLocs.map((locItem, idx) => {
+                const pctOfTotal = Math.round((locItem.count / totalFiltered) * 100);
+                const barWidth = Math.round((locItem.count / maxCount) * 100);
+                const col = colors[idx % colors.length];
+
+                const topEventEntry = Object.entries(locItem.events).sort((a,b) => b[1] - a[1])[0];
+                const topEventName = topEventEntry ? topEventEntry[0] : '-';
+                const topEventCount = topEventEntry ? topEventEntry[1] : 0;
+                const trueRate = locItem.count ? Math.round((locItem.trueCount / locItem.count) * 100) : 0;
+
+                let analysisText = "";
+                if (currentLang === 'th') {
+                    if (trueRate >= 50) {
+                        analysisText = `มีเคสจริง ${locItem.trueCount} เคส (${trueRate}%) เกิดขึ้นสูงสุดคือ <strong>${escapeHTML(topEventName)}</strong> (${topEventCount} เคส) บ่งชี้ปัญหาอุปกรณ์หรือโหลดการใช้งานหน้างาน แนะนำให้ทีมเทคนิคเข้าตรวจสอบและบำรุงรักษาเชิงป้องกัน`;
+                    } else {
+                        analysisText = `สัญญาณแจ้งเตือนหลอก (False Alarm) สูงถึง ${locItem.falseCount} เคส (${100 - trueRate}%) จาก <strong>${escapeHTML(topEventName)}</strong> (${topEventCount} เคส) แนะนำตรวจสอบฝุ่นละอองหรือปรับจูน Sensitivity ของเซนเซอร์`;
+                    }
+                } else {
+                    if (trueRate >= 50) {
+                        analysisText = `Verified true incidents: ${locItem.trueCount} (${trueRate}%). Top event: <strong>${escapeHTML(topEventName)}</strong> (${topEventCount} cases). Indicates active equipment stress; prioritize technician inspection.`;
+                    } else {
+                        analysisText = `Predominantly false alarms: ${locItem.falseCount} (${100 - trueRate}%). Top event: <strong>${escapeHTML(topEventName)}</strong> (${topEventCount} cases). Suggests ambient interference or sensor calibration issue.`;
+                    }
+                }
+
                 return `
-                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 hover:border-slate-700 transition">
                         <div class="flex items-center justify-between text-xs">
-                            <span class="font-bold text-white flex items-center gap-1.5 truncate max-w-[240px]" title="${reason}">
-                                <span class="px-1.5 py-0.2 rounded text-[10px] font-black ${idx === 0 ? 'bg-amber-500/20 text-amber-300' : 'bg-indigo-500/20 text-indigo-300'}">#${idx + 1}</span>
-                                ${shortenLabel(reason, 36)}
+                            <span class="font-bold text-white flex items-center gap-1.5 truncate max-w-[220px]" title="${escapeHTML(locItem.name)}">
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-black ${col.badge}">#${idx + 1}</span>
+                                ${escapeHTML(shortenLabel(locItem.name, 28))}
                             </span>
-                            <span class="font-bold ${idx === 0 ? 'text-amber-400' : 'text-indigo-400'} shrink-0">${count} cases (${pct}%)</span>
+                            <span class="font-bold ${col.text} shrink-0">${locItem.count} ${I18N_COMPARE[currentLang]?.casesUnit || 'cases'} (${pctOfTotal}%)</span>
                         </div>
                         <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                            <div class="${idx === 0 ? 'bg-amber-500' : 'bg-indigo-500'} h-full rounded-full" style="width: ${pct}%"></div>
+                            <div class="${col.bar} h-full rounded-full" style="width: ${barWidth}%"></div>
                         </div>
-                        <p class="text-[11px] text-slate-400 leading-snug">
-                            ${currentLang === 'th' 
-                                ? `เป็นอุปสรรคสำคัญลำดับที่ ${idx + 1} คิดเป็น ${pct}% ของเคสค้างสะสมทั้งหมด แนะนำให้เร่งประสานทีมเทคนิคเพื่อเร่งรัดปิดงานตาม SLA` 
-                                : `Ranked #${idx + 1} primary bottleneck accounting for ${pct}% of active backlog. Recommend coordinating with field contractors to meet SLA target.`}
+                        <div class="flex items-center justify-between text-[10px] text-slate-400">
+                            <span><span class="text-emerald-400 font-semibold">${locItem.trueCount} True</span> / <span class="text-amber-400 font-semibold">${locItem.falseCount} False</span></span>
+                            <span class="truncate max-w-[170px]" title="${escapeHTML(topEventName)}">${escapeHTML(shortenLabel(topEventName, 22))} (${topEventCount})</span>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-snug">
+                            ${analysisText}
                         </p>
                     </div>
                 `;
             }).join('');
         }
+
+        const renderBacklogAnalysis = renderTop5LocationsAnalysis;
 
         function updateDeepDiveInsightBoxes(filtered, comparisonGroups, comparisonType) {
             const filterKey = getFilterStateKey();
@@ -6853,12 +6790,12 @@
                 <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 shadow space-y-3" data-card-id="${cardId}">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-800">
                         <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">${headerTag}</span>
-                        <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded">${totalCases} ${I18N_COMPARE[currentLang].casesUnit}</span>
+                        <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded">${totalCases} ${I18N_COMPARE[currentLang]?.casesUnit || 'cases'}</span>
                     </div>
                     <div>
-                        <h4 class="font-bold text-white text-xs truncate" title="${fixedEvent}">${fixedEvent}</h4>
+                        <h4 class="font-bold text-white text-xs truncate" title="${escapeHTML(fixedEvent)}">${escapeHTML(fixedEvent)}</h4>
                         <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-1">
-                            <span><i class="fa-solid fa-location-dot mr-1 text-slate-500"></i>${topLoc}</span>
+                            <span><i class="fa-solid fa-location-dot mr-1 text-slate-500"></i>${escapeHTML(topLoc)}</span>
                             <span>&bull;</span>
                             <span class="text-emerald-400 font-semibold">${trueRate}% True</span>
                         </div>
@@ -6868,13 +6805,13 @@
                             <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400 block mb-0.5">
                                 <i class="fa-solid fa-file-lines mr-1"></i>Incident Summary
                             </span>
-                            <div class="summary-text text-slate-100" contenteditable="${isEditingBriefing}">${finalSummary}</div>
+                            <div class="summary-text text-slate-100" contenteditable="${isEditingBriefing}">${escapeHTML(finalSummary)}</div>
                         </div>
                         <div class="flashcard-action p-2 rounded-r">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
                                 <i class="fa-solid fa-wrench mr-1"></i>Resolution & Findings
                             </span>
-                            <div class="finding-text text-slate-100" contenteditable="${isEditingBriefing}">${finalFinding}</div>
+                            <div class="finding-text text-slate-100" contenteditable="${isEditingBriefing}">${escapeHTML(finalFinding)}</div>
                         </div>
                     </div>
                 </div>
@@ -6888,51 +6825,40 @@
 
             let html = '';
             items.forEach((item, idx) => {
-                let rootCause = "", triggers = "", immediateAction = "", prevention = "";
+                let observation = "";
+                let recommendation = "";
 
-                if (currentLang === 'th') {
-                    if (type === 'shift') {
-                        rootCause = `พบความผันผวนของ <strong>${item.name}</strong> จากการตัดต่อวงจรและทดสอบระบบเซนเซอร์โดยไม่ผ่านการ Bypass`;
-                        triggers = `ผู้รับเหมาเข้าพื้นที่ตกแต่งภายในและ <strong>ตัดต่อสายสัญญาณช่วงกะดึก</strong> โดยไม่มีการแจ้งล่วงหน้า`;
-                        immediateAction = `ส่งทีมปฏิบัติการตรวจสอบพิกัด <strong>ระงับงานที่ไม่มีใบอนุญาต</strong> และรีเซ็ตระบบกลับสู่สถานะปกติ`;
-                        prevention = `บังคับใช้ระเบียบ <strong>Digital Work Permit ล่วงหน้า 24 ชม.</strong> และกำหนดโซน Bypass สัญญาณชัดเจน`;
-                    } else if (type === 'true') {
-                        rootCause = `ความล้าสะสมของชิ้นส่วนฮาร์ดแวร์ในอุปกรณ์ <strong>${item.name}</strong> ที่ใช้งานต่อเนื่องเต็มขีดจำกัด`;
-                        triggers = `ปริมาณทราฟฟิกผู้ใช้งานและ <strong>ยานพาหนะเข้าพื้นที่สูงเกินพิกัด</strong> ในชั่วโมงเร่งด่วน`;
-                        immediateAction = `เข้ากั้นพื้นที่ ควบคุมจุดเกิดเหตุ และ <strong>เบิกอะไหล่สำรองเข้าเปลี่ยนทันที</strong> ภายในกรอบเวลา SLA`;
-                        prevention = `ยกระดับตาราง <strong>Predictive Health Check</strong> ตรวจวัดความร้อนและการสั่นสะเทือนทุกสัปดาห์`;
-                    } else if (type === 'false') {
-                        rootCause = `ค่าความไว <strong>Sensitivity Threshold</strong> ของตัวตรวจจับสูงเกินไป ไม่สอดคล้องกับสภาพแวดล้อมหน้างาน`;
-                        triggers = `<strong>ละอองฝุ่นจากงานขัดพื้น</strong> และสารเคมีทำความสะอาดระเหยเข้าไปสะสมในช่องเลนส์ตรวจจับ`;
-                        immediateAction = `ใช้เครื่องเป่าลมแรงดันสูง <strong>ทำความสะอาดหัว Sensor</strong> และทดสอบส่งสัญญาณร่วมกับศูนย์ DCC`;
-                        prevention = `<strong>ปรับลดค่า Sensitivity ลง 15%</strong> พร้อมจัดตารางล้าง Chamber ตรวจจับฝุ่นละอองทุก 30 วัน`;
-                    } else if (type === 'recurring') {
-                        rootCause = `ข้อจำกัดทางกายภาพและอุปกรณ์เดิมเป็น <strong>รุ่น Standard ไม่รองรับโหลด</strong> การใช้งานระดับ Commercial`;
-                        triggers = `พฤติกรรมผู้เช่า <strong>ค้ำประตูเปิดทิ้งไว้</strong> และแรงกระแทกจากรถเข็นส่งของบริเวณจุดขนถ่าย`;
-                        immediateAction = `ปรับตั้งระยะสปีดโช้คอัพประตู <strong>ติดป้ายเตือน</strong> และวางกำลัง รปภ. ประจำจุดเสี่ยงชั่วคราว`;
-                        prevention = `เสนอของบปรับปรุงเป็นอุปกรณ์เกรด <strong>Heavy-Duty อุตสาหกรรม</strong> พร้อมปรับปรุง SOP ควบคุมการเข้าออก`;
+                if (type === 'shift') {
+                    if (currentLang === 'th') {
+                        observation = `พบความผันผวนของ <strong>${escapeHTML(item.name)}</strong> (${item.total ? item.total.toLocaleString() + ' เคส' : ''}) โดยมีความต่างของจำนวนเคสระหว่างช่วงเปรียบเทียบสูงที่สุด`;
+                        recommendation = `แนะนำตรวจสอบกิจกรรมหน้างาน เช่น งานซ่อมบำรุงกะดึก งานตกแต่งพื้นที่ หรือการปรับตั้งค่าระบบที่ส่งผลให้เกิดความผันผวน`;
+                    } else {
+                        observation = `Significant variance detected in <strong>${escapeHTML(item.name)}</strong> (${item.total ? item.total.toLocaleString() + ' cases' : ''}) showing notable frequency shifts across comparison periods.`;
+                        recommendation = `Investigate on-site operational activities, off-shift contractor works, or seasonal factors driving this volume fluctuation.`;
                     }
-                } else {
-                    if (type === 'shift') {
-                        rootCause = `Sharp telemetry spikes in <strong>${item.name}</strong> due to unauthorized sensor isolation during fit-out.`;
-                        triggers = `Contractor rewiring and <strong>dry testing detector heads</strong> during shift turnovers without pre-clearance.`;
-                        immediateAction = `Dispatched field technicians to <strong>halt unpermitted activity</strong> and restore telemetry within SLA.`;
-                        prevention = `Enforce mandatory <strong>24-hr advance Digital Work Permit</strong> with strictly isolated zonal bypass.`;
-                    } else if (type === 'true') {
-                        rootCause = `Hardware lifecycle fatigue and stress loading on <strong>${item.name}</strong> operating at peak throughput.`;
-                        triggers = `Massive traffic volume of vehicles and pedestrians <strong>exceeding standard design ratings</strong>.`;
-                        immediateAction = `Barricade affected area, stabilize hazard, and <strong>deploy hot-swap spare parts</strong> immediately.`;
-                        prevention = `Establish weekly <strong>Predictive Health Check</strong> audits for vibration, temperature, and wear.`;
-                    } else if (type === 'false') {
-                        rootCause = `Over-calibrated optical <strong>sensitivity threshold</strong> on ${item.name} mismatched with ambient dust.`;
-                        triggers = `<strong>Ambient fit-out particulates</strong> and aerosolized floor solvents reaching optical chambers.`;
-                        immediateAction = `Execute <strong>compressed air cleaning</strong> of detector heads and coordinate live reset with DCC console.`;
-                        prevention = `<strong>Recalibrate sensitivity downward by 15%</strong> and mandate 30-day sensor chamber maintenance.`;
-                    } else if (type === 'recurring') {
-                        rootCause = `Architectural pinch-point bottleneck where <strong>standard-duty hardware fails</strong> under commercial use.`;
-                        triggers = `Tenants <strong>propping doors open</strong> and logistical trolley impacts along high-traffic corridors.`;
-                        immediateAction = `<strong>Re-tension door closer hydraulics</strong>, place warning decals, and station spot security officers.`;
-                        prevention = `Submit CapEx replacement for <strong>Industrial Heavy-Duty units</strong> and update operational SOP.`;
+                } else if (type === 'true') {
+                    if (currentLang === 'th') {
+                        observation = `เหตุการณ์จริงที่ตรวจสอบยืนยันแล้ว (${item.total ? item.total.toLocaleString() + ' เคส' : ''}) ซึ่งส่งผลกระทบต่อระบบงานและอุปกรณ์หน้างานโดยตรง`;
+                        recommendation = `ควรจัดลำดับความสำคัญในการจัดส่งทีมช่างเข้าแก้ไขตามกรอบ SLA พร้อมบันทึกประวัติเพื่อปรับรอบการบำรุงรักษาเชิงป้องกัน (PM)`;
+                    } else {
+                        observation = `Verified operational incidents for <strong>${escapeHTML(item.name)}</strong> (${item.total ? item.total.toLocaleString() + ' cases' : ''}) with confirmed physical impact.`;
+                        recommendation = `Ensure priority dispatch within SLA thresholds and review component wear history to reinforce preventive maintenance cycles.`;
+                    }
+                } else if (type === 'false') {
+                    if (currentLang === 'th') {
+                        observation = `สัญญาณแจ้งเตือนหลอกสะสมสูงสุด (${item.total ? item.total.toLocaleString() + ' เคส' : ''}) ก่อให้เกิดความล้าในการตอบสนองสัญญาณเตือน (Alarm Fatigue)`;
+                        recommendation = `แนะนำจัดรอบทำความสะอาดหัวตรวจวัด (Sensor Chamber) และพิจารณาปรับจูนค่าความไว (Sensitivity Threshold) ให้เข้ากับสภาพแวดล้อม`;
+                    } else {
+                        observation = `High concentration of false alerts for <strong>${escapeHTML(item.name)}</strong> (${item.total ? item.total.toLocaleString() + ' cases' : ''}) causing alert fatigue.`;
+                        recommendation = `Clean sensor chambers and adjust detection sensitivity thresholds to reduce environmental triggers (dust, drafts, steam).`;
+                    }
+                } else if (type === 'recurring') {
+                    if (currentLang === 'th') {
+                        observation = `เกิดเหตุการณ์ซ้ำซ้อนสูงสุด ณ จุดเกิดเหตุ (${item.total ? item.total.toLocaleString() + ' ครั้ง' : ''}) บ่งชี้ถึงปัญหาเชิงกายภาพหรือการใช้งานในพื้นที่ดังกล่าว`;
+                        recommendation = `ควรส่งวิศวกรเข้าตรวจสอบสภาพหน้างานจริง พิจารณาใช้อุปกรณ์เกรดอุตสาหกรรม (Heavy-Duty) หรือปรับปรุงคู่มือปฏิบัติการ (SOP)`;
+                    } else {
+                        observation = `Highest recurrence frequency (${item.total ? item.total.toLocaleString() + ' occurrences' : ''}) indicating localized hardware stress or specific usage patterns.`;
+                        recommendation = `Conduct on-site engineering audit. Consider upgrading to heavy-duty hardware and reviewing zone-specific operating procedures.`;
                     }
                 }
 
@@ -6940,35 +6866,23 @@
                     <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 shadow-sm space-y-2 hover:border-slate-700 transition">
                         <div class="flex items-start justify-between pb-1.5 border-b border-slate-800 gap-2">
                             <span class="font-bold text-white text-xs break-words leading-snug tracking-wide">
-                                <span class="text-indigo-400 font-extrabold mr-1">#${idx+1}</span>${item.name}
+                                <span class="text-indigo-400 font-extrabold mr-1">#${idx+1}</span>${escapeHTML(item.name)}
                             </span>
                             <span class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300 font-mono text-[10px] font-bold whitespace-nowrap">
-                                ${item.total ? item.total.toLocaleString() + ' ' + I18N_COMPARE[currentLang].casesUnit : ''}
+                                ${item.total ? item.total.toLocaleString() + ' ' + (I18N_COMPARE[currentLang]?.casesUnit || 'cases') : ''}
                             </span>
                         </div>
-                        <div class="flashcard-root text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
-                            <span class="text-rose-400 font-bold uppercase tracking-wider text-[10px] block">
-                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>Primary Root Cause:
+                        <div class="text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-l-2 border-indigo-500/50 bg-slate-950/40">
+                            <span class="text-indigo-400 font-bold uppercase tracking-wider text-[10px] block mb-0.5">
+                                <i class="fa-solid fa-chart-simple mr-1"></i>${currentLang === 'th' ? 'ข้อสังเกตเชิงข้อมูล (Observation):' : 'Data Observation:'}
                             </span>
-                            <span class="text-slate-100">${rootCause}</span>
+                            <span class="text-slate-200">${observation}</span>
                         </div>
-                        <div class="flashcard-trigger text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
-                            <span class="text-amber-400 font-bold uppercase tracking-wider text-[10px] block">
-                                <i class="fa-solid fa-bolt-lightning mr-1"></i>Operational Trigger:
+                        <div class="text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-l-2 border-emerald-500/50 bg-slate-950/40">
+                            <span class="text-emerald-400 font-bold uppercase tracking-wider text-[10px] block mb-0.5">
+                                <i class="fa-solid fa-compass mr-1"></i>${currentLang === 'th' ? 'ข้อเสนอแนะเชิงปฏิบัติการ (Actionable Guidance):' : 'Actionable Guidance:'}
                             </span>
-                            <span class="text-slate-100">${triggers}</span>
-                        </div>
-                        <div class="flashcard-action text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
-                            <span class="text-emerald-400 font-bold uppercase tracking-wider text-[10px] block">
-                                <i class="fa-solid fa-wrench mr-1"></i>Immediate Action:
-                            </span>
-                            <span class="text-slate-100">${immediateAction}</span>
-                        </div>
-                        <div class="flashcard-prevent text-[11px] leading-relaxed pl-2.5 py-1 rounded-r border-slate-800">
-                            <span class="text-cyan-400 font-bold uppercase tracking-wider text-[10px] block">
-                                <i class="fa-solid fa-shield-halved mr-1"></i>Predictive & SOP:
-                            </span>
-                            <span class="text-slate-100">${prevention}</span>
+                            <span class="text-slate-200">${recommendation}</span>
                         </div>
                     </div>
                 `;
@@ -7087,14 +7001,52 @@
             if (modalChartInstance) modalChartInstance.destroy();
 
             const isLight = document.body.classList.contains('light-mode');
-            const cfg = JSON.parse(JSON.stringify(src.config));
-            cfg.options.maintainAspectRatio = false;
-            cfg.options.plugins = cfg.options.plugins || {};
-            cfg.options.plugins.legend = { 
-                position: 'top', 
-                labels: { color: isLight ? '#0f172a' : '#cbd5e1', font: { size: 12, weight: 'bold' } } 
-            };
-            modalChartInstance = new Chart(mCanvas, cfg);
+            const clonedLabels = [...(src.data.labels || [])];
+            const clonedDatasets = (src.data.datasets || []).map(ds => ({
+                label: ds.label,
+                data: [...(ds.data || [])],
+                backgroundColor: ds.backgroundColor,
+                borderColor: ds.borderColor,
+                borderWidth: ds.borderWidth || 1,
+                borderRadius: ds.borderRadius || 4
+            }));
+
+            modalChartInstance = new Chart(mCanvas, {
+                type: (src.config && src.config.type) || 'bar',
+                data: {
+                    labels: clonedLabels,
+                    datasets: clonedDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'top', 
+                            labels: { color: isLight ? '#0f172a' : '#cbd5e1', font: { size: 12, weight: 'bold' } } 
+                        },
+                        datalabels: {
+                            color: isLight ? '#0f172a' : '#fff',
+                            anchor: 'end',
+                            align: 'top',
+                            offset: -2,
+                            font: { size: 11, weight: 'bold' },
+                            formatter: (v) => v > 0 ? v : ''
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 11 } }, 
+                            grid: { display: false } 
+                        },
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 11 } },
+                            grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' } 
+                        }
+                    }
+                }
+            });
         }
 
         function closeChartModal() {
