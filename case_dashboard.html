@@ -931,7 +931,7 @@
 
                     <!-- 2. Present Mode Icon Button -->
                     <button onclick="togglePresentationMode()" class="p-1.5 sm:p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-purple-400 hover:text-purple-300 transition border border-slate-700/80 shadow-sm shrink-0" title="Presentation Mode">
-                        <i data-lucide="presentation" class="w-4 h-4"></i>
+                        <i id="presIcon" data-lucide="presentation" class="w-4 h-4"></i>
                     </button>
 
                     <!-- 3. Day / Night Mode Toggle Button -->
@@ -5702,12 +5702,14 @@
                 document.getElementById('emptyStatePlaceholder')?.classList.remove('hidden');
                 document.getElementById('dashboardContent')?.classList.add('hidden');
                 document.getElementById('filterRow')?.classList.add('opacity-60', 'pointer-events-none');
+                document.getElementById('sidebarFiltersCompare')?.classList.add('opacity-60', 'pointer-events-none');
                 return;
             }
 
             document.getElementById('emptyStatePlaceholder')?.classList.add('hidden');
             document.getElementById('dashboardContent')?.classList.remove('hidden');
             document.getElementById('filterRow')?.classList.remove('opacity-60', 'pointer-events-none');
+            document.getElementById('sidebarFiltersCompare')?.classList.remove('opacity-60', 'pointer-events-none');
 
             initializeDropdownFilters(true);
             renderAllDropdownMenus();
