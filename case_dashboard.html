@@ -1019,13 +1019,35 @@
         /* ======================================================== */
         /* PDF EXPORT ENGINE: HIGH SHARPNESS & CRISP PAGINATION     */
         /* ======================================================== */
-        .pdf-page-break {
+        .html2pdf__page-break {
+            display: none;
+        }
+        body.pdf-exporting .html2pdf__page-break {
+            display: block !important;
+            page-break-before: always !important;
+            break-before: page !important;
+            height: 0px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        body.pdf-exporting .pdf-page-break {
             page-break-before: always !important;
             break-before: page !important;
         }
-        .pdf-avoid-break {
+        body.pdf-exporting .pdf-avoid-break,
+        body.pdf-exporting .glass-card,
+        body.pdf-exporting .dashboard-card,
+        body.pdf-exporting .exec-section-card {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+        }
+        body.pdf-exporting #viewDashboard,
+        body.pdf-exporting #viewCompare {
+            width: 1500px !important;
+            max-width: 1500px !important;
+            margin: 0 auto !important;
+            padding: 12px !important;
         }
 
         /* Hide interactive controls, scrollbars, and tools during PDF capture */
@@ -1938,6 +1960,8 @@
             </div>
         </section>
 
+        <div class="html2pdf__page-break"></div>
+
         <!-- Section 1 & Section 2: Top 3 Incidents & Top 3 Recurring Hotspots -->
         <section id="execSectionsRow" class="pdf-page-break pdf-avoid-break grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
             <!-- Section 1 (FULL WIDTH TOP): Top 3 Incidents + Top 3 Frequent Locations -->
@@ -1968,6 +1992,8 @@
                 </div>
             </div>
         </section>
+
+        <div class="html2pdf__page-break"></div>
 
         <!-- Charts Grid 1: Monthly Trends -->
         <section id="sec-charts-grid1" class="pdf-page-break pdf-avoid-break grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -2014,6 +2040,8 @@
                 </div>
             </div>
         </section>
+
+        <div class="html2pdf__page-break"></div>
 
         <!-- Charts Grid 2: Categories, Created By Team, and Zones -->
         <section id="sec-charts-grid2" class="pdf-page-break pdf-avoid-break grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -2088,6 +2116,8 @@
             </div>
         </section>
 
+        <div class="html2pdf__page-break"></div>
+
         <!-- Dynamic Top 10 Incident Types Bar Chart -->
         <section id="cardTop10Chart" class="pdf-page-break pdf-avoid-break dashboard-card bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg relative transition-all">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
@@ -2114,6 +2144,8 @@
                 </div>
             </div>
         </section>
+
+        <div class="html2pdf__page-break"></div>
 
         <!-- Unfinished & Pending Tasks Log -->
         <section id="cardPendingTable" class="pdf-page-break pdf-avoid-break dashboard-card bg-slate-900/80 border border-rose-900/30 rounded-2xl p-4 shadow-lg space-y-3 relative transition-all">
@@ -2282,6 +2314,8 @@
                     <div id="highlightCasesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
 
+                <div class="html2pdf__page-break"></div>
+
                 <!-- 4 Strategic Deep-Dive Flashcards -->
                 <div class="glass-card p-4 sm:p-5 border-indigo-500/30 pdf-page-break pdf-avoid-break">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
@@ -2316,6 +2350,8 @@
 
                 <!-- Charts Section: 4 Multi-Bar Comparison Charts (Full Width) -->
                 <div class="space-y-6">
+                    <div class="html2pdf__page-break"></div>
+
                     <!-- Chart 1: Significant Delta Shifts (Full Width) -->
                     <!-- Chart 1: Significant Delta Shifts -->
                     <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
@@ -2347,6 +2383,8 @@
                         </div>
                     </div>
 
+                    <div class="html2pdf__page-break"></div>
+
                     <!-- Chart 2: Top True Incidents Comparison -->
                     <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
                         <div class="flex items-center justify-between mb-3">
@@ -2376,6 +2414,8 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="html2pdf__page-break"></div>
 
                     <!-- Chart 3: Top False Incident Event Types -->
                     <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
@@ -2407,6 +2447,8 @@
                         </div>
                     </div>
 
+                    <div class="html2pdf__page-break"></div>
+
                     <!-- Chart 4: Recurring Hotspots -->
                     <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
                         <div class="flex items-center justify-between mb-3">
@@ -2437,6 +2479,8 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="html2pdf__page-break"></div>
 
                 <!-- Bottom Section: New Event Types (Full Width) -->
                 <div class="glass-card p-4 sm:p-5 w-full pdf-avoid-break">
@@ -5225,7 +5269,7 @@
             }
 
             const opt = {
-                margin:       [0.25, 0.30, 0.25, 0.30],
+                margin:       [0.20, 0.25, 0.20, 0.25],
                 filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.99 },
                 html2canvas:  { 
@@ -5235,10 +5279,10 @@
                     letterRendering: true,
                     logging: false,
                     backgroundColor: pdfBgColor,
-                    windowWidth: 1550
+                    windowWidth: 1500
                 },
                 jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape', compress: true },
-                pagebreak:    { mode: ['css', 'legacy'], before: '.pdf-page-break', avoid: '.pdf-avoid-break' }
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'], before: '.pdf-page-break', avoid: '.pdf-avoid-break' }
             };
 
             const worker = html2pdf().set(opt).from(targetContainer);
@@ -5273,27 +5317,64 @@
         }
 
         function captureCanvasImage(canvasId, bgColor = '#ffffff') {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas || canvas.width === 0 || canvas.height === 0) return null;
+            const canvasAliases = {
+                'slaChart': 'slaTrendChart',
+                'categoryChart': 'categoryDonutChart',
+                'teamWorkloadChart': 'createdByChart'
+            };
+            const targetId = canvasAliases[canvasId] || canvasId;
+            const canvas = document.getElementById(targetId);
+            if (!canvas) return null;
+
+            let chartInst = null;
             try {
-                const offCanvas = document.createElement('canvas');
-                offCanvas.width = canvas.width;
-                offCanvas.height = canvas.height;
-                const ctx = offCanvas.getContext('2d');
-                if (bgColor) {
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+                if (typeof Chart !== 'undefined') {
+                    chartInst = Chart.getChart(canvas);
                 }
-                ctx.drawImage(canvas, 0, 0);
-                return offCanvas.toDataURL('image/png');
-            } catch (e) {
+            } catch (e) {}
+
+            // Ensure canvas is rendered if canvas was recently unhidden or resized
+            if (chartInst && (canvas.width === 0 || canvas.height === 0)) {
                 try {
-                    return canvas.toDataURL('image/png');
-                } catch (err) {
-                    console.warn('Canvas capture fallback failed for ' + canvasId, err);
-                    return null;
-                }
+                    chartInst.resize();
+                    chartInst.render();
+                } catch (e) {}
             }
+
+            // Primary: Offscreen canvas with solid background (ensures opaque background for PPTX)
+            if (canvas.width > 0 && canvas.height > 0) {
+                try {
+                    const offCanvas = document.createElement('canvas');
+                    offCanvas.width = canvas.width;
+                    offCanvas.height = canvas.height;
+                    const ctx = offCanvas.getContext('2d');
+                    if (bgColor) {
+                        ctx.fillStyle = bgColor;
+                        ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+                    }
+                    ctx.drawImage(canvas, 0, 0);
+                    const b64 = offCanvas.toDataURL('image/png');
+                    if (b64 && b64.length > 100) return b64;
+                } catch (e) {}
+            }
+
+            // Secondary fallback: Chart.js native export
+            if (chartInst) {
+                try {
+                    const img = chartInst.toBase64Image('image/png', 1);
+                    if (img && img.length > 100) return img;
+                } catch (e) {}
+            }
+
+            // Tertiary fallback: direct canvas export
+            try {
+                if (canvas.width > 0 && canvas.height > 0) {
+                    const img = canvas.toDataURL('image/png');
+                    if (img && img.length > 100) return img;
+                }
+            } catch (e) {}
+
+            return null;
         }
 
         function applyFrasersSlideHeaderFooter(slide, pptx, subjectTitle, slideNum, totalSlides, reportDateStr) {
@@ -5422,355 +5503,396 @@
                 alert('PowerPoint library is initializing. Please try again.');
                 return;
             }
-            const pptx = new PptxGenJS();
-            pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
-            pptx.layout = 'FRASERS_16X9';
 
-            const TOTAL_SLIDES = 6;
-            const dateObj = getFrasersDateFormatted();
-            const reportDateStr = dateObj.reportDate;
+            // Temporarily unhide dashboard container if currently on compare view so charts and DOM exist
+            const viewDash = document.getElementById('viewDashboard');
+            const wasHidden = viewDash && viewDash.classList.contains('hidden');
+            const prevView = CURRENT_VIEW;
+            if (wasHidden) {
+                viewDash.classList.remove('hidden');
+                viewDash.style.position = 'fixed';
+                viewDash.style.left = '-9999px';
+                viewDash.style.top = '0';
+                viewDash.style.width = '1400px';
+                viewDash.style.visibility = 'hidden';
+                if (typeof renderAllCharts === 'function') {
+                    CURRENT_VIEW = 'dashboard';
+                    try { renderAllCharts(); } catch(e){}
+                }
+            }
 
-            const totalCount = document.getElementById('kpiTotal')?.textContent || '0';
-            const faRate = document.getElementById('kpiFARate')?.textContent || '0%';
-            const faCount = document.getElementById('kpiFACount')?.textContent || '0';
-            const compSLA = document.getElementById('kpiCompSLA')?.textContent || '0%';
-            const respSLA = document.getElementById('kpiRespSLA')?.textContent || '0%';
-            const mttr = document.getElementById('kpiMTTR')?.textContent || '0 hrs';
-            const pendingCount = document.getElementById('kpiPending')?.textContent || '0';
+            try {
+                const pptx = new PptxGenJS();
+                pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
+                pptx.layout = 'FRASERS_16X9';
 
-            // ----------------------------------------------------
-            // SLIDE 1: Cover Slide
-            // ----------------------------------------------------
-            const coverMeta = [
-                { label: "Target Project / Facility", value: `${CURRENT_PROJECT_NAME} Operations Command Centre`, color: FRASERS_RED },
-                { label: "Total Filtered Records", value: `${totalCount} incident events`, color: '1E293B' },
-                { label: "False Alarm Overhead", value: `${faRate} (${faCount})`, color: 'D97706' },
-                { label: "Completion SLA Compliance", value: compSLA, color: '059669' },
-                { label: "Response SLA Compliance", value: respSLA, color: '0284C7' },
-                { label: "Unresolved Active Backlog", value: `${pendingCount} cases`, color: 'E11D48' }
-            ];
-            createFrasersCoverSlide(pptx, `${CURRENT_PROJECT_NAME} COMMAND CENTER`, "Executive Operational Telemetry & Dynamic Intelligence Briefing", coverMeta, reportDateStr);
+                const TOTAL_SLIDES = 6;
+                const dateObj = getFrasersDateFormatted();
+                const reportDateStr = dateObj.reportDate;
 
-            // ----------------------------------------------------
-            // SLIDE 2: Executive Overview - KPIs & Telemetry Briefing
-            // ----------------------------------------------------
-            const slide2 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide2, pptx, "Executive Operational Performance & SLA Overview", 2, TOTAL_SLIDES, reportDateStr);
+                const totalCount = document.getElementById('kpiTotal')?.textContent || '0';
+                const faRate = document.getElementById('kpiFARate')?.textContent || '0%';
+                const faCount = document.getElementById('kpiFACount')?.textContent || '0';
+                const compSLA = document.getElementById('kpiCompSLA')?.textContent || '0%';
+                const respSLA = document.getElementById('kpiRespSLA')?.textContent || '0%';
+                const mttr = document.getElementById('kpiMTTR')?.textContent || '0 hrs';
+                const pendingCount = document.getElementById('kpiPending')?.textContent || '0';
 
-            // 6 KPI Scorecards Row (Symmetrically fitting inside 12.10" content area)
-            const kpiItems = [
-                { label: "TOTAL RECORDS", val: totalCount, sub: "100% Filtered", color: "3730A3" },
-                { label: "FALSE ALARM RATE", val: faRate, sub: faCount, color: "D97706" },
-                { label: "COMPLETION SLA", val: compSLA, sub: "Closed Target", color: "059669" },
-                { label: "RESPONSE SLA", val: respSLA, sub: "Initial Triage", color: "0284C7" },
-                { label: "MEAN TTR", val: mttr, sub: "Resolution Time", color: "7C3AED" },
-                { label: "PENDING TASKS", val: pendingCount, sub: "Active Queue", color: "E11D48" }
-            ];
+                // ----------------------------------------------------
+                // SLIDE 1: Cover Slide
+                // ----------------------------------------------------
+                const coverMeta = [
+                    { label: "Target Project / Facility", value: `${CURRENT_PROJECT_NAME} Operations Command Centre`, color: FRASERS_RED },
+                    { label: "Total Filtered Records", value: `${totalCount} incident events`, color: '1E293B' },
+                    { label: "False Alarm Overhead", value: `${faRate} (${faCount})`, color: 'D97706' },
+                    { label: "Completion SLA Compliance", value: compSLA, color: '059669' },
+                    { label: "Response SLA Compliance", value: respSLA, color: '0284C7' },
+                    { label: "Unresolved Active Backlog", value: `${pendingCount} cases`, color: 'E11D48' }
+                ];
+                createFrasersCoverSlide(pptx, `${CURRENT_PROJECT_NAME} COMMAND CENTER`, "Executive Operational Telemetry & Dynamic Intelligence Briefing", coverMeta, reportDateStr);
 
-            const cardW = 1.88;
-            const gapX = 0.16;
-            kpiItems.forEach((k, idx) => {
-                const posX = 0.60 + idx * (cardW + gapX);
-                slide2.addShape(pptx.ShapeType.roundRect, {
-                    x: posX, y: 1.05, w: cardW, h: 1.20,
+                // ----------------------------------------------------
+                // SLIDE 2: Executive Overview - KPIs & Telemetry Briefing
+                // ----------------------------------------------------
+                const slide2 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide2, pptx, "Executive Operational Performance & SLA Overview", 2, TOTAL_SLIDES, reportDateStr);
+
+                // 6 KPI Scorecards Row (Symmetrically fitting inside 12.10" content area)
+                const kpiItems = [
+                    { label: "TOTAL RECORDS", val: totalCount, sub: "100% Filtered", color: "3730A3" },
+                    { label: "FALSE ALARM RATE", val: faRate, sub: faCount, color: "D97706" },
+                    { label: "COMPLETION SLA", val: compSLA, sub: "Closed Target", color: "059669" },
+                    { label: "RESPONSE SLA", val: respSLA, sub: "Initial Triage", color: "0284C7" },
+                    { label: "MEAN TTR", val: mttr, sub: "Resolution Time", color: "7C3AED" },
+                    { label: "PENDING TASKS", val: pendingCount, sub: "Active Queue", color: "E11D48" }
+                ];
+
+                const cardW = 1.88;
+                const gapX = 0.16;
+                kpiItems.forEach((k, idx) => {
+                    const posX = 0.60 + idx * (cardW + gapX);
+                    slide2.addShape(pptx.ShapeType.roundRect, {
+                        x: posX, y: 1.05, w: cardW, h: 1.20,
+                        fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
+                        rectRadius: 0.08
+                    });
+                    slide2.addText(k.label, {
+                        x: posX, y: 1.15, w: cardW, h: 0.22,
+                        fontSize: 8.5, bold: true, color: '64748B', align: 'center', fontFace: 'Segoe UI'
+                    });
+                    slide2.addText(k.val, {
+                        x: posX, y: 1.38, w: cardW, h: 0.45,
+                        fontSize: 17, bold: true, color: k.color, align: 'center', fontFace: 'Segoe UI'
+                    });
+                    slide2.addText(k.sub, {
+                        x: posX, y: 1.85, w: cardW, h: 0.25,
+                        fontSize: 8, color: '94A3B8', align: 'center', fontFace: 'Segoe UI'
+                    });
+                });
+
+                // 4 Executive Telemetry Briefing Cards (2x2 Grid)
+                const noteVol = (document.getElementById('dynInsightVolume')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+                const noteFA = (document.getElementById('dynInsightFA')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+                const noteSLA = (document.getElementById('dynInsightSLA')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+                const notePending = (document.getElementById('dynInsightPending')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+
+                const briefingCards = [
+                    { title: "Incident Volume Surge Drivers", text: noteVol, borderClr: "C7D2FE", accentClr: "3730A3", x: 0.60, y: 2.45 },
+                    { title: "False Alarm Overhead & Tuning Focus", text: noteFA, borderClr: "FDE68A", accentClr: "B45309", x: 6.75, y: 2.45 },
+                    { title: "SLA Compliance & Efficiency Gap", text: noteSLA, borderClr: "BAE6FD", accentClr: "0369A1", x: 0.60, y: 4.65 },
+                    { title: "Unfinished Workload & Backlog Aging", text: notePending, borderClr: "FECDD3", accentClr: "BE123C", x: 6.75, y: 4.65 }
+                ];
+
+                briefingCards.forEach(b => {
+                    slide2.addShape(pptx.ShapeType.roundRect, {
+                        x: b.x, y: b.y, w: 5.95, h: 2.05,
+                        fill: { color: 'FFFFFF' }, line: { color: b.borderClr, width: 1.5 },
+                        rectRadius: 0.08
+                    });
+                    slide2.addText(b.title, {
+                        x: b.x + 0.20, y: b.y + 0.15, w: 5.55, h: 0.35,
+                        fontSize: 11.5, bold: true, color: b.accentClr, fontFace: 'Segoe UI'
+                    });
+                    slide2.addText(b.text, {
+                        x: b.x + 0.20, y: b.y + 0.52, w: 5.55, h: 1.40,
+                        fontSize: 9.5, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 13
+                    });
+                });
+
+                // ----------------------------------------------------
+                // SLIDE 3: Top 3 Incidents & Top 3 Recurring Hotspots
+                // ----------------------------------------------------
+                const slide3 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide3, pptx, "Top 3 Incident Types & Top 3 Recurring Hotspots Telemetry", 3, TOTAL_SLIDES, reportDateStr);
+
+                // Compute Top 3 Events & Top 3 Hotspots with resilient field resolution
+                const evCounts = {};
+                const locCounts = {};
+                FILTERED_DATA.forEach(d => {
+                    const ev = (d.eventType || d.EventType || 'Other').trim();
+                    const lc = (d.loc || d.location || d.Location || 'General').trim();
+                    if (ev) evCounts[ev] = (evCounts[ev] || 0) + 1;
+                    if (lc) locCounts[lc] = (locCounts[lc] || 0) + 1;
+                });
+                const top3Ev = Object.entries(evCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+                const top3Loc = Object.entries(locCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+                // Left Section: Top 3 Incidents
+                slide3.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: FRASERS_LIGHT_BG }, line: { color: 'C7D2FE', width: 1.2 },
+                    rectRadius: 0.08
+                });
+                slide3.addText("Top 3 Incident Types & Frequent Locations", {
+                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12.5, bold: true, color: '3730A3', fontFace: 'Segoe UI'
+                });
+
+                top3Ev.forEach(([evName, count], idx) => {
+                    const evRecords = FILTERED_DATA.filter(d => (d.eventType || d.EventType || '').trim() === evName);
+                    const evFalse = evRecords.filter(d => d.isFA === true || String(d.isFalseAlarm).toLowerCase() === 'yes').length;
+                    const evTrue = evRecords.length - evFalse;
+                    const locSub = {};
+                    evRecords.forEach(d => {
+                        const lc = (d.loc || d.location || d.Location || 'General').trim();
+                        locSub[lc] = (locSub[lc] || 0) + 1;
+                    });
+                    const topLocs = Object.entries(locSub).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+                    const boxY = 1.65 + idx * 1.60;
+                    slide3.addShape(pptx.ShapeType.roundRect, {
+                        x: 0.80, y: boxY, w: 5.55, h: 1.45,
+                        fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
+                        rectRadius: 0.06
+                    });
+                    slide3.addText(`Rank ${idx + 1}: ${evName}`, {
+                        x: 0.95, y: boxY + 0.10, w: 3.40, h: 0.30,
+                        fontSize: 10.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
+                    });
+                    slide3.addText(`Total: ${count}  |  True: ${evTrue}  |  False: ${evFalse}`, {
+                        x: 2.80, y: boxY + 0.10, w: 3.40, h: 0.30,
+                        fontSize: 8.5, bold: true, color: '475569', align: 'right', fontFace: 'Segoe UI'
+                    });
+
+                    const locText = topLocs.map(([lName, lCount], lIdx) => {
+                        const lRecords = evRecords.filter(d => (d.loc || d.location || d.Location || 'General').trim() === lName);
+                        const lFalse = lRecords.filter(d => d.isFA === true || String(d.isFalseAlarm).toLowerCase() === 'yes').length;
+                        const lTrue = lRecords.length - lFalse;
+                        return `#${lIdx + 1} ${lName}: ${lCount} cases (True: ${lTrue}, False: ${lFalse})`;
+                    }).join('\n');
+                    slide3.addText(locText || 'No specific location breakdown recorded.', {
+                        x: 0.95, y: boxY + 0.42, w: 5.25, h: 0.95,
+                        fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 12
+                    });
+                });
+
+                // Right Section: Top 3 Hotspots
+                slide3.addShape(pptx.ShapeType.roundRect, {
+                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: FRASERS_LIGHT_BG }, line: { color: 'FECDD3', width: 1.2 },
+                    rectRadius: 0.08
+                });
+                slide3.addText("Top 3 Recurring Hotspots & Frequent Event Types", {
+                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12.5, bold: true, color: 'BE123C', fontFace: 'Segoe UI'
+                });
+
+                top3Loc.forEach(([locName, count], idx) => {
+                    const locRecords = FILTERED_DATA.filter(d => (d.loc || d.location || d.Location || 'General').trim() === locName);
+                    const locFalse = locRecords.filter(d => d.isFA === true || String(d.isFalseAlarm).toLowerCase() === 'yes').length;
+                    const locTrue = locRecords.length - locFalse;
+                    const evSub = {};
+                    locRecords.forEach(d => {
+                        const ev = (d.eventType || d.EventType || 'Other').trim();
+                        evSub[ev] = (evSub[ev] || 0) + 1;
+                    });
+                    const topEvs = Object.entries(evSub).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+                    const boxY = 1.65 + idx * 1.60;
+                    slide3.addShape(pptx.ShapeType.roundRect, {
+                        x: 6.95, y: boxY, w: 5.55, h: 1.45,
+                        fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
+                        rectRadius: 0.06
+                    });
+                    slide3.addText(`Rank ${idx + 1}: ${locName}`, {
+                        x: 7.10, y: boxY + 0.10, w: 3.40, h: 0.30,
+                        fontSize: 10.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
+                    });
+                    slide3.addText(`Total: ${count}  |  True: ${locTrue}  |  False: ${locFalse}`, {
+                        x: 8.95, y: boxY + 0.10, w: 3.40, h: 0.30,
+                        fontSize: 8.5, bold: true, color: '475569', align: 'right', fontFace: 'Segoe UI'
+                    });
+
+                    const evText = topEvs.map(([eName, eCount], eIdx) => {
+                        const eRecords = locRecords.filter(d => (d.eventType || d.EventType || 'Other').trim() === eName);
+                        const eFalse = eRecords.filter(d => d.isFA === true || String(d.isFalseAlarm).toLowerCase() === 'yes').length;
+                        const eTrue = eRecords.length - eFalse;
+                        return `#${eIdx + 1} ${eName}: ${eCount} cases (True: ${eTrue}, False: ${eFalse})`;
+                    }).join('\n');
+                    slide3.addText(evText || 'No specific event types recorded.', {
+                        x: 7.10, y: boxY + 0.42, w: 5.25, h: 0.95,
+                        fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 12
+                    });
+                });
+
+                // ----------------------------------------------------
+                // SLIDE 4: Operational Trends (Monthly Incidents & SLA)
+                // ----------------------------------------------------
+                const slide4 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide4, pptx, "Incident Volume Trends & SLA Performance Telemetry", 4, TOTAL_SLIDES, reportDateStr);
+
+                const trendImg = captureCanvasImage('trendChart');
+                const slaImg = captureCanvasImage('slaTrendChart');
+
+                // Left: Trend Chart
+                slide4.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                    rectRadius: 0.08
+                });
+                slide4.addText("Monthly Incident Trend & False Alarms", {
+                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+                });
+                if (trendImg) {
+                    slide4.addImage({ data: trendImg, x: 0.75, y: 1.65, w: 5.65, h: 4.85 });
+                } else {
+                    slide4.addText("Monthly trend chart active in interactive view.", {
+                        x: 0.80, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
+                    });
+                }
+
+                // Right: SLA Chart
+                slide4.addShape(pptx.ShapeType.roundRect, {
+                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                    rectRadius: 0.08
+                });
+                slide4.addText("SLA Performance Trend (Response vs Completion %)", {
+                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+                });
+                if (slaImg) {
+                    slide4.addImage({ data: slaImg, x: 6.90, y: 1.65, w: 5.65, h: 4.85 });
+                } else {
+                    slide4.addText("SLA performance trend chart active in interactive view.", {
+                        x: 6.95, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
+                    });
+                }
+
+                // ----------------------------------------------------
+                // SLIDE 5: Workload Distribution & Team Telemetry
+                // ----------------------------------------------------
+                const slide5 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide5, pptx, "Incident Category Distribution & Team Workload Telemetry", 5, TOTAL_SLIDES, reportDateStr);
+
+                const catImg = captureCanvasImage('categoryDonutChart');
+                const teamImg = captureCanvasImage('createdByChart');
+
+                // Left: Category Distribution
+                slide5.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                    rectRadius: 0.08
+                });
+                slide5.addText("Incident Category Distribution Breakdown", {
+                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+                });
+                if (catImg) {
+                    slide5.addImage({ data: catImg, x: 0.75, y: 1.65, w: 5.65, h: 4.85 });
+                } else {
+                    slide5.addText("Category breakdown chart active in interactive view.", {
+                        x: 0.80, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
+                    });
+                }
+
+                // Right: Team Workload
+                slide5.addShape(pptx.ShapeType.roundRect, {
+                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
                     fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
                     rectRadius: 0.08
                 });
-                slide2.addText(k.label, {
-                    x: posX, y: 1.15, w: cardW, h: 0.22,
-                    fontSize: 8.5, bold: true, color: '64748B', align: 'center', fontFace: 'Segoe UI'
+                slide5.addText("Team Workload & Handling Capacity", {
+                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
                 });
-                slide2.addText(k.val, {
-                    x: posX, y: 1.38, w: cardW, h: 0.45,
-                    fontSize: 17, bold: true, color: k.color, align: 'center', fontFace: 'Segoe UI'
-                });
-                slide2.addText(k.sub, {
-                    x: posX, y: 1.85, w: cardW, h: 0.25,
-                    fontSize: 8, color: '94A3B8', align: 'center', fontFace: 'Segoe UI'
-                });
-            });
+                if (teamImg) {
+                    slide5.addImage({ data: teamImg, x: 6.90, y: 1.65, w: 5.65, h: 4.85 });
+                } else {
+                    slide5.addText("Team workload chart active in interactive view.", {
+                        x: 6.95, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
+                    });
+                }
 
-            // 4 Executive Telemetry Briefing Cards (2x2 Grid)
-            const noteVol = (document.getElementById('dynInsightVolume')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
-            const noteFA = (document.getElementById('dynInsightFA')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
-            const noteSLA = (document.getElementById('dynInsightSLA')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
-            const notePending = (document.getElementById('dynInsightPending')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+                // ----------------------------------------------------
+                // SLIDE 6: Unresolved Operational Tickets & Critical Backlog
+                // ----------------------------------------------------
+                const slide6 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide6, pptx, "Unresolved Operational Tickets & Critical Backlog Telemetry", 6, TOTAL_SLIDES, reportDateStr);
 
-            const briefingCards = [
-                { title: "Incident Volume Surge Drivers", text: noteVol, borderClr: "C7D2FE", accentClr: "3730A3", x: 0.60, y: 2.45 },
-                { title: "False Alarm Overhead & Tuning Focus", text: noteFA, borderClr: "FDE68A", accentClr: "B45309", x: 6.75, y: 2.45 },
-                { title: "SLA Compliance & Efficiency Gap", text: noteSLA, borderClr: "BAE6FD", accentClr: "0369A1", x: 0.60, y: 4.65 },
-                { title: "Unfinished Workload & Backlog Aging", text: notePending, borderClr: "FECDD3", accentClr: "BE123C", x: 6.75, y: 4.65 }
-            ];
+                const pendingRows = (typeof currentPendingData !== 'undefined' && currentPendingData.length > 0)
+                    ? currentPendingData
+                    : FILTERED_DATA.filter(d => {
+                        const st = (d.status || d.Status || '').toLowerCase();
+                        return st.includes('pending') || st.includes('open') || st.includes('in progress');
+                    });
 
-            briefingCards.forEach(b => {
-                slide2.addShape(pptx.ShapeType.roundRect, {
-                    x: b.x, y: b.y, w: 5.95, h: 2.05,
-                    fill: { color: 'FFFFFF' }, line: { color: b.borderClr, width: 1.5 },
-                    rectRadius: 0.08
-                });
-                slide2.addText(b.title, {
-                    x: b.x + 0.20, y: b.y + 0.15, w: 5.55, h: 0.35,
-                    fontSize: 11.5, bold: true, color: b.accentClr, fontFace: 'Segoe UI'
-                });
-                slide2.addText(b.text, {
-                    x: b.x + 0.20, y: b.y + 0.52, w: 5.55, h: 1.40,
-                    fontSize: 9.5, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 13
-                });
-            });
+                const tableRows = [
+                    [
+                        { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Category", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "TTR / Age", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
+                    ]
+                ];
 
-            // ----------------------------------------------------
-            // SLIDE 3: Top 3 Incidents & Top 3 Recurring Hotspots
-            // ----------------------------------------------------
-            const slide3 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide3, pptx, "Top 3 Incident Types & Top 3 Recurring Hotspots Telemetry", 3, TOTAL_SLIDES, reportDateStr);
+                const sliceLimit = Math.min(pendingRows.length, 10);
+                for (let i = 0; i < sliceLimit; i++) {
+                    const r = pendingRows[i];
+                    const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
+                    const ageText = (r.aging !== undefined && r.aging !== null && r.aging !== '-') 
+                        ? `${r.aging} days` 
+                        : (r.mttrMins ? `${Math.round(r.mttrMins/60)} hrs` : (r.ttrHours ? `${r.ttrHours} hrs` : '-'));
+                    tableRows.push([
+                        { text: String(r.caseNo || r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                        { text: String(r.date || r.dateOnly || r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
+                        { text: String(r.cat || r.category || r.EventCategory || '-'), options: { color: "1E293B", fill: { color: bg } } },
+                        { text: String(r.eventType || r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
+                        { text: String(r.loc || r.location || r.Location || '-'), options: { color: "475569", fill: { color: bg } } },
+                        { text: String(r.status || r.Status || 'Pending'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
+                        { text: ageText, options: { bold: true, color: "64748B", fill: { color: bg } } }
+                    ]);
+                }
 
-            // Compute Top 3 Events & Top 3 Hotspots
-            const evCounts = {};
-            const locCounts = {};
-            FILTERED_DATA.forEach(d => {
-                evCounts[d.eventType] = (evCounts[d.eventType] || 0) + 1;
-                locCounts[d.location] = (locCounts[d.location] || 0) + 1;
-            });
-            const top3Ev = Object.entries(evCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
-            const top3Loc = Object.entries(locCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+                if (pendingRows.length === 0) {
+                    tableRows.push([
+                        { text: "Zero unresolved tickets detected under current active filters.", options: { colspan: 7, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                    ]);
+                }
 
-            // Left Section: Top 3 Incidents
-            slide3.addShape(pptx.ShapeType.roundRect, {
-                x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'C7D2FE', width: 1.2 },
-                rectRadius: 0.08
-            });
-            slide3.addText("Top 3 Incident Types & Frequent Locations", {
-                x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12.5, bold: true, color: '3730A3', fontFace: 'Segoe UI'
-            });
-
-            top3Ev.forEach(([evName, count], idx) => {
-                const evRecords = FILTERED_DATA.filter(d => d.eventType === evName);
-                const evTrue = evRecords.filter(d => d.isFalseAlarm === 'No').length;
-                const evFalse = evRecords.filter(d => d.isFalseAlarm === 'Yes').length;
-                const locSub = {};
-                evRecords.forEach(d => { locSub[d.location] = (locSub[d.location] || 0) + 1; });
-                const topLocs = Object.entries(locSub).sort((a,b) => b[1] - a[1]).slice(0, 3);
-
-                const boxY = 1.65 + idx * 1.60;
-                slide3.addShape(pptx.ShapeType.roundRect, {
-                    x: 0.80, y: boxY, w: 5.55, h: 1.45,
-                    fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
-                    rectRadius: 0.06
-                });
-                slide3.addText(`Rank ${idx + 1}: ${evName}`, {
-                    x: 0.95, y: boxY + 0.10, w: 3.40, h: 0.30,
-                    fontSize: 10.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
-                });
-                slide3.addText(`Total: ${count}  |  True: ${evTrue}  |  False: ${evFalse}`, {
-                    x: 2.80, y: boxY + 0.10, w: 3.40, h: 0.30,
-                    fontSize: 8.5, bold: true, color: '475569', align: 'right', fontFace: 'Segoe UI'
+                slide6.addTable(tableRows, {
+                    x: 0.60, y: 1.15, w: 12.10,
+                    fontSize: 9.5,
+                    border: { pt: 0.5, color: "CBD5E1" }
                 });
 
-                const locText = topLocs.map(([lName, lCount], lIdx) => {
-                    const lRecords = evRecords.filter(d => d.location === lName);
-                    const lTrue = lRecords.filter(d => d.isFalseAlarm === 'No').length;
-                    const lFalse = lRecords.filter(d => d.isFalseAlarm === 'Yes').length;
-                    return `#${lIdx + 1} ${lName}: ${lCount} cases (True: ${lTrue}, False: ${lFalse})`;
-                }).join('\n');
-                slide3.addText(locText || 'No specific location breakdown recorded.', {
-                    x: 0.95, y: boxY + 0.42, w: 5.25, h: 0.95,
-                    fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 12
-                });
-            });
-
-            // Right Section: Top 3 Hotspots
-            slide3.addShape(pptx.ShapeType.roundRect, {
-                x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'FECDD3', width: 1.2 },
-                rectRadius: 0.08
-            });
-            slide3.addText("Top 3 Recurring Hotspots & Frequent Event Types", {
-                x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12.5, bold: true, color: 'BE123C', fontFace: 'Segoe UI'
-            });
-
-            top3Loc.forEach(([locName, count], idx) => {
-                const locRecords = FILTERED_DATA.filter(d => d.location === locName);
-                const locTrue = locRecords.filter(d => d.isFalseAlarm === 'No').length;
-                const locFalse = locRecords.filter(d => d.isFalseAlarm === 'Yes').length;
-                const evSub = {};
-                locRecords.forEach(d => { evSub[d.eventType] = (evSub[d.eventType] || 0) + 1; });
-                const topEvs = Object.entries(evSub).sort((a,b) => b[1] - a[1]).slice(0, 3);
-
-                const boxY = 1.65 + idx * 1.60;
-                slide3.addShape(pptx.ShapeType.roundRect, {
-                    x: 6.95, y: boxY, w: 5.55, h: 1.45,
-                    fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
-                    rectRadius: 0.06
-                });
-                slide3.addText(`Rank ${idx + 1}: ${locName}`, {
-                    x: 7.10, y: boxY + 0.10, w: 3.40, h: 0.30,
-                    fontSize: 10.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
-                });
-                slide3.addText(`Total: ${count}  |  True: ${locTrue}  |  False: ${locFalse}`, {
-                    x: 8.95, y: boxY + 0.10, w: 3.40, h: 0.30,
-                    fontSize: 8.5, bold: true, color: '475569', align: 'right', fontFace: 'Segoe UI'
-                });
-
-                const evText = topEvs.map(([eName, eCount], eIdx) => {
-                    const eRecords = locRecords.filter(d => d.eventType === eName);
-                    const eTrue = eRecords.filter(d => d.isFalseAlarm === 'No').length;
-                    const eFalse = eRecords.filter(d => d.isFalseAlarm === 'Yes').length;
-                    return `#${eIdx + 1} ${eName}: ${eCount} cases (True: ${eTrue}, False: ${eFalse})`;
-                }).join('\n');
-                slide3.addText(evText || 'No specific event types recorded.', {
-                    x: 7.10, y: boxY + 0.42, w: 5.25, h: 0.95,
-                    fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 12
-                });
-            });
-
-            // ----------------------------------------------------
-            // SLIDE 4: Operational Trends (Monthly Incidents & SLA)
-            // ----------------------------------------------------
-            const slide4 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide4, pptx, "Incident Volume Trends & SLA Performance Telemetry", 4, TOTAL_SLIDES, reportDateStr);
-
-            const trendImg = captureCanvasImage('trendChart');
-            const slaImg = captureCanvasImage('slaChart');
-
-            // Left: Trend Chart
-            slide4.addShape(pptx.ShapeType.roundRect, {
-                x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                rectRadius: 0.08
-            });
-            slide4.addText("Monthly Incident Trend & False Alarms", {
-                x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-            if (trendImg) {
-                slide4.addImage({ data: trendImg, x: 0.75, y: 1.65, w: 5.65, h: 4.85 });
-            } else {
-                slide4.addText("Monthly trend chart data active in interactive view.", {
-                    x: 0.80, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                });
+                // Save Presentation
+                pptx.writeFile({ fileName: `${CURRENT_PROJECT_NAME}_Daily_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
+            } finally {
+                if (wasHidden && viewDash) {
+                    viewDash.style.position = '';
+                    viewDash.style.left = '';
+                    viewDash.style.top = '';
+                    viewDash.style.width = '';
+                    viewDash.style.visibility = '';
+                    viewDash.classList.add('hidden');
+                    CURRENT_VIEW = prevView;
+                }
             }
-
-            // Right: SLA Chart
-            slide4.addShape(pptx.ShapeType.roundRect, {
-                x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                rectRadius: 0.08
-            });
-            slide4.addText("SLA Performance Trend (Response vs Completion %)", {
-                x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-            if (slaImg) {
-                slide4.addImage({ data: slaImg, x: 6.90, y: 1.65, w: 5.65, h: 4.85 });
-            } else {
-                slide4.addText("SLA performance trend chart active in interactive view.", {
-                    x: 6.95, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                });
-            }
-
-            // ----------------------------------------------------
-            // SLIDE 5: Workload Distribution & Team Telemetry
-            // ----------------------------------------------------
-            const slide5 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide5, pptx, "Incident Category Distribution & Team Workload Telemetry", 5, TOTAL_SLIDES, reportDateStr);
-
-            const catImg = captureCanvasImage('categoryChart');
-            const teamImg = captureCanvasImage('teamWorkloadChart');
-
-            // Left: Category Distribution
-            slide5.addShape(pptx.ShapeType.roundRect, {
-                x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                rectRadius: 0.08
-            });
-            slide5.addText("Incident Category Distribution Breakdown", {
-                x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-            if (catImg) {
-                slide5.addImage({ data: catImg, x: 0.75, y: 1.65, w: 5.65, h: 4.85 });
-            } else {
-                slide5.addText("Category breakdown chart active in interactive view.", {
-                    x: 0.80, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                });
-            }
-
-            // Right: Team Workload
-            slide5.addShape(pptx.ShapeType.roundRect, {
-                x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
-                rectRadius: 0.08
-            });
-            slide5.addText("Team Workload & Handling Capacity", {
-                x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-            if (teamImg) {
-                slide5.addImage({ data: teamImg, x: 6.90, y: 1.65, w: 5.65, h: 4.85 });
-            } else {
-                slide5.addText("Team workload chart active in interactive view.", {
-                    x: 6.95, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                });
-            }
-
-            // ----------------------------------------------------
-            // SLIDE 6: Unresolved Operational Tickets & Critical Backlog
-            // ----------------------------------------------------
-            const slide6 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide6, pptx, "Unresolved Operational Tickets & Critical Backlog Telemetry", 6, TOTAL_SLIDES, reportDateStr);
-
-            const pendingRows = (typeof currentPendingData !== 'undefined' && currentPendingData.length > 0)
-                ? currentPendingData
-                : FILTERED_DATA.filter(d => {
-                    const st = (d.status || '').toLowerCase();
-                    return st.includes('pending') || st.includes('open') || st.includes('in progress');
-                });
-
-            const tableRows = [
-                [
-                    { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Category", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "TTR / Age", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
-                ]
-            ];
-
-            const sliceLimit = Math.min(pendingRows.length, 10);
-            for (let i = 0; i < sliceLimit; i++) {
-                const r = pendingRows[i];
-                const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
-                tableRows.push([
-                    { text: String(r.caseNo || r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
-                    { text: String(r.dateOnly || r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
-                    { text: String(r.category || r.EventCategory || '-'), options: { color: "1E293B", fill: { color: bg } } },
-                    { text: String(r.eventType || r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
-                    { text: String(r.location || r.Location || '-'), options: { color: "475569", fill: { color: bg } } },
-                    { text: String(r.status || r.Status || 'Pending'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
-                    { text: `${r.ttrHours || '-'} hrs`, options: { bold: true, color: "64748B", fill: { color: bg } } }
-                ]);
-            }
-
-            if (pendingRows.length === 0) {
-                tableRows.push([
-                    { text: "Zero unresolved tickets detected under current active filters.", options: { colspan: 7, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
-                ]);
-            }
-
-            slide6.addTable(tableRows, {
-                x: 0.60, y: 1.15, w: 12.10,
-                fontSize: 9.5,
-                border: { pt: 0.5, color: "CBD5E1" }
-            });
-
-            // Save Presentation
-            pptx.writeFile({ fileName: `${CURRENT_PROJECT_NAME}_Daily_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
         }
 
         // CROSS-PERIOD & CASE COMPARE ENGINE
@@ -8206,391 +8328,454 @@
         // ========================================================
         // COMPARE VIEW PPTX EXPORT (6 Well-Paginated Slides)
         // ========================================================
-        // ========================================================
-        // COMPARE VIEW PPTX EXPORT (6 Well-Paginated Slides)
-        // ========================================================
         function exportCompareToPPTX() {
             if (typeof PptxGenJS === 'undefined') {
                 alert('PowerPoint library is initializing. Please try again.');
                 return;
             }
-            const pptx = new PptxGenJS();
-            pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
-            pptx.layout = 'FRASERS_16X9';
 
-            const TOTAL_SLIDES = 6;
-            const dateObj = getFrasersDateFormatted();
-            const reportDateStr = dateObj.reportDate;
-
-            const totalVal = document.getElementById('kpiTotalVal')?.innerText || '-';
-            const trueRate = document.getElementById('kpiTrueRateVal')?.innerText || '-';
-            const backlog = document.getElementById('kpiBacklogVal')?.innerText || '-';
-            const newType = document.getElementById('kpiNewTypeVal')?.innerText || '-';
-
-            // ----------------------------------------------------
-            // SLIDE 1: Cover Slide
-            // ----------------------------------------------------
-            const coverMeta = [
-                { label: "Target Project / Scope", value: `${CURRENT_PROJECT_NAME} Multi-Period Incident Intelligence`, color: FRASERS_RED },
-                { label: "Total Filtered Cases", value: `${totalVal} incident records`, color: '1E293B' },
-                { label: "True Incident Verification Rate", value: trueRate, color: '059669' },
-                { label: "Pending Operational Backlog", value: `${backlog} unresolved tickets`, color: 'D97706' },
-                { label: "Emerging New Event Types", value: `${newType} unseen in historical baseline`, color: '0284C7' },
-                { label: "Analytical Comparison Mode", value: "Multi-File Cross-Year & Sunday-to-Saturday Week Slicer", color: '475569' }
-            ];
-            createFrasersCoverSlide(pptx, "Command Centre Executive Cross-Comparison", "Multi-File Cross-Year Telemetry & Deep Root-Cause Intelligence", coverMeta, reportDateStr);
-
-            // ----------------------------------------------------
-            // SLIDE 2: Compare KPI Overview & Critical Incident Watchlist
-            // ----------------------------------------------------
-            const slide2 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide2, pptx, "Executive Incident KPI Overview & Priority Escalations", 2, TOTAL_SLIDES, reportDateStr);
-
-            // 4 Compare KPI Cards (Symmetrically fitting inside 12.10" content area)
-            const compKpis = [
-                { label: "TOTAL CASES", val: totalVal, sub: "Active Filter Scope", color: "3730A3" },
-                { label: "TRUE INCIDENT RATE", val: trueRate, sub: "Verified Incidents", color: "059669" },
-                { label: "BACKLOG / PENDING", val: backlog, sub: "Unresolved Queue", color: "D97706" },
-                { label: "NEW EVENT TYPES", val: newType, sub: "Emerging vs History", color: "0284C7" }
-            ];
-
-            const cW = 2.87;
-            const cGap = 0.20;
-            compKpis.forEach((k, idx) => {
-                const posX = 0.60 + idx * (cW + cGap);
-                slide2.addShape(pptx.ShapeType.roundRect, {
-                    x: posX, y: 1.05, w: cW, h: 1.20,
-                    fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
-                    rectRadius: 0.08
-                });
-                slide2.addText(k.label, {
-                    x: posX, y: 1.15, w: cW, h: 0.25,
-                    fontSize: 9, bold: true, color: '64748B', align: 'center', fontFace: 'Segoe UI'
-                });
-                slide2.addText(k.val, {
-                    x: posX, y: 1.40, w: cW, h: 0.45,
-                    fontSize: 20, bold: true, color: k.color, align: 'center', fontFace: 'Segoe UI'
-                });
-                slide2.addText(k.sub, {
-                    x: posX, y: 1.85, w: cW, h: 0.25,
-                    fontSize: 8.5, color: '94A3B8', align: 'center', fontFace: 'Segoe UI'
-                });
-            });
-
-            // Critical Incident Watchlist Table
-            slide2.addText("Critical Incident Watchlist: Priority Escalations (True Incidents Ranked CAT 1-3)", {
-                x: 0.60, y: 2.45, w: 12.10, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-
-            const critRows = (typeof fullDataset !== 'undefined')
-                ? fullDataset.filter(d => d.IsFalseAlarm === 'No' && (d.Priority === '1' || d.Priority === '2' || d.Priority === '3' || d.Priority === 'CAT 1' || d.Priority === 'CAT 2' || d.Priority === 'CAT 3'))
-                : [];
-
-            const watchTable = [
-                [
-                    { text: "Priority", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
-                ]
-            ];
-
-            const watchLimit = Math.min(critRows.length, 8);
-            for (let i = 0; i < watchLimit; i++) {
-                const r = critRows[i];
-                const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
-                watchTable.push([
-                    { text: String(r.Priority || '-'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
-                    { text: String(r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
-                    { text: String(r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
-                    { text: String(r.Location || '-'), options: { color: "1E293B", fill: { color: bg } } },
-                    { text: String(r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
-                    { text: String(r.Status || 'Closed'), options: { bold: true, color: "059669", fill: { color: bg } } }
-                ]);
-            }
-
-            if (critRows.length === 0) {
-                watchTable.push([
-                    { text: "Zero critical high-impact escalations detected under active filter criteria.", options: { colspan: 6, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
-                ]);
-            }
-
-            slide2.addTable(watchTable, {
-                x: 0.60, y: 2.85, w: 12.10,
-                fontSize: 9.5,
-                border: { pt: 0.5, color: "CBD5E1" }
-            });
-
-            // ----------------------------------------------------
-            // SLIDE 3: Top 5 Significant Delta Shifts
-            // ----------------------------------------------------
-            const slide3 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide3, pptx, "Top 5 Significant Delta Shifts - Multi-Period Comparison", 3, TOTAL_SLIDES, reportDateStr);
-
-            const shiftImg = captureCanvasImage('shiftChart');
-
-            // Left side: Chart
-            slide3.addShape(pptx.ShapeType.roundRect, {
-                x: 0.60, y: 1.05, w: 7.00, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                rectRadius: 0.08
-            });
-            slide3.addText("Significant Delta Shifts (Parallel Month Comparison)", {
-                x: 0.80, y: 1.20, w: 6.60, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-            if (shiftImg) {
-                slide3.addImage({ data: shiftImg, x: 0.75, y: 1.65, w: 6.70, h: 4.85 });
-            } else {
-                slide3.addText("Delta shift comparison chart active in interactive view.", {
-                    x: 0.80, y: 3.50, w: 6.60, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                });
-            }
-
-            // Right side: Summary Breakdown Box
-            slide3.addShape(pptx.ShapeType.roundRect, {
-                x: 7.80, y: 1.05, w: 4.90, h: 5.65,
-                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
-                rectRadius: 0.08
-            });
-            slide3.addText("Top 5 Volatile Events Summary Breakdown", {
-                x: 8.00, y: 1.20, w: 4.50, h: 0.35,
-                fontSize: 11.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
-            });
-
-            const shiftListEl = document.getElementById('shiftSummaryList');
-            const shiftItems = shiftListEl ? Array.from(shiftListEl.querySelectorAll('.cursor-pointer')) : [];
-
-            if (shiftItems.length > 0) {
-                shiftItems.slice(0, 5).forEach((item, idx) => {
-                    const text = item.innerText.replace(/\s+/g, ' ');
-                    const boxY = 1.65 + idx * 0.95;
-                    slide3.addShape(pptx.ShapeType.roundRect, {
-                        x: 7.95, y: boxY, w: 4.60, h: 0.85,
-                        fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
-                        rectRadius: 0.06
-                    });
-                    slide3.addText(text, {
-                        x: 8.05, y: boxY + 0.08, w: 4.40, h: 0.70,
-                        fontSize: 8.5, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 11
-                    });
-                });
-            } else {
-                slide3.addText("Summary telemetry calculated dynamically based on active filter state.", {
-                    x: 8.00, y: 3.20, w: 4.50, h: 0.50, fontSize: 9.5, color: '94A3B8', align: 'center'
-                });
-            }
-
-            // ----------------------------------------------------
-            // SLIDE 4: Top True vs False Incident Event Types
-            // ----------------------------------------------------
-            const slide4 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide4, pptx, "Top True & False Incident Event Types Telemetry", 4, TOTAL_SLIDES, reportDateStr);
-
-            const trueImg = captureCanvasImage('trueEventChart');
-            const falseImg = captureCanvasImage('falseEventChart');
-
-            // Left: True Incident Events
-            slide4.addShape(pptx.ShapeType.roundRect, {
-                x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: 'A7F3D0', width: 1 },
-                rectRadius: 0.08
-            });
-            slide4.addText("Top True Incident Event Types (Verified Real Events)", {
-                x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: '059669', fontFace: 'Segoe UI'
-            });
-            if (trueImg) {
-                slide4.addImage({ data: trueImg, x: 0.75, y: 1.55, w: 5.65, h: 3.10 });
-            }
-            const trueListEl = document.getElementById('trueEventSummaryList');
-            const trueSummaryText = trueListEl ? trueListEl.innerText.replace(/\s+/g, ' ') : '';
-            slide4.addShape(pptx.ShapeType.roundRect, {
-                x: 0.75, y: 4.80, w: 5.65, h: 1.70,
-                fill: { color: 'F0FDF4' }, line: { color: 'A7F3D0', width: 1 },
-                rectRadius: 0.06
-            });
-            slide4.addText(trueSummaryText.slice(0, 320) || 'Top true incident distribution calculated across active months.', {
-                x: 0.90, y: 4.88, w: 5.35, h: 1.50,
-                fontSize: 8.5, color: '065F46', fontFace: 'Segoe UI', lineSpacing: 11
-            });
-
-            // Right: False Alarm Events
-            slide4.addShape(pptx.ShapeType.roundRect, {
-                x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: 'FDE68A', width: 1 },
-                rectRadius: 0.08
-            });
-            slide4.addText("Top False Incident Event Types (Tuning Strategy)", {
-                x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: 'B45309', fontFace: 'Segoe UI'
-            });
-            if (falseImg) {
-                slide4.addImage({ data: falseImg, x: 6.90, y: 1.55, w: 5.65, h: 3.10 });
-            }
-            const falseListEl = document.getElementById('falseEventSummaryList');
-            const falseSummaryText = falseListEl ? falseListEl.innerText.replace(/\s+/g, ' ') : '';
-            slide4.addShape(pptx.ShapeType.roundRect, {
-                x: 6.90, y: 4.80, w: 5.65, h: 1.70,
-                fill: { color: 'FFFBEB' }, line: { color: 'FDE68A', width: 1 },
-                rectRadius: 0.06
-            });
-            slide4.addText(falseSummaryText.slice(0, 320) || 'Top false alarm distribution evaluated for sensor thresholding.', {
-                x: 7.05, y: 4.88, w: 5.35, h: 1.50,
-                fontSize: 8.5, color: '92400E', fontFace: 'Segoe UI', lineSpacing: 11
-            });
-
-            // ----------------------------------------------------
-            // SLIDE 5: Recurring Hotspots & Emerging New Event Types
-            // ----------------------------------------------------
-            const slide5 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide5, pptx, "Recurring Hotspots & Emerging Unseen Event Types", 5, TOTAL_SLIDES, reportDateStr);
-
-            const recurImg = captureCanvasImage('recurringChart');
-
-            // Left: Recurring Hotspots
-            slide5.addShape(pptx.ShapeType.roundRect, {
-                x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                rectRadius: 0.08
-            });
-            slide5.addText("Recurring Hotspots: Event + Location Telemetry", {
-                x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-            });
-            if (recurImg) {
-                slide5.addImage({ data: recurImg, x: 0.75, y: 1.55, w: 5.65, h: 3.10 });
-            }
-            const recurListEl = document.getElementById('recurringSummaryList');
-            const recurSummaryText = recurListEl ? recurListEl.innerText.replace(/\s+/g, ' ') : '';
-            slide5.addShape(pptx.ShapeType.roundRect, {
-                x: 0.75, y: 4.80, w: 5.65, h: 1.70,
-                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
-                rectRadius: 0.06
-            });
-            slide5.addText(recurSummaryText.slice(0, 320) || 'Spatial hotspots cross-analyzed for systemic operational flaws.', {
-                x: 0.90, y: 4.88, w: 5.35, h: 1.50,
-                fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 11
-            });
-
-            // Right: New Emerging Event Types Table
-            slide5.addShape(pptx.ShapeType.roundRect, {
-                x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                fill: { color: 'FFFFFF' }, line: { color: 'BAE6FD', width: 1 },
-                rectRadius: 0.08
-            });
-            slide5.addText("New Event Types: Emerging in Current Month vs History", {
-                x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                fontSize: 11.5, bold: true, color: '0369A1', fontFace: 'Segoe UI'
-            });
-
-            const newEvRows = [
-                [
-                    { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Count", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "False Alarm", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                    { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
-                ]
-            ];
-
-            const newTableBody = document.getElementById('newEventTableBody');
-            const trs = newTableBody ? Array.from(newTableBody.querySelectorAll('tr')) : [];
-
-            if (trs.length > 0 && !trs[0].innerText.includes('No emerging') && !trs[0].innerText.includes('ไม่พบเคสแปลกใหม่') && !trs[0].innerText.includes('ไม่มีเคสแปลกใหม่')) {
-                trs.slice(0, 8).forEach((tr, i) => {
-                    const tds = tr.querySelectorAll('td');
-                    const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
-                    if (tds.length >= 5) {
-                        const rawFA = tds[3] ? tds[3].innerText.replace(/\s+/g, ' ').trim() : '-';
-                        const faFormatted = rawFA.replace(/(\bNo:)/g, '| $1');
-                        newEvRows.push([
-                            { text: tds[0].innerText.trim().slice(0, 24), options: { bold: true, color: "0F172A", fill: { color: bg } } },
-                            { text: tds[1].innerText.trim(), options: { bold: true, color: "3730A3", fill: { color: bg } } },
-                            { text: faFormatted, options: { bold: true, color: "B45309", fill: { color: bg } } },
-                            { text: tds[2].innerText.trim().slice(0, 20), options: { color: "475569", fill: { color: bg } } },
-                            { text: tds[4] ? tds[4].innerText.trim() : 'Closed', options: { color: "059669", fill: { color: bg } } }
-                        ]);
-                    }
-                });
-            }
-
-            if (newEvRows.length === 1) {
-                newEvRows.push([
-                    { text: "No emerging/unseen event types detected in this baseline month.", options: { colspan: 5, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
-                ]);
-            }
-
-            slide5.addTable(newEvRows, {
-                x: 6.90, y: 1.60, w: 5.65,
-                colW: [1.75, 0.55, 1.35, 1.25, 0.75],
-                fontSize: 8,
-                border: { pt: 0.5, color: "CBD5E1" }
-            });
-
-            // ----------------------------------------------------
-            // SLIDE 6: Executive Strategic Intelligence & Deep Dive
-            // ----------------------------------------------------
-            const slide6 = pptx.addSlide();
-            applyFrasersSlideHeaderFooter(slide6, pptx, "Executive Strategic Intelligence & Deep-Dive Root-Cause Analysis", 6, TOTAL_SLIDES, reportDateStr);
-
-            // Extract deep dive content
-            const deepDiveCards = [
-                {
-                    title: "Primary Root Cause Analysis",
-                    badge: "Systemic Root Cause",
-                    text: "Systemic operational analysis indicates device maintenance, BMS communication batches, and access door sensor calibration as the primary operational variance drivers.",
-                    fillClr: "FFF1F2", borderClr: "FECDD3", textClr: "BE123C",
-                    x: 0.60, y: 1.15
-                },
-                {
-                    title: "Operational Trigger Identification",
-                    badge: "Dynamic Triggers",
-                    text: "Routine preventative maintenance schedules and contractor testing during non-peak windows triggered batch alerts that temporarily skewed telemetry response times.",
-                    fillClr: "FFFBEB", borderClr: "FDE68A", textClr: "B45309",
-                    x: 6.75, y: 1.15
-                },
-                {
-                    title: "Immediate Action & Incident Resolution",
-                    badge: "Execution Plan",
-                    text: "Standard Operating Procedures (SOP) were executed immediately. Technicians verified sensor statuses on-site and cleared queued batch BMS alerts to restore 100% SLA compliance.",
-                    fillClr: "F0FDF4", borderClr: "A7F3D0", textClr: "059669",
-                    x: 0.60, y: 3.85
-                },
-                {
-                    title: "Predictive & Preventative Engineering",
-                    badge: "Long-Term SOP",
-                    text: "Implement automated BMS testing mode suppression during contractor commissioning windows to eliminate artificial false alarm spikes and protect operator SLA queues.",
-                    fillClr: "ECFEFF", borderClr: "A5F3FC", textClr: "0369A1",
-                    x: 6.75, y: 3.85
+            // Temporarily unhide compare container if currently hidden so charts and DOM exist
+            const viewComp = document.getElementById('viewCompare');
+            const wasCompHidden = viewComp && viewComp.classList.contains('hidden');
+            const prevView = CURRENT_VIEW;
+            if (wasCompHidden) {
+                viewComp.classList.remove('hidden');
+                viewComp.style.position = 'fixed';
+                viewComp.style.left = '-9999px';
+                viewComp.style.top = '0';
+                viewComp.style.width = '1400px';
+                viewComp.style.visibility = 'hidden';
+                if (typeof renderCompareDashboard === 'function') {
+                    CURRENT_VIEW = 'compare';
+                    try { renderCompareDashboard(); } catch(e){}
                 }
-            ];
+            }
 
-            deepDiveCards.forEach(c => {
-                slide6.addShape(pptx.ShapeType.roundRect, {
-                    x: c.x, y: c.y, w: 5.95, h: 2.50,
-                    fill: { color: c.fillClr }, line: { color: c.borderClr, width: 1.5 },
+            try {
+                const pptx = new PptxGenJS();
+                pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
+                pptx.layout = 'FRASERS_16X9';
+
+                const TOTAL_SLIDES = 6;
+                const dateObj = getFrasersDateFormatted();
+                const reportDateStr = dateObj.reportDate;
+
+                const totalVal = document.getElementById('kpiTotalVal')?.innerText || '-';
+                const trueRate = document.getElementById('kpiTrueRateVal')?.innerText || '-';
+                const backlog = document.getElementById('kpiBacklogVal')?.innerText || '-';
+                const newType = document.getElementById('kpiNewTypeVal')?.innerText || '-';
+
+                // ----------------------------------------------------
+                // SLIDE 1: Cover Slide
+                // ----------------------------------------------------
+                const coverMeta = [
+                    { label: "Target Project / Scope", value: `${CURRENT_PROJECT_NAME} Multi-Period Incident Intelligence`, color: FRASERS_RED },
+                    { label: "Total Filtered Cases", value: `${totalVal} incident records`, color: '1E293B' },
+                    { label: "True Incident Verification Rate", value: trueRate, color: '059669' },
+                    { label: "Pending Operational Backlog", value: `${backlog} unresolved tickets`, color: 'D97706' },
+                    { label: "Emerging New Event Types", value: `${newType} unseen in historical baseline`, color: '0284C7' },
+                    { label: "Analytical Comparison Mode", value: "Multi-File Cross-Year & Sunday-to-Saturday Week Slicer", color: '475569' }
+                ];
+                createFrasersCoverSlide(pptx, "Command Centre Executive Cross-Comparison", "Multi-File Cross-Year Telemetry & Deep Root-Cause Intelligence", coverMeta, reportDateStr);
+
+                // ----------------------------------------------------
+                // SLIDE 2: Compare KPI Overview & Critical Incident Watchlist
+                // ----------------------------------------------------
+                const slide2 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide2, pptx, "Executive Incident KPI Overview & Priority Escalations", 2, TOTAL_SLIDES, reportDateStr);
+
+                // 4 Compare KPI Cards (Symmetrically fitting inside 12.10" content area)
+                const compKpis = [
+                    { label: "TOTAL CASES", val: totalVal, sub: "Active Filter Scope", color: "3730A3" },
+                    { label: "TRUE INCIDENT RATE", val: trueRate, sub: "Verified Incidents", color: "059669" },
+                    { label: "BACKLOG / PENDING", val: backlog, sub: "Unresolved Queue", color: "D97706" },
+                    { label: "NEW EVENT TYPES", val: newType, sub: "Emerging vs History", color: "0284C7" }
+                ];
+
+                const cW = 2.87;
+                const cGap = 0.20;
+                compKpis.forEach((k, idx) => {
+                    const posX = 0.60 + idx * (cW + cGap);
+                    slide2.addShape(pptx.ShapeType.roundRect, {
+                        x: posX, y: 1.05, w: cW, h: 1.20,
+                        fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
+                        rectRadius: 0.08
+                    });
+                    slide2.addText(k.label, {
+                        x: posX, y: 1.15, w: cW, h: 0.25,
+                        fontSize: 9, bold: true, color: '64748B', align: 'center', fontFace: 'Segoe UI'
+                    });
+                    slide2.addText(k.val, {
+                        x: posX, y: 1.40, w: cW, h: 0.45,
+                        fontSize: 20, bold: true, color: k.color, align: 'center', fontFace: 'Segoe UI'
+                    });
+                    slide2.addText(k.sub, {
+                        x: posX, y: 1.85, w: cW, h: 0.25,
+                        fontSize: 8.5, color: '94A3B8', align: 'center', fontFace: 'Segoe UI'
+                    });
+                });
+
+                // Critical Incident Watchlist Table
+                slide2.addText("Critical Incident Watchlist: Priority Escalations (True Incidents Ranked CAT 1-3)", {
+                    x: 0.60, y: 2.45, w: 12.10, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+                });
+
+                const critRows = (typeof fullDataset !== 'undefined')
+                    ? fullDataset.filter(d => d.IsFalseAlarm === 'No' && (d.Priority === '1' || d.Priority === '2' || d.Priority === '3' || d.Priority === 'CAT 1' || d.Priority === 'CAT 2' || d.Priority === 'CAT 3'))
+                    : [];
+
+                const watchTable = [
+                    [
+                        { text: "Priority", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
+                    ]
+                ];
+
+                const sliceWatch = Math.min(critRows.length, 8);
+                for (let i = 0; i < sliceWatch; i++) {
+                    const r = critRows[i];
+                    const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
+                    watchTable.push([
+                        { text: String(r.Priority || '-'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
+                        { text: String(r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                        { text: String(r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
+                        { text: String(r.Location || '-'), options: { color: "1E293B", fill: { color: bg } } },
+                        { text: String(r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
+                        { text: String(r.Status || 'Closed'), options: { bold: true, color: "059669", fill: { color: bg } } }
+                    ]);
+                }
+
+                if (critRows.length === 0) {
+                    watchTable.push([
+                        { text: "Zero critical high-impact escalations detected under active filter criteria.", options: { colspan: 6, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                    ]);
+                }
+
+                slide2.addTable(watchTable, {
+                    x: 0.60, y: 2.85, w: 12.10,
+                    fontSize: 9.5,
+                    border: { pt: 0.5, color: "CBD5E1" }
+                });
+
+                // ----------------------------------------------------
+                // SLIDE 3: Top 5 Significant Delta Shifts
+                // ----------------------------------------------------
+                const slide3 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide3, pptx, "Top 5 Significant Delta Shifts - Multi-Period Comparison", 3, TOTAL_SLIDES, reportDateStr);
+
+                const shiftImg = captureCanvasImage('shiftChart');
+
+                // Left side: Chart
+                slide3.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.60, y: 1.05, w: 7.00, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
                     rectRadius: 0.08
                 });
-                slide6.addText(c.title, {
-                    x: c.x + 0.25, y: c.y + 0.18, w: 5.45, h: 0.35,
-                    fontSize: 12.5, bold: true, color: c.textClr, fontFace: 'Segoe UI'
+                slide3.addText("Significant Delta Shifts (Parallel Month Comparison)", {
+                    x: 0.80, y: 1.20, w: 6.60, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
                 });
-                slide6.addText(c.badge.toUpperCase(), {
-                    x: c.x + 0.25, y: c.y + 0.55, w: 2.50, h: 0.25,
-                    fontSize: 8.5, bold: true, color: c.textClr, fontFace: 'Segoe UI'
-                });
-                slide6.addText(c.text, {
-                    x: c.x + 0.25, y: c.y + 0.85, w: 5.45, h: 1.45,
-                    fontSize: 10, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 14
-                });
-            });
+                if (shiftImg) {
+                    slide3.addImage({ data: shiftImg, x: 0.75, y: 1.65, w: 6.70, h: 4.85 });
+                } else {
+                    slide3.addText("Delta shift comparison chart active in interactive view.", {
+                        x: 0.80, y: 3.50, w: 6.60, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
+                    });
+                }
 
-            // Save Presentation
-            pptx.writeFile({ fileName: `DCC_Executive_Compare_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
+                // Right side: Summary Breakdown Box
+                slide3.addShape(pptx.ShapeType.roundRect, {
+                    x: 7.80, y: 1.05, w: 4.90, h: 5.65,
+                    fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
+                    rectRadius: 0.08
+                });
+                slide3.addText("Top 5 Volatile Events Summary Breakdown", {
+                    x: 8.00, y: 1.20, w: 4.50, h: 0.35,
+                    fontSize: 11.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
+                });
+
+                const shiftListEl = document.getElementById('shiftSummaryList');
+                const shiftItems = shiftListEl ? Array.from(shiftListEl.querySelectorAll('.cursor-pointer')) : [];
+
+                if (shiftItems.length > 0) {
+                    shiftItems.slice(0, 5).forEach((item, idx) => {
+                        const text = item.innerText.replace(/\s+/g, ' ');
+                        const boxY = 1.65 + idx * 0.95;
+                        slide3.addShape(pptx.ShapeType.roundRect, {
+                            x: 7.95, y: boxY, w: 4.60, h: 0.85,
+                            fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
+                            rectRadius: 0.06
+                        });
+                        slide3.addText(text, {
+                            x: 8.05, y: boxY + 0.08, w: 4.40, h: 0.70,
+                            fontSize: 8.5, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 11
+                        });
+                    });
+                } else {
+                    slide3.addText("Summary telemetry calculated dynamically based on active filter state.", {
+                        x: 8.00, y: 3.20, w: 4.50, h: 0.50, fontSize: 9.5, color: '94A3B8', align: 'center'
+                    });
+                }
+
+                // ----------------------------------------------------
+                // SLIDE 4: Top True vs False Incident Event Types
+                // ----------------------------------------------------
+                const slide4 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide4, pptx, "Top True & False Incident Event Types Telemetry", 4, TOTAL_SLIDES, reportDateStr);
+
+                const trueImg = captureCanvasImage('trueEventChart');
+                const falseImg = captureCanvasImage('falseEventChart');
+
+                // Left: True Incident Events
+                slide4.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: 'A7F3D0', width: 1 },
+                    rectRadius: 0.08
+                });
+                slide4.addText("Top True Incident Event Types (Verified Real Events)", {
+                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: '059669', fontFace: 'Segoe UI'
+                });
+                if (trueImg) {
+                    slide4.addImage({ data: trueImg, x: 0.75, y: 1.55, w: 5.65, h: 3.10 });
+                }
+                const trueListEl = document.getElementById('trueEventSummaryList');
+                const trueSummaryText = trueListEl ? trueListEl.innerText.replace(/\s+/g, ' ') : '';
+                slide4.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.75, y: 4.80, w: 5.65, h: 1.70,
+                    fill: { color: 'F0FDF4' }, line: { color: 'A7F3D0', width: 1 },
+                    rectRadius: 0.06
+                });
+                slide4.addText(trueSummaryText.slice(0, 320) || 'Top true incident distribution calculated across active months.', {
+                    x: 0.90, y: 4.88, w: 5.35, h: 1.50,
+                    fontSize: 8.5, color: '065F46', fontFace: 'Segoe UI', lineSpacing: 11
+                });
+
+                // Right: False Alarm Events
+                slide4.addShape(pptx.ShapeType.roundRect, {
+                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: 'FDE68A', width: 1 },
+                    rectRadius: 0.08
+                });
+                slide4.addText("Top False Incident Event Types (Tuning Strategy)", {
+                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: 'B45309', fontFace: 'Segoe UI'
+                });
+                if (falseImg) {
+                    slide4.addImage({ data: falseImg, x: 6.90, y: 1.55, w: 5.65, h: 3.10 });
+                }
+                const falseListEl = document.getElementById('falseEventSummaryList');
+                const falseSummaryText = falseListEl ? falseListEl.innerText.replace(/\s+/g, ' ') : '';
+                slide4.addShape(pptx.ShapeType.roundRect, {
+                    x: 6.90, y: 4.80, w: 5.65, h: 1.70,
+                    fill: { color: 'FFFBEB' }, line: { color: 'FDE68A', width: 1 },
+                    rectRadius: 0.06
+                });
+                slide4.addText(falseSummaryText.slice(0, 320) || 'Top false alarm distribution evaluated for sensor thresholding.', {
+                    x: 7.05, y: 4.88, w: 5.35, h: 1.50,
+                    fontSize: 8.5, color: '92400E', fontFace: 'Segoe UI', lineSpacing: 11
+                });
+
+                // ----------------------------------------------------
+                // SLIDE 5: Recurring Hotspots & Emerging New Event Types
+                // ----------------------------------------------------
+                const slide5 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide5, pptx, "Recurring Hotspots & Emerging Unseen Event Types", 5, TOTAL_SLIDES, reportDateStr);
+
+                const recurImg = captureCanvasImage('recurringChart');
+
+                // Left: Recurring Hotspots
+                slide5.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                    rectRadius: 0.08
+                });
+                slide5.addText("Recurring Hotspots: Event + Location Telemetry", {
+                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+                });
+                if (recurImg) {
+                    slide5.addImage({ data: recurImg, x: 0.75, y: 1.55, w: 5.65, h: 3.10 });
+                }
+                const recurListEl = document.getElementById('recurringSummaryList');
+                const recurSummaryText = recurListEl ? recurListEl.innerText.replace(/\s+/g, ' ') : '';
+                slide5.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.75, y: 4.80, w: 5.65, h: 1.70,
+                    fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
+                    rectRadius: 0.06
+                });
+                slide5.addText(recurSummaryText.slice(0, 320) || 'Spatial hotspots cross-analyzed for systemic operational flaws.', {
+                    x: 0.90, y: 4.88, w: 5.35, h: 1.50,
+                    fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 11
+                });
+
+                // Right: New Emerging Event Types Table
+                slide5.addShape(pptx.ShapeType.roundRect, {
+                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
+                    fill: { color: 'FFFFFF' }, line: { color: 'BAE6FD', width: 1 },
+                    rectRadius: 0.08
+                });
+                slide5.addText("New Event Types: Emerging in Current Month vs History", {
+                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
+                    fontSize: 11.5, bold: true, color: '0369A1', fontFace: 'Segoe UI'
+                });
+
+                const newEvRows = [
+                    [
+                        { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Count", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "False Alarm", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                        { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
+                    ]
+                ];
+
+                const newTableBody = document.getElementById('newEventTableBody');
+                const trs = newTableBody ? Array.from(newTableBody.querySelectorAll('tr')) : [];
+
+                if (trs.length > 0 && !trs[0].innerText.includes('No emerging') && !trs[0].innerText.includes('ไม่พบเคสแปลกใหม่') && !trs[0].innerText.includes('ไม่มีเคสแปลกใหม่')) {
+                    trs.slice(0, 8).forEach((tr, i) => {
+                        const tds = tr.querySelectorAll('td');
+                        const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
+                        if (tds.length >= 5) {
+                            const rawFA = tds[3] ? tds[3].innerText.replace(/\s+/g, ' ').trim() : '-';
+                            const faFormatted = rawFA.replace(/(\bNo:)/g, '| $1');
+                            newEvRows.push([
+                                { text: tds[0].innerText.trim().slice(0, 24), options: { bold: true, color: "0F172A", fill: { color: bg } } },
+                                { text: tds[1].innerText.trim(), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                                { text: faFormatted, options: { bold: true, color: "B45309", fill: { color: bg } } },
+                                { text: tds[2].innerText.trim().slice(0, 20), options: { color: "475569", fill: { color: bg } } },
+                                { text: tds[4] ? tds[4].innerText.trim() : 'Closed', options: { color: "059669", fill: { color: bg } } }
+                            ]);
+                        }
+                    });
+                }
+
+                if (newEvRows.length === 1) {
+                    newEvRows.push([
+                        { text: "No emerging/unseen event types detected in this baseline month.", options: { colspan: 5, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                    ]);
+                }
+
+                slide5.addTable(newEvRows, {
+                    x: 6.90, y: 1.60, w: 5.65,
+                    colW: [1.75, 0.55, 1.35, 1.25, 0.75],
+                    fontSize: 8,
+                    border: { pt: 0.5, color: "CBD5E1" }
+                });
+
+                // ----------------------------------------------------
+                // SLIDE 6: Executive Strategic Intelligence & Deep Dive
+                // ----------------------------------------------------
+                const slide6 = pptx.addSlide();
+                applyFrasersSlideHeaderFooter(slide6, pptx, "Executive Strategic Intelligence & Deep-Dive Root-Cause Analysis", 6, TOTAL_SLIDES, reportDateStr);
+
+                // Dynamically extract live deep dive cards if present, otherwise default to strategic baseline
+                const renderedDeepDive = Array.from(document.querySelectorAll('#deepDiveDynamicGrid > div'));
+                if (renderedDeepDive.length > 0) {
+                    const colors = [
+                        { fillClr: "FFF1F2", borderClr: "FECDD3", textClr: "BE123C", x: 0.60, y: 1.15 },
+                        { fillClr: "FFFBEB", borderClr: "FDE68A", textClr: "B45309", x: 6.75, y: 1.15 },
+                        { fillClr: "F0FDF4", borderClr: "A7F3D0", textClr: "059669", x: 0.60, y: 3.85 },
+                        { fillClr: "ECFEFF", borderClr: "A5F3FC", textClr: "0369A1", x: 6.75, y: 3.85 }
+                    ];
+                    renderedDeepDive.slice(0, 4).forEach((card, idx) => {
+                        const cfg = colors[idx] || colors[0];
+                        const title = card.querySelector('h4')?.innerText || card.querySelector('h3')?.innerText || `Strategic Focus ${idx + 1}`;
+                        const badge = card.querySelector('.font-mono')?.innerText || "Executive Finding";
+                        const sum = card.querySelector('.summary-text')?.innerText || '';
+                        const fnd = card.querySelector('.finding-text')?.innerText || '';
+                        const fullText = (sum + (fnd ? '\n' + fnd : '')).trim() || card.innerText.replace(/\s+/g, ' ');
+
+                        slide6.addShape(pptx.ShapeType.roundRect, {
+                            x: cfg.x, y: cfg.y, w: 5.95, h: 2.50,
+                            fill: { color: cfg.fillClr }, line: { color: cfg.borderClr, width: 1.5 },
+                            rectRadius: 0.08
+                        });
+                        slide6.addText(title.slice(0, 40), {
+                            x: cfg.x + 0.25, y: cfg.y + 0.18, w: 5.45, h: 0.35,
+                            fontSize: 12.5, bold: true, color: cfg.textClr, fontFace: 'Segoe UI'
+                        });
+                        slide6.addText(badge.toUpperCase().slice(0, 25), {
+                            x: cfg.x + 0.25, y: cfg.y + 0.55, w: 5.00, h: 0.25,
+                            fontSize: 8.5, bold: true, color: cfg.textClr, fontFace: 'Segoe UI'
+                        });
+                        slide6.addText(fullText.slice(0, 320), {
+                            x: cfg.x + 0.25, y: cfg.y + 0.85, w: 5.45, h: 1.45,
+                            fontSize: 10, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 14
+                        });
+                    });
+                } else {
+                    const defaultDeepDive = [
+                        {
+                            title: "Primary Root Cause Analysis",
+                            badge: "Systemic Root Cause",
+                            text: "Systemic operational analysis indicates device maintenance, BMS communication batches, and access door sensor calibration as the primary operational variance drivers.",
+                            fillClr: "FFF1F2", borderClr: "FECDD3", textClr: "BE123C",
+                            x: 0.60, y: 1.15
+                        },
+                        {
+                            title: "Operational Trigger Identification",
+                            badge: "Dynamic Triggers",
+                            text: "Routine preventative maintenance schedules and contractor testing during non-peak windows triggered batch alerts that temporarily skewed telemetry response times.",
+                            fillClr: "FFFBEB", borderClr: "FDE68A", textClr: "B45309",
+                            x: 6.75, y: 1.15
+                        },
+                        {
+                            title: "Immediate Action & Incident Resolution",
+                            badge: "Execution Plan",
+                            text: "Standard Operating Procedures (SOP) were executed immediately. Technicians verified sensor statuses on-site and cleared queued batch BMS alerts to restore 100% SLA compliance.",
+                            fillClr: "F0FDF4", borderClr: "A7F3D0", textClr: "059669",
+                            x: 0.60, y: 3.85
+                        },
+                        {
+                            title: "Predictive & Preventative Engineering",
+                            badge: "Long-Term SOP",
+                            text: "Implement automated BMS testing mode suppression during contractor commissioning windows to eliminate artificial false alarm spikes and protect operator SLA queues.",
+                            fillClr: "ECFEFF", borderClr: "A5F3FC", textClr: "0369A1",
+                            x: 6.75, y: 3.85
+                        }
+                    ];
+
+                    defaultDeepDive.forEach(c => {
+                        slide6.addShape(pptx.ShapeType.roundRect, {
+                            x: c.x, y: c.y, w: 5.95, h: 2.50,
+                            fill: { color: c.fillClr }, line: { color: c.borderClr, width: 1.5 },
+                            rectRadius: 0.08
+                        });
+                        slide6.addText(c.title, {
+                            x: c.x + 0.25, y: c.y + 0.18, w: 5.45, h: 0.35,
+                            fontSize: 12.5, bold: true, color: c.textClr, fontFace: 'Segoe UI'
+                        });
+                        slide6.addText(c.badge.toUpperCase(), {
+                            x: c.x + 0.25, y: c.y + 0.55, w: 2.50, h: 0.25,
+                            fontSize: 8.5, bold: true, color: c.textClr, fontFace: 'Segoe UI'
+                        });
+                        slide6.addText(c.text, {
+                            x: c.x + 0.25, y: c.y + 0.85, w: 5.45, h: 1.45,
+                            fontSize: 10, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 14
+                        });
+                    });
+                }
+
+                // Save Presentation
+                pptx.writeFile({ fileName: `DCC_Executive_Compare_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
+            } finally {
+                if (wasCompHidden && viewComp) {
+                    viewComp.style.position = '';
+                    viewComp.style.left = '';
+                    viewComp.style.top = '';
+                    viewComp.style.width = '';
+                    viewComp.style.visibility = '';
+                    viewComp.classList.add('hidden');
+                    CURRENT_VIEW = prevView;
+                }
+            }
         }
 
         function exportAllRecordsToExcel() {
