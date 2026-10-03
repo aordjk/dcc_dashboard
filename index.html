@@ -764,19 +764,75 @@
         }
         body.light-mode .flashcard-root {
             background: #fff1f2 !important;
-            border-left: 3px solid #e11d48 !important;
+            border-left: 3.5px solid #e11d48 !important;
+            border-top: 1px solid #fecdd3 !important;
+            border-right: 1px solid #fecdd3 !important;
+            border-bottom: 1px solid #fecdd3 !important;
+        }
+        body.light-mode .flashcard-root .text-rose-400,
+        body.light-mode .flashcard-root span[class*="text-rose"] {
+            color: #be123c !important;
+            font-weight: 700 !important;
         }
         body.light-mode .flashcard-trigger {
             background: #fffbeb !important;
-            border-left: 3px solid #d97706 !important;
+            border-left: 3.5px solid #d97706 !important;
+            border-top: 1px solid #fde68a !important;
+            border-right: 1px solid #fde68a !important;
+            border-bottom: 1px solid #fde68a !important;
+        }
+        body.light-mode .flashcard-trigger .text-amber-400,
+        body.light-mode .flashcard-trigger span[class*="text-amber"] {
+            color: #b45309 !important;
+            font-weight: 700 !important;
         }
         body.light-mode .flashcard-action {
             background: #f0fdf4 !important;
-            border-left: 3px solid #059669 !important;
+            border-left: 3.5px solid #059669 !important;
+            border-top: 1px solid #a7f3d0 !important;
+            border-right: 1px solid #a7f3d0 !important;
+            border-bottom: 1px solid #a7f3d0 !important;
+        }
+        body.light-mode .flashcard-action .text-emerald-400,
+        body.light-mode .flashcard-action span[class*="text-emerald"] {
+            color: #047857 !important;
+            font-weight: 700 !important;
         }
         body.light-mode .flashcard-prevent {
             background: #ecfeff !important;
-            border-left: 3px solid #0891b2 !important;
+            border-left: 3.5px solid #0891b2 !important;
+            border-top: 1px solid #a5f3fc !important;
+            border-right: 1px solid #a5f3fc !important;
+            border-bottom: 1px solid #a5f3fc !important;
+        }
+        body.light-mode .flashcard-prevent .text-cyan-400,
+        body.light-mode .flashcard-prevent span[class*="text-cyan"] {
+            color: #0e7490 !important;
+            font-weight: 700 !important;
+        }
+        body.light-mode .summary-text,
+        body.light-mode .finding-text,
+        body.light-mode .crit-summary-text,
+        body.light-mode .crit-desc-text,
+        body.light-mode .crit-res-text,
+        body.light-mode .flashcard-root .text-slate-100,
+        body.light-mode .flashcard-trigger .text-slate-100,
+        body.light-mode .flashcard-action .text-slate-100,
+        body.light-mode .flashcard-prevent .text-slate-100 {
+            color: #0f172a !important;
+            font-weight: 500 !important;
+            line-height: 1.5 !important;
+        }
+        body.light-mode .summary-text[contenteditable="true"],
+        body.light-mode .finding-text[contenteditable="true"],
+        body.light-mode .crit-summary-text[contenteditable="true"],
+        body.light-mode .crit-desc-text[contenteditable="true"],
+        body.light-mode .crit-res-text[contenteditable="true"] {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px dashed #6366f1 !important;
+            padding: 0.25rem 0.5rem !important;
+            border-radius: 0.25rem !important;
         }
         body.light-mode #chartModal {
             background-color: #ffffff !important;
@@ -891,27 +947,183 @@
         body.light-mode #pendingTableBody .text-slate-300 {
             color: #1e293b !important;
         }
-        body.light-mode #highlightCasesContainer > div {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-        }
-        body.light-mode #highlightCasesContainer .text-white {
-            color: #0f172a !important;
-        }
-        body.light-mode #highlightCasesContainer .text-slate-300,
-        body.light-mode #highlightCasesContainer .text-slate-400 {
-            color: #334155 !important;
-        }
+        /* High Contrast Day Mode Overrides for Deep-Dive Analysis and Critical Watchlist */
+        body.light-mode #highlightCasesContainer > div,
+        body.light-mode #deepDiveDynamicGrid > div,
         body.light-mode .deep-dive-card {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
         }
+        body.light-mode #highlightHeader,
+        body.light-mode #deepDiveHeader,
+        body.light-mode #highlightCasesContainer .text-white,
+        body.light-mode #deepDiveDynamicGrid h4,
+        body.light-mode #deepDiveDynamicGrid .text-white,
         body.light-mode .deep-dive-card .text-white {
             color: #0f172a !important;
+            font-weight: 700 !important;
         }
+        body.light-mode #highlightCasesContainer .text-slate-300,
+        body.light-mode #highlightCasesContainer .text-slate-400,
+        body.light-mode #deepDiveDynamicGrid .text-slate-300,
+        body.light-mode #deepDiveDynamicGrid .text-slate-400,
         body.light-mode .deep-dive-card .text-slate-300,
         body.light-mode .deep-dive-card .text-slate-400 {
             color: #334155 !important;
+        }
+        body.light-mode #highlightCasesContainer .border-slate-800,
+        body.light-mode #deepDiveDynamicGrid .border-slate-800,
+        body.light-mode .deep-dive-card .border-slate-800 {
+            border-color: #e2e8f0 !important;
+        }
+        body.light-mode #highlightCasesContainer .bg-slate-800,
+        body.light-mode #deepDiveDynamicGrid .bg-slate-800 {
+            background-color: #f1f5f9 !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        body.light-mode #briefingStateBadge {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode #deepDiveEditableNotice {
+            color: #475569 !important;
+        }
+        body.light-mode .glass-card .bg-slate-900\/80 {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode #shiftSummaryTitle,
+        body.light-mode #trueEventSummaryTitle,
+        body.light-mode #falseEventSummaryTitle,
+        body.light-mode #recurringSummaryTitle {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+
+        /* ======================================================== */
+        /* PDF EXPORT ENGINE: HIGH SHARPNESS & CRISP PAGINATION     */
+        /* ======================================================== */
+        .pdf-page-break {
+            page-break-before: always !important;
+            break-before: page !important;
+        }
+        .pdf-avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        /* Hide interactive controls, scrollbars, and tools during PDF capture */
+        body.pdf-exporting #stickyControlBar,
+        body.pdf-exporting #filterModal,
+        body.pdf-exporting #chartModal,
+        body.pdf-exporting #caseDetailModal,
+        body.pdf-exporting .no-print,
+        body.pdf-exporting button[title*="Expand"],
+        body.pdf-exporting button[onclick*="toggleCardExpand"],
+        body.pdf-exporting button[onclick*="openChartModal"],
+        body.pdf-exporting #toggleEditBtn,
+        body.pdf-exporting #btnBriefingToggle,
+        body.pdf-exporting #btnBriefingReset,
+        body.pdf-exporting #pendingSearchInput,
+        body.pdf-exporting #pendingPrevBtn,
+        body.pdf-exporting #pendingNextBtn,
+        body.pdf-exporting #emptyDashboardPlaceholder,
+        body.pdf-exporting #emptyStatePlaceholder,
+        body.pdf-exporting footer {
+            display: none !important;
+        }
+
+        /* Strip all blur filters during capture to avoid html2canvas text blurring bug */
+        body.pdf-exporting *,
+        body.pdf-exporting .glass-card,
+        body.pdf-exporting .glass-sidebar,
+        body.pdf-exporting .dashboard-card,
+        body.pdf-exporting .kpi-card,
+        body.pdf-exporting [class*="backdrop-blur"] {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            text-rendering: optimizeLegibility !important;
+            -webkit-font-smoothing: antialiased !important;
+        }
+
+        body.pdf-exporting #cardPendingTable .chart-container-inner {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* Night Mode PDF Crisp High-Contrast & Color Vibrancy */
+        body:not(.light-mode).pdf-exporting {
+            background-color: #070d19 !important;
+            color: #f8fafc !important;
+        }
+        body:not(.light-mode).pdf-exporting .kpi-card,
+        body:not(.light-mode).pdf-exporting .dashboard-card,
+        body:not(.light-mode).pdf-exporting .glass-card,
+        body:not(.light-mode).pdf-exporting .exec-section-card,
+        body:not(.light-mode).pdf-exporting #deepDiveDynamicGrid > div,
+        body:not(.light-mode).pdf-exporting #highlightCasesContainer > div,
+        body:not(.light-mode).pdf-exporting .exec-summary-card {
+            background-color: #0d1527 !important;
+            border-color: #1e293b !important;
+        }
+        body:not(.light-mode).pdf-exporting .text-white {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+        body:not(.light-mode).pdf-exporting .text-slate-100,
+        body:not(.light-mode).pdf-exporting .text-slate-200,
+        body:not(.light-mode).pdf-exporting .text-slate-300 {
+            color: #f1f5f9 !important;
+        }
+        body:not(.light-mode).pdf-exporting .text-slate-400 {
+            color: #cbd5e1 !important;
+        }
+        body:not(.light-mode).pdf-exporting .text-slate-500 {
+            color: #94a3b8 !important;
+        }
+        body:not(.light-mode).pdf-exporting .flashcard-root {
+            background: rgba(244, 63, 94, 0.12) !important;
+            border-left: 3.5px solid #f43f5e !important;
+        }
+        body:not(.light-mode).pdf-exporting .flashcard-action {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border-left: 3.5px solid #10b981 !important;
+        }
+        body:not(.light-mode).pdf-exporting .flashcard-trigger {
+            background: rgba(245, 158, 11, 0.12) !important;
+            border-left: 3.5px solid #f59e0b !important;
+        }
+        body:not(.light-mode).pdf-exporting .flashcard-prevent {
+            background: rgba(6, 182, 212, 0.12) !important;
+            border-left: 3.5px solid #06b6d4 !important;
+        }
+        body:not(.light-mode).pdf-exporting table thead {
+            background-color: #1e293b !important;
+        }
+        body:not(.light-mode).pdf-exporting table tbody tr {
+            border-color: #1e293b !important;
+        }
+        body:not(.light-mode).pdf-exporting table tbody tr:nth-child(even) {
+            background-color: rgba(30, 41, 59, 0.35) !important;
+        }
+
+        /* Light Mode PDF Solid Crisp Styling */
+        body.light-mode.pdf-exporting {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        body.light-mode.pdf-exporting .glass-card,
+        body.light-mode.pdf-exporting .dashboard-card,
+        body.light-mode.pdf-exporting .kpi-card,
+        body.light-mode.pdf-exporting .exec-section-card,
+        body.light-mode.pdf-exporting #deepDiveDynamicGrid > div,
+        body.light-mode.pdf-exporting #highlightCasesContainer > div {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
         }
 
         @media print {
@@ -1575,7 +1787,7 @@
                     <div id="dashboardActiveSections" class="space-y-4 hidden">
 
                     <!-- Section 1: overall -->
-                    <section id="sec-overall" class="scroll-mt-20">
+                    <section id="sec-overall" class="scroll-mt-20 pdf-avoid-break">
                         <!-- KPI Metric Cards -->
                         <div id="kpiContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 kpi-section">
             <div id="cardTotalRecords" class="kpi-card bg-slate-900/80 border border-indigo-500/40 rounded-xl p-3 shadow-lg relative group">
@@ -1647,7 +1859,7 @@
     </section>
 
         <!-- Executive Analytics & In-Depth Data Intelligence -->
-        <section id="execBriefingSection" class="bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 relative">
+        <section id="execBriefingSection" class="bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 relative pdf-avoid-break">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
@@ -1711,43 +1923,41 @@
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- 50/50 Side-by-Side Layout: TOP 3 INCIDENTS (LEFT) & RECURRING HOTSPOTS (RIGHT) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2 text-xs border-t border-slate-800/80">
-                
-                <!-- Section 1 (FULL WIDTH TOP): Top 3 Incidents + Top 3 Frequent Locations -->
-                <div class="exec-section-card w-full bg-slate-800/60 border border-indigo-500/30 rounded-xl p-4 space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
-                        <h3 class="font-bold text-indigo-300 flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
-                            <i data-lucide="zap" class="w-4 h-4 text-indigo-400"></i>
-                            <span data-i18n="sec1_title">Top 3 Incident Types & In-Depth Root-Cause Resolution</span>
-                        </h3>
-                        <span class="text-[10px] text-indigo-400 font-mono px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded" data-i18n="badge_priority_ranking">PRIORITY RANKING</span>
-                    </div>
-                    <div id="analystSection1" class="analyst-editable space-y-3 text-slate-200 leading-relaxed">
-                        Loading incident distribution and top locations...
-                    </div>
+        <!-- Section 1 & Section 2: Top 3 Incidents & Top 3 Recurring Hotspots -->
+        <section id="execSectionsRow" class="pdf-page-break pdf-avoid-break grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+            <!-- Section 1 (FULL WIDTH TOP): Top 3 Incidents + Top 3 Frequent Locations -->
+            <div class="exec-section-card w-full bg-slate-800/60 border border-indigo-500/30 rounded-xl p-4 space-y-3 shadow-sm">
+                <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
+                    <h3 class="font-bold text-indigo-300 flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
+                        <i data-lucide="zap" class="w-4 h-4 text-indigo-400"></i>
+                        <span data-i18n="sec1_title">Top 3 Incident Types & In-Depth Root-Cause Resolution</span>
+                    </h3>
+                    <span class="text-[10px] text-indigo-400 font-mono px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded" data-i18n="badge_priority_ranking">PRIORITY RANKING</span>
                 </div>
-
-                <!-- Section 2 (FULL WIDTH BOTTOM): Top 3 Recurring Hotspots + Top Event Type (Single) -->
-                <div class="exec-section-card w-full bg-slate-800/60 border border-rose-500/30 rounded-xl p-4 space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-rose-500/20 pb-2">
-                        <h3 class="font-bold text-rose-300 flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
-                            <i data-lucide="map-pin" class="w-4 h-4 text-rose-400"></i>
-                            <span data-i18n="sec2_title">Top 3 Recurring Hotspots & In-Depth Root-Cause Resolution</span>
-                        </h3>
-                        <span class="text-[10px] text-rose-400 font-mono px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded" data-i18n="badge_critical_hotspots">CRITICAL HOTSPOTS</span>
-                    </div>
-                    <div id="analystSection2" class="analyst-editable space-y-3 text-slate-200 leading-relaxed">
-                        Loading hotspot telemetry and top event types...
-                    </div>
+                <div id="analystSection1" class="analyst-editable space-y-3 text-slate-200 leading-relaxed">
+                    Loading incident distribution and top locations...
                 </div>
+            </div>
 
+            <!-- Section 2 (FULL WIDTH BOTTOM): Top 3 Recurring Hotspots + Top Event Type (Single) -->
+            <div class="exec-section-card w-full bg-slate-800/60 border border-rose-500/30 rounded-xl p-4 space-y-3 shadow-sm">
+                <div class="flex items-center justify-between border-b border-rose-500/20 pb-2">
+                    <h3 class="font-bold text-rose-300 flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-rose-400"></i>
+                        <span data-i18n="sec2_title">Top 3 Recurring Hotspots & In-Depth Root-Cause Resolution</span>
+                    </h3>
+                    <span class="text-[10px] text-rose-400 font-mono px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded" data-i18n="badge_critical_hotspots">CRITICAL HOTSPOTS</span>
+                </div>
+                <div id="analystSection2" class="analyst-editable space-y-3 text-slate-200 leading-relaxed">
+                    Loading hotspot telemetry and top event types...
+                </div>
             </div>
         </section>
 
         <!-- Charts Grid 1: Monthly Trends -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <section id="sec-charts-grid1" class="pdf-page-break pdf-avoid-break grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div id="cardTrendChart" class="dashboard-card bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col relative transition-all">
                 <div class="flex items-center justify-between mb-2">
                     <div>
@@ -1793,7 +2003,7 @@
         </section>
 
         <!-- Charts Grid 2: Categories, Created By Team, and Zones -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <section id="sec-charts-grid2" class="pdf-page-break pdf-avoid-break grid grid-cols-1 lg:grid-cols-3 gap-4">
             
             <!-- Category Donut -->
             <div id="cardCategoryChart" class="dashboard-card bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col relative transition-all">
@@ -1866,7 +2076,7 @@
         </section>
 
         <!-- Dynamic Top 10 Incident Types Bar Chart -->
-        <section id="cardTop10Chart" class="dashboard-card bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg relative transition-all">
+        <section id="cardTop10Chart" class="pdf-page-break pdf-avoid-break dashboard-card bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-lg relative transition-all">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                 <div>
                     <h2 class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
@@ -1893,7 +2103,7 @@
         </section>
 
         <!-- Unfinished & Pending Tasks Log -->
-        <section id="cardPendingTable" class="dashboard-card bg-slate-900/80 border border-rose-900/30 rounded-2xl p-4 shadow-lg space-y-3 relative transition-all">
+        <section id="cardPendingTable" class="pdf-page-break pdf-avoid-break dashboard-card bg-slate-900/80 border border-rose-900/30 rounded-2xl p-4 shadow-lg space-y-3 relative transition-all">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <div class="flex items-center gap-2">
@@ -2042,7 +2252,7 @@
                 </div>
 
                 <!-- CRITICAL INCIDENT WATCHLIST -->
-                <div class="glass-card p-4 sm:p-5 border-rose-500/30">
+                <div class="glass-card p-4 sm:p-5 border-rose-500/30 pdf-avoid-break">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-slate-800 pb-2.5">
                         <div class="flex items-center gap-2.5">
                             <div class="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 font-bold shrink-0">
@@ -2060,7 +2270,7 @@
                 </div>
 
                 <!-- 4 Strategic Deep-Dive Flashcards -->
-                <div class="glass-card p-4 sm:p-5 border-indigo-500/30">
+                <div class="glass-card p-4 sm:p-5 border-indigo-500/30 pdf-page-break pdf-avoid-break">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
                         <div class="flex items-center gap-2">
                             <div class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400 shrink-0">
@@ -2095,7 +2305,7 @@
                 <div class="space-y-6">
                     <!-- Chart 1: Significant Delta Shifts (Full Width) -->
                     <!-- Chart 1: Significant Delta Shifts -->
-                    <div class="glass-card p-4 sm:p-5">
+                    <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h3 id="chart1Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart1T">
@@ -2125,7 +2335,7 @@
                     </div>
 
                     <!-- Chart 2: Top True Incidents Comparison -->
-                    <div class="glass-card p-4 sm:p-5">
+                    <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h3 id="chart2Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart2T">
@@ -2155,7 +2365,7 @@
                     </div>
 
                     <!-- Chart 3: Top False Incident Event Types -->
-                    <div class="glass-card p-4 sm:p-5">
+                    <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h3 id="chartFalseTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chartFalseT">
@@ -2185,7 +2395,7 @@
                     </div>
 
                     <!-- Chart 4: Recurring Hotspots -->
-                    <div class="glass-card p-4 sm:p-5">
+                    <div class="glass-card p-4 sm:p-5 pdf-page-break pdf-avoid-break">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h3 id="chart3Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart3T">
@@ -2216,7 +2426,7 @@
                 </div>
 
                 <!-- Bottom Section: New Event Types (Full Width) -->
-                <div class="glass-card p-4 sm:p-5 w-full">
+                <div class="glass-card p-4 sm:p-5 w-full pdf-avoid-break">
                     <div class="flex items-center justify-between mb-3">
                         <div>
                             <h3 id="tableTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="tableT">
@@ -4981,16 +5191,50 @@
         }
 
         function exportToPDF() {
-            const element = document.getElementById('mainContainer');
+            const isCompare = document.getElementById('viewCompare') && !document.getElementById('viewCompare').classList.contains('hidden');
+            const targetContainer = isCompare ? document.getElementById('viewCompare') : document.getElementById('viewDashboard');
+            if (!targetContainer) return;
+
+            const isLight = document.body.classList.contains('light-mode');
+            const pdfBgColor = isLight ? '#f8fafc' : '#070d19';
+            const fileName = isCompare 
+                ? `${CURRENT_PROJECT_NAME}_Executive_Compare_Intelligence_2026.pdf`
+                : `${CURRENT_PROJECT_NAME}_Executive_Dashboard_2026.pdf`;
+
+            // Add exporting class to trigger ultra-sharp layout & disable blurs
+            document.body.classList.add('pdf-exporting');
+
+            // Force Chart.js instances to re-render statically
+            if (typeof Chart !== 'undefined' && Chart.instances) {
+                Object.values(Chart.instances).forEach(inst => {
+                    try { inst.resize(); inst.render(); } catch (e) {}
+                });
+            }
+
             const opt = {
-                margin:       [0.2, 0.2, 0.2, 0.2],
-                filename:     `${CURRENT_PROJECT_NAME}_Executive_Dashboard_2026.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: document.body.classList.contains('light-mode') ? '#f8fafc' : '#0b1120' },
-                jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                margin:       [0.25, 0.30, 0.25, 0.30],
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.99 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    allowTaint: true,
+                    letterRendering: true,
+                    logging: false,
+                    backgroundColor: pdfBgColor,
+                    windowWidth: 1550
+                },
+                jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape', compress: true },
+                pagebreak:    { mode: ['css', 'legacy'], before: '.pdf-page-break', avoid: '.pdf-avoid-break' }
             };
-            html2pdf().set(opt).from(element).save();
+
+            const worker = html2pdf().set(opt).from(targetContainer);
+            worker.save().then(() => {
+                document.body.classList.remove('pdf-exporting');
+            }).catch(err => {
+                console.error('PDF export error:', err);
+                document.body.classList.remove('pdf-exporting');
+            });
         }
 
         // ========================================================
@@ -7562,7 +7806,7 @@
             const finalFinding = cachedData?.finding || dynamicFinding;
 
             return `
-                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 shadow space-y-3" data-card-id="${cardId}">
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 shadow space-y-3 deep-dive-card" data-card-id="${cardId}">
                     <div class="flex items-center justify-between pb-2 border-b border-slate-800">
                         <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">${headerTag}</span>
                         <span class="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded">${totalCases} ${I18N_COMPARE[currentLang]?.casesUnit || 'cases'}</span>
