@@ -1,0 +1,2473 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Tracking Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            darkbg: '#0b0f17',
+            cardbg: '#131b2b',
+            bordercol: '#1e293b',
+            accent: '#38bdf8'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- PapaParse for Real CSV Parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- SheetJS: read .xlsx / .xls exports directly -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Chart.js DataLabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <!-- html2pdf for PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- PptxGenJS for PowerPoint Export -->
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter & Sarabun -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', 'Sarabun', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f17;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .bg-cardbg {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+    }
+  </style>
+</head>
+<body id="dashboardBody" class="bg-darkbg text-slate-200 antialiased min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+  <!-- ========================================== -->
+  <!-- 0. INITIAL EMPTY STATE / DRAG & DROP ZONE -->
+  <!-- ========================================== -->
+  <div id="initialUploadContainer" class="flex-1 flex flex-col items-center justify-center p-6 min-h-screen">
+    <div id="dropZone" 
+         ondragover="handleDragOver(event)" 
+         ondragleave="handleDragLeave(event)" 
+         ondrop="handleFileDrop(event)"
+         class="w-full max-w-2xl border-2 border-dashed border-slate-700 hover:border-cyan-500 bg-cardbg/60 hover:bg-cardbg transition-all duration-300 rounded-3xl p-12 text-center flex flex-col items-center justify-center shadow-2xl cursor-pointer group">
+      
+      <div class="w-20 h-20 rounded-2xl bg-cyan-950/60 border border-cyan-800 text-cyan-400 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+        <i class="fa-solid fa-folder-tree"></i>
+      </div>
+
+      <h2 class="text-xl sm:text-2xl font-bold text-white tracking-wide mb-3">
+        District Command Centre PPM Dashboard
+      </h2>
+
+      <p class="text-slate-300 font-medium text-base sm:text-lg mb-4">
+        Please upload PPM or drag and drop your updated file(s) directly here
+      </p>
+
+      <p class="text-xs text-slate-400 mb-6 max-w-md leading-relaxed">
+        รองรับการเลือกและประมวลผลพร้อมกันหลายไฟล์ (<span class="text-cyan-400 font-mono font-semibold">Multi-File Merge</span>) ระบบจะรวมข้อมูลจากทุกไฟล์เข้าด้วยกันเป็นภาพเดียวอัตโนมัติ
+      </p>
+
+      <label class="cursor-pointer inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-cyan-950/80 transition-all hover:shadow-cyan-500/25">
+        <i class="fa-solid fa-folder-open mr-2"></i> Browse Computer (Multi-Select)
+        <input type="file" id="initialCsvInput" accept=".csv,.xlsx,.xls" multiple class="hidden" onchange="handleFileInputChange(event)">
+      </label>
+
+      <div id="uploadLoader" class="hidden mt-6 flex items-center space-x-2 text-cyan-400 text-xs font-semibold">
+        <i class="fa-solid fa-circle-notch fa-spin text-sm"></i>
+        <span id="uploadProgressText">Processing files...</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- DASHBOARD WRAPPER (HIDDEN UNTIL FILE LOAD)  -->
+  <!-- ========================================== -->
+  <div id="dashboardWrapper" class="hidden flex-col flex-1">
+
+    <!-- 1. Top Header -->
+    <header class="bg-cardbg/95 backdrop-blur border-b border-bordercol sticky top-0 z-30 shadow-md">
+      <div class="max-w-[1750px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap justify-between items-center gap-3">
+        
+        <!-- Project Title with Dynamic Detection -->
+        <div class="flex items-center space-x-3">
+          <div class="bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white p-2.5 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-950/60">
+            <i class="fa-solid fa-gauge-high text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2 flex-wrap">
+              <h1 id="projectTitle" class="text-base sm:text-lg font-bold text-white tracking-wide">Master Tracking Dashboard</h1>
+              <span class="text-[11px] px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800 font-mono font-medium" id="headerTag">PPM Consolidated</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono font-semibold" id="fileCountBadge">1 File</span>
+            </div>
+            <p id="dashboardSubtitle" class="text-xs text-slate-400">District Command Centre Preventive Maintenance Operations</p>
+          </div>
+        </div>
+
+        <!-- Action & Controls -->
+        <div class="flex items-center flex-wrap gap-2">
+          
+          <!-- Append / Add More Files Button -->
+          <label class="cursor-pointer inline-flex items-center px-3 py-1.5 rounded-lg border border-teal-700/60 bg-teal-950/40 hover:bg-teal-900/60 text-xs font-semibold text-teal-300 transition shadow-sm" title="Add more CSV files without clearing current data">
+            <i class="fa-solid fa-plus-circle mr-1.5 text-teal-400"></i>
+            <span id="txtAppendBtn">Add Files</span>
+            <input type="file" id="appendCsvFileInput" accept=".csv,.xlsx,.xls" multiple class="hidden" onchange="handleAppendInputChange(event)">
+          </label>
+
+          <!-- File Re-Uploader (Replace All) -->
+          <label class="cursor-pointer inline-flex items-center px-3 py-1.5 rounded-lg border border-cyan-700/60 bg-cyan-950/40 hover:bg-cyan-900/60 text-xs font-semibold text-cyan-300 transition shadow-sm">
+            <i class="fa-solid fa-cloud-arrow-up mr-1.5 text-cyan-400"></i>
+            <span id="txtUploadBtn">Reload All</span>
+            <input type="file" id="reCsvFileInput" accept=".csv,.xlsx,.xls" multiple class="hidden" onchange="handleFileInputChange(event)">
+          </label>
+
+          <!-- Fullscreen / Present Mode Button -->
+          <button id="presentModeBtn" onclick="togglePresentMode()" class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-indigo-600/90 hover:bg-indigo-600 text-white text-xs font-semibold shadow-sm transition border border-indigo-500">
+            <i id="presentModeIcon" class="fa-solid fa-expand mr-1.5"></i>
+            <span id="presentModeText">Present Mode</span>
+          </button>
+
+          <!-- Day / Night toggle (standalone; inside index.html the main toggle controls it) -->
+          <button id="ppmThemeToggle" onclick="togglePpmTheme()" title="Day / Night mode" class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-amber-400 text-xs transition">
+            <i id="ppmThemeIcon" class="fa-solid fa-sun"></i>
+          </button>
+
+          <!-- Language Switcher: EN First -->
+          <div class="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs font-medium">
+            <button id="langEN" onclick="setLanguage('en')" class="px-2.5 py-1 rounded-md transition font-semibold bg-cyan-600 text-white">EN</button>
+            <button id="langTH" onclick="setLanguage('th')" class="px-2.5 py-1 rounded-md transition font-semibold text-slate-400 hover:text-white">TH</button>
+          </div>
+
+          <!-- Export Center Dropdown -->
+          <div class="relative inline-block text-left" id="exportDropdownContainer">
+            <button onclick="toggleExportMenu()" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition">
+              <i class="fa-solid fa-file-export mr-1.5"></i> <span>Export Report</span> <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i>
+            </button>
+            
+            <div id="exportMenu" class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-cardbg border border-slate-700 shadow-2xl z-50 py-1.5">
+              <button onclick="exportToPDF()" class="w-full text-left px-3.5 py-2 text-xs text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center transition">
+                <i class="fa-solid fa-file-pdf mr-2.5 text-rose-400 text-sm"></i> Export as PDF (.pdf)
+              </button>
+              <button onclick="exportToPPTX()" class="w-full text-left px-3.5 py-2 text-xs text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center transition">
+                <i class="fa-solid fa-file-powerpoint mr-2.5 text-amber-500 text-sm"></i> Export as PowerPoint (.pptx)
+              </button>
+              <button onclick="exportToWord()" class="w-full text-left px-3.5 py-2 text-xs text-slate-200 hover:bg-slate-800 hover:text-cyan-400 flex items-center transition">
+                <i class="fa-solid fa-file-word mr-2.5 text-blue-400 text-sm"></i> Export as Word (.docx)
+              </button>
+              <div class="border-t border-slate-800 my-1"></div>
+              <button onclick="exportUnfinishTasksToExcel()" class="w-full text-left px-3.5 py-2 text-xs text-slate-200 hover:bg-slate-800 hover:text-emerald-400 flex items-center transition">
+                <i class="fa-solid fa-file-excel mr-2.5 text-emerald-400 text-sm"></i> Export Unfinish (CSV)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Uploaded files (✕ removes a file) -->
+    <div class="border-b border-bordercol bg-cardbg/60">
+      <div class="max-w-[1750px] mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center gap-2">
+        <span id="lblUploadedFiles" class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-paperclip mr-1"></i>Uploaded Files:</span>
+        <div id="ppmFileChips" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+    </div>
+
+    <!-- 2. Filter strip (Case style) -->
+    <section id="ppmFilterStrip" class="dcc-filter-strip sticky z-20 px-3 sm:px-6 lg:px-8 pt-3 pb-2.5 border-b border-slate-800 bg-[#0b1120]/95 backdrop-blur">
+      <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
+        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="ppmLblFilters">Filters</span></span></div>
+        <div class="flex flex-col min-w-[72px] max-w-[95px] flex-1"><label id="lblFilterYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><select id="filterYear" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Years</option></select></div>
+        <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="lblFilterMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><select id="filterMonth" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Months</option></select></div>
+        <div class="flex flex-col min-w-[120px] max-w-[175px] flex-1"><label id="lblFilterWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week (Sun - Sat)</label><select id="filterWeek" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Weeks</option></select></div>
+        <div class="flex flex-col min-w-[105px] max-w-[140px] flex-1"><label id="lblFilterDay" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Day</label><select id="filterDay" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Days</option></select></div>
+        <div class="flex flex-col min-w-[120px] max-w-[190px] flex-1"><label id="lblFilterTeam" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Service Provider</label><select id="filterTeam" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Providers</option></select></div>
+        <div class="flex flex-col min-w-[120px] max-w-[190px] flex-1"><label id="lblFilterCategory" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Service Category</label><select id="filterCategory" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Categories</option></select></div>
+        <div class="flex flex-col min-w-[100px] max-w-[140px] flex-1"><label id="lblFilterFrequency" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Frequency</label><select id="filterFrequency" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Frequencies</option></select></div>
+        <div class="flex flex-col min-w-[110px] max-w-[150px] flex-1"><label id="lblFilterStatus" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Status</label><select id="filterStatus" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Statuses</option></select></div>
+        <div class="flex flex-col shrink-0 ml-auto"><span class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate invisible">.</span>
+          <button type="button" onclick="resetAllFilters()" class="dcc-reset-btn flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition" title="Reset all filters"><i class="fa-solid fa-rotate-left text-[11px]"></i><span id="lblResetFilter">Reset</span></button></div>
+          <!-- legacy team buttons kept hidden (referenced by original reset code) -->
+          <div class="hidden"><!-- Multi-select Bar: Team -->
+          <div class="lg:col-span-3">
+            <label id="lblFilterTeamLegacy" class="block text-xs font-semibold text-slate-300 mb-1">Assigned Team (Multi-Select):</label>
+            <div class="flex items-center space-x-1.5" id="teamButtonGroup">
+              <button type="button" id="btnTeamHard" onclick="toggleTeam('FM Hard')" class="flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center transition bg-indigo-600/30 border-indigo-500 text-indigo-200">
+                <i class="fa-solid fa-check mr-1.5 text-xs text-indigo-400" id="iconTeamHard"></i> FM Hard
+              </button>
+              <button type="button" id="btnTeamSoft" onclick="toggleTeam('FM Soft')" class="flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center transition bg-teal-600/30 border-teal-500 text-teal-200">
+                <i class="fa-solid fa-check mr-1.5 text-xs text-teal-400" id="iconTeamSoft"></i> FM Soft
+              </button>
+            </div>
+          </div></div>
+
+      </div>
+    </section>
+
+    <!-- 3. Main Dashboard Workspace -->
+    <main id="exportableArea" class="max-w-[1750px] mx-auto px-4 sm:px-6 py-5 flex-1 w-full space-y-5">
+
+      <!-- KPI Metric Cards -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- KPI 1: Total Tasks -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <div>
+              <p id="lblKpiTotal" class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total Scheduled Tasks</p>
+              <h3 class="text-2xl font-bold text-white mt-1 font-mono" id="kpiTotalTasks">0</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-800 flex items-center justify-center text-cyan-400">
+              <i class="fa-solid fa-clipboard-list text-lg"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center text-xs text-slate-400">
+            <span class="text-cyan-400 font-semibold mr-1.5" id="lblKpiTotalSub">Active Filtered Scope</span>
+          </div>
+        </div>
+
+        <!-- KPI 2: Completion Rate -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <div>
+              <p id="lblKpiDoneRate" class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Completion Rate</p>
+              <h3 class="text-2xl font-bold text-emerald-400 mt-1 font-mono" id="kpiCompletionRate">0.00%</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-emerald-950/60 border border-emerald-800 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center text-xs text-slate-400">
+            <span id="kpiCompletedCount" class="text-emerald-400 font-semibold mr-1.5">0 Tasks</span>
+            <span id="lblKpiDoneSub">Verified & Closed</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: SLA Met Rate -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <div>
+              <p id="lblKpiSla" class="text-xs font-semibold text-slate-400 uppercase tracking-wide">SLA Met Rate</p>
+              <h3 class="text-2xl font-bold text-sky-400 mt-1 font-mono" id="kpiSlaRate">0.00%</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-sky-950/60 border border-sky-800 flex items-center justify-center text-sky-400">
+              <i class="fa-solid fa-business-time text-lg"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center text-xs text-slate-400">
+            <span id="kpiSlaMetCount" class="text-sky-400 font-semibold mr-1.5">0</span>
+            <span id="lblKpiSlaSub">Tasks Met SLA Target</span>
+          </div>
+        </div>
+
+        <!-- KPI 4: Pending / Unfinish Tasks -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <div>
+              <p id="lblKpiPending" class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Unfinish Tasks</p>
+              <h3 class="text-2xl font-bold text-rose-400 mt-1 font-mono" id="kpiPendingTasks">0</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-rose-950/60 border border-rose-800 flex items-center justify-center text-rose-400">
+              <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center text-xs space-x-2 font-mono">
+            <span class="text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800" id="badgePendingHard">FM Hard: 0</span>
+            <span class="text-teal-300 bg-teal-950/80 px-2 py-0.5 rounded border border-teal-800" id="badgePendingSoft">FM Soft: 0</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- LIVE DATA ANALYZE & ACTION PLAN -->
+      <section class="bg-cardbg p-4 rounded-xl border border-bordercol shadow">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-bordercol">
+          <div class="flex items-center space-x-2.5">
+            <div class="p-2 rounded-lg bg-cyan-950 text-cyan-400 border border-cyan-800">
+              <i class="fa-solid fa-brain text-sm"></i>
+            </div>
+            <div>
+              <h4 id="lblAnalyzeHeading" class="text-sm font-bold text-white tracking-wide">Operational Data Analysis & Action Plan</h4>
+              <p id="lblAnalyzeSub" class="text-xs text-slate-400">Live dynamic executive synthesis with manual override & persistent state</p>
+            </div>
+          </div>
+          
+          <div class="flex items-center space-x-2 no-print">
+            <span id="saveStatusIndicator" class="text-xs text-emerald-400 hidden"><i class="fa-solid fa-check-double mr-1"></i> Saved</span>
+            
+            <button id="btnResetAuto" onclick="resetAnalysisToAuto()" class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-300 transition">
+              <i class="fa-solid fa-rotate-left mr-1.5"></i> <span id="lblBtnResetAuto">Reset to Auto</span>
+            </button>
+
+            <button id="btnEditAnalyze" onclick="toggleEditAnalysis()" class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition">
+              <i class="fa-solid fa-pen-to-square mr-1.5 text-cyan-400"></i> <span id="lblBtnEdit">Edit Analysis</span>
+            </button>
+
+            <button id="btnSaveAnalyze" onclick="saveCurrentAnalysis()" class="hidden inline-flex items-center px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition shadow-md shadow-cyan-950">
+              <i class="fa-solid fa-floppy-disk mr-1.5"></i> <span id="lblBtnSave">Save Analysis</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Output Area -->
+        <div class="mt-3.5">
+          <div id="analyzeViewMode" class="bg-slate-900/60 p-4 rounded-lg border border-slate-800/80 text-xs text-slate-300 leading-relaxed">
+          </div>
+
+          <div id="analyzeEditMode" class="hidden">
+            <textarea id="analyzeTextarea" rows="5" class="w-full text-xs p-3 rounded-lg border border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none font-sans leading-relaxed"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visualizations: 4 Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
+        <!-- Graph 1: Monthly Workload Volume -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 id="lblChartTrendTitle" class="text-sm font-bold text-white flex items-center">
+                <i class="fa-solid fa-chart-column mr-2 text-cyan-400"></i> Monthly Workload Volume
+              </h4>
+              <p id="lblChartTrendSub" class="text-xs text-slate-400">Click any bar to filter by month (Click again to reset)</p>
+            </div>
+            <div class="flex items-center space-x-1.5 no-print">
+              <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">Clickable</span>
+              <button onclick="expandChartModal('monthlyChart', 'Monthly Workload Volume')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 border border-slate-700 transition" title="Expand Fullscreen">
+                <i class="fa-solid fa-maximize text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <div class="relative flex-1 cursor-pointer" style="min-height: 260px;">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Graph 2: SLA Compliance Trend -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 id="lblChartSlaTrendTitle" class="text-sm font-bold text-white flex items-center">
+                <i class="fa-solid fa-chart-line mr-2 text-emerald-400"></i> Monthly SLA Compliance Trend (%)
+              </h4>
+              <p id="lblChartSlaTrendSub" class="text-xs text-slate-400">Click any point to filter by month</p>
+            </div>
+            <div class="flex items-center space-x-1.5 no-print">
+              <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-mono">Actual %</span>
+              <button onclick="expandChartModal('slaTrendChart', 'Monthly SLA Compliance Trend (%)')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 border border-slate-700 transition" title="Expand Fullscreen">
+                <i class="fa-solid fa-maximize text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <div class="relative flex-1 cursor-pointer" style="min-height: 260px;">
+            <canvas id="slaTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Graph 3: System Category Share Donut -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 id="lblChartCategoryTitle" class="text-sm font-bold text-white flex items-center">
+                <i class="fa-solid fa-chart-pie mr-2 text-indigo-400"></i> System Category Share (%)
+              </h4>
+              <p id="lblChartCategorySub" class="text-xs text-slate-400">Click slice to filter by system category</p>
+            </div>
+            <div class="flex items-center space-x-1.5 no-print">
+              <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">Clickable</span>
+              <button onclick="expandChartModal('categoryChart', 'System Category Share (%)')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-indigo-400 border border-slate-700 transition" title="Expand Fullscreen">
+                <i class="fa-solid fa-maximize text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <div class="relative flex-1 flex items-center justify-center cursor-pointer" style="min-height: 260px;">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Graph 4: Maintenance Frequency -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 id="lblChartFreqTitle" class="text-sm font-bold text-white flex items-center">
+                <i class="fa-solid fa-wave-square mr-2 text-amber-400"></i> Maintenance Frequency Distribution
+              </h4>
+              <p id="lblChartFreqSub" class="text-xs text-slate-400">Click any bar to filter by frequency</p>
+            </div>
+            <div class="flex items-center space-x-1.5 no-print">
+              <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">Clickable</span>
+              <button onclick="expandChartModal('frequencyChart', 'Maintenance Frequency Distribution')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-400 border border-slate-700 transition" title="Expand Fullscreen">
+                <i class="fa-solid fa-maximize text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <div class="relative flex-1 cursor-pointer" style="min-height: 260px;">
+            <canvas id="frequencyChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Table Section: UNFINISH TASKS REGISTRY -->
+      <section class="bg-cardbg rounded-xl border border-bordercol shadow overflow-hidden">
+        <div class="p-3.5 border-b border-bordercol flex flex-wrap justify-between items-center gap-3">
+          <div class="flex items-center flex-wrap gap-2.5">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-list-check text-rose-400"></i>
+              <h4 id="lblTableTitle" class="text-sm font-bold text-white">Unfinish Tasks Registry</h4>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800 font-mono" id="pendingBadgeCount">0 Tasks</span>
+            </div>
+            <button onclick="exportUnfinishTasksToExcel()" class="inline-flex items-center px-3 py-1 rounded-md bg-emerald-600/90 hover:bg-emerald-600 text-white text-xs font-semibold transition border border-emerald-500 shadow-sm ml-2 no-print">
+              <i class="fa-solid fa-file-excel mr-1.5"></i> Export to Excel
+            </button>
+          </div>
+
+          <div class="w-full sm:w-72 relative no-print">
+            <input type="text" id="pendingSearch" oninput="handleTableSearch()" placeholder="Search ID, Group, Team, Status..." class="w-full text-xs rounded-lg border border-slate-700 pl-8 pr-3 py-1.5 bg-slate-800/80 text-slate-200 placeholder-slate-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800/90 text-slate-200 font-semibold border-b border-bordercol uppercase tracking-wider">
+              <tr>
+                <th scope="col" id="thPpmId" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('id')">PPM ID <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thGroup" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('group')">Servicing Group / Task Description <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thTeam" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('team')">Team <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thCat" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('category')">System Category <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thFreq" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('frequency')">Frequency <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thComp" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('component')">Component <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thStage" class="py-2.5 px-4 cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('stage')">Stage / Status <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+                <th scope="col" id="thMonth" class="py-2.5 px-4 text-center cursor-pointer hover:text-cyan-400" onclick="sortPendingTable('month')">Month <i class="fa-solid fa-sort ml-1 text-slate-500"></i></th>
+              </tr>
+            </thead>
+            <tbody id="pendingTableBody" class="divide-y divide-slate-800/60 font-sans">
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-3 border-t border-bordercol flex flex-wrap items-center justify-between text-xs text-slate-400 gap-3">
+          <div id="paginationInfo">Showing 0 to 0 of 0 unfinish entries</div>
+          <div class="flex items-center space-x-1 no-print" id="paginationButtons">
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Fullscreen Modal for Charts -->
+    <div id="chartModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-cardbg border border-slate-700 rounded-2xl w-full max-w-6xl h-[85vh] flex flex-col p-5 shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+          <h3 id="modalChartTitle" class="text-base font-bold text-white flex items-center">
+            <i class="fa-solid fa-chart-simple mr-2 text-cyan-400"></i> Chart Expanded View
+          </h3>
+          <button onclick="closeChartModal()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-white transition text-xs font-semibold">
+            <i class="fa-solid fa-xmark mr-1"></i> Close
+          </button>
+        </div>
+        <div class="relative flex-1 mt-4">
+          <canvas id="modalChartCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-cardbg border-t border-bordercol py-3 mt-auto">
+      <div class="max-w-[1750px] mx-auto px-4 sm:px-6 flex flex-wrap justify-between items-center text-xs text-slate-500 gap-2">
+        <span id="footerBrand">District Command Centre Operations Management System © 2026</span>
+        <span class="font-mono text-slate-600">Built for DCC Operations</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Core JavaScript -->
+  <script>
+    Chart.register(ChartDataLabels);
+
+    // Master Aggregated State
+    let AGGREGATED_CUBE = [];
+    let UNFINISH_TASKS_DATA = [];
+    let CATEGORIES_BY_TEAM = { "FM Hard": [], "FM Soft": [] };
+    let AVAILABLE_MONTHS = [];
+    let AVAILABLE_FREQS = [];
+    let LOADED_FILE_NAMES = new Set();
+
+    // Internal maps to support dynamic additions
+    let globalCubeMap = {};
+    let globalTeamCatMap = { "FM Hard": new Set(), "FM Soft": new Set() };
+    let globalMonthSet = new Set();
+    let globalFreqSet = new Set();
+
+    // Localization Dictionary
+    const I18N = {
+      en: {
+        projectTitle: "Master Tracking Dashboard",
+        projectSub: "District Command Centre Preventive Maintenance Operations",
+        uploadBtn: "Reload All",
+        appendBtn: "Add Files",
+        presentMode: "Present Mode",
+        exitPresentMode: "Exit Present",
+        resetFilter: "Reset",
+        filterTeam: "Assigned Team (Multi-Select):",
+        filterMonth: "Month",
+        filterCategory: "System Category",
+        filterFrequency: "Frequency Type",
+        filterStatus: "Task Status",
+        allMonths: "All Months",
+        allCategories: "All Systems",
+        allFrequencies: "All Frequencies",
+        allStatuses: "All Statuses",
+        kpiTotal: "Total Scheduled Tasks",
+        kpiTotalSub: "Active Filtered Scope",
+        kpiDoneRate: "Completion Rate",
+        kpiDoneSub: "Verified & Closed",
+        kpiSla: "SLA Met Rate",
+        kpiSlaSub: "Tasks Met SLA Target",
+        kpiPending: "Unfinish Tasks",
+        analyzeHeading: "Operational Data Analysis & Action Plan",
+        analyzeSub: "Live dynamic executive synthesis with manual override & persistent state",
+        btnEdit: "Edit Analysis",
+        btnSave: "Save Analysis",
+        btnResetAuto: "Reset to Auto",
+        saveDone: "Saved",
+        chartTrendTitle: "Monthly Workload Volume",
+        chartTrendSub: "Click any bar to filter by month (Click again to reset)",
+        chartSlaTitle: "Monthly SLA Compliance Trend (%)",
+        chartSlaSub: "Click any point to filter by month",
+        chartCatTitle: "System Category Share (%)",
+        chartCatSub: "Click slice to filter by system category",
+        chartFreqTitle: "Maintenance Frequency Distribution",
+        chartFreqSub: "Click any bar to filter by frequency",
+        tableTitle: "Unfinish Tasks Registry",
+        searchPlaceholder: "Search ID, Group, Team, Status...",
+        thPpmId: "PPM ID",
+        thGroup: "Servicing Group / Task Description",
+        thTeam: "Team",
+        thCat: "System Category",
+        thFreq: "Frequency",
+        thComp: "Component",
+        thStage: "Stage / Status",
+        thMonth: "Month",
+        emptyTable: "No unfinish tasks found matching current filters",
+        footerBrand: "District Command Centre Operations Management System © 2026"
+      },
+      th: {
+        projectTitle: "Master Tracking Dashboard",
+        projectSub: "ศูนย์บัญชาการควบคุมการบำรุงรักษาเชิงป้องกัน (District Command Centre)",
+        uploadBtn: "โหลดใหม่ทั้งหมด",
+        appendBtn: "เพิ่มไฟล์ (+)",
+        presentMode: "โหมดนำเสนอ (Present Mode)",
+        exitPresentMode: "ออกจากโหมดพรีเซนต์ (Exit Present)",
+        resetFilter: "รีเซ็ต",
+        filterTeam: "ทีมงาน (Team - เลือกได้หลายทีม):",
+        filterMonth: "เดือน (Month)",
+        filterCategory: "หมวดหมู่งานระบบ (System Category)",
+        filterFrequency: "ความถี่ (Frequency Type)",
+        filterStatus: "สถานะงาน (Task Status)",
+        allMonths: "ทุกเดือน (All Months)",
+        allCategories: "ทุกหมวดหมู่ (All Systems)",
+        allFrequencies: "ทุกความถี่ (All Frequencies)",
+        allStatuses: "ทุกสถานะ (All Statuses)",
+        kpiTotal: "จำนวนแผนงานรวม",
+        kpiTotalSub: "ตามสโคปตัวกรองที่เลือก",
+        kpiDoneRate: "อัตราเสร็จสิ้นรวม",
+        kpiDoneSub: "ผ่านการยืนยันแล้ว",
+        kpiSla: "อัตราตรงต่อเวลา (SLA Met)",
+        kpiSlaSub: "รายการตรงเวลา",
+        kpiPending: "งานที่ยังไม่เสร็จ (Unfinish)",
+        analyzeHeading: "Operational Data Analysis & Action Plan",
+        analyzeSub: "การประมวลผลวิเคราะห์สดระดับผู้บริหาร พร้อมระบบแก้ไขบันทึกเฉพาะตัวกรอง",
+        btnEdit: "แก้ไขข้อวิเคราะห์ (Edit)",
+        btnSave: "บันทึกผล (Save)",
+        btnResetAuto: "คืนค่าวิเคราะห์สด (Reset to Auto)",
+        saveDone: "บันทึกแล้ว",
+        chartTrendTitle: "แนวโน้มปริมาณงานรายเดือน (Monthly Workload Volume)",
+        chartTrendSub: "คลิกที่แท่งกราฟเพื่อกรองเฉพาะเดือนนั้น (คลิกซ้ำเพื่อปลดล็อก)",
+        chartSlaTitle: "แนวโน้มการปฏิบัติตาม SLA รายเดือน (SLA Compliance Trend %)",
+        chartSlaSub: "คลิกที่จุดกราฟเพื่อกรองเฉพาะเดือนนั้น",
+        chartCatTitle: "สัดส่วนตามหมวดหมู่งานระบบ (System Category Share)",
+        chartCatSub: "คลิกส่วนโดนัทเพื่อกรองเฉพาะงานระบบนั้น",
+        chartFreqTitle: "ปริมาณงานตามรอบความถี่ (Maintenance Frequency Distribution)",
+        chartFreqSub: "คลิกที่แท่งกราฟเพื่อกรองตามรอบความถี่",
+        tableTitle: "ตารางรายการงานที่ยังไม่เสร็จ (Unfinish Tasks Registry)",
+        searchPlaceholder: "ค้นหารหัส, ชื่องาน, ทีม, ช่าง...",
+        thPpmId: "รหัสงาน (PPM ID)",
+        thGroup: "รายละเอียดงาน / กลุ่มอุปกรณ์ (Servicing Group)",
+        thTeam: "ทีม (Team)",
+        thCat: "หมวดหมู่งานระบบ",
+        thFreq: "ความถี่",
+        thComp: "Component",
+        thStage: "สถานะ (Stage)",
+        thMonth: "เดือน",
+        emptyTable: "ไม่พบงานค้างที่ตรงตามเงื่อนไขตัวกรอง",
+        footerBrand: "ระบบบริหารจัดการศูนย์บัญชาการ District Command Centre Operations Management © 2026"
+      }
+    };
+
+    let currentLang = 'en';
+    let isPresentMode = false;
+    let selectedMonth = "All";
+    let selectedTeams = new Set();   // empty = all teams
+    let selectedCategory = "All";
+    let selectedFrequency = "All";
+    let selectedStatus = "All";
+    let selectedYear = "All";
+    let selectedWeek = "All";
+    let selectedDay = "All";
+    let isEditingAnalysis = false;
+
+    let filteredPendingList = [];
+    let currentPendingPage = 1;
+    const pendingPageSize = 8;
+    let sortPendingKey = "id";
+    let sortPendingAsc = true;
+
+    let monthlyChart = null;
+    let slaTrendChart = null;
+    let categoryChart = null;
+    let frequencyChart = null;
+    let modalChartInstance = null;
+
+    // -------------------------------------------------------------
+    // DRAG AND DROP & MULTI-FILE SELECTION HANDLERS
+    // -------------------------------------------------------------
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("dropZone").classList.add("border-cyan-400", "bg-cardbg");
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("dropZone").classList.remove("border-cyan-400", "bg-cardbg");
+    }
+
+    function handleFileDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("dropZone").classList.remove("border-cyan-400", "bg-cardbg");
+      
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        processMultipleFiles(Array.from(files), false);
+      }
+    }
+
+    function handleFileInputChange(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        processMultipleFiles(Array.from(files), false);
+      }
+      e.target.value = ""; // Reset input
+    }
+
+    function handleAppendInputChange(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        processMultipleFiles(Array.from(files), true);
+      }
+      e.target.value = ""; // Reset input
+    }
+
+    // Helper: Parse single CSV via Promise
+    function parseCsvFile(file) {
+      if (/\.xlsx?$/i.test(file.name) && typeof XLSX !== 'undefined') {
+        return file.arrayBuffer().then(buf => {
+          const wb = XLSX.read(buf, { type: 'array', cellDates: false });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
+          return { file, data };
+        });
+      }
+      return new Promise((resolve, reject) => {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve({ file, data: results.data }),
+          error: (err) => reject({ file, error: err })
+        });
+      });
+    }
+
+    // Per-file store: name -> { file, data }. Uploads append (same name replaces);
+    // the ✕ on a file chip removes it and the dashboard is rebuilt from the rest.
+    const PPM_FILES = new Map();
+
+    async function processMultipleFiles(fileList, isAppend = false) {
+      const validFiles = fileList.filter(f => /\.(csv|xlsx|xls)$/i.test(f.name));
+      if (validFiles.length === 0) {
+        alert(currentLang === 'th' ? "กรุณาเลือกไฟล์ .csv หรือ .xlsx" : "Please select .csv or .xlsx files");
+        return;
+      }
+      const loader = document.getElementById("uploadLoader");
+      const progressText = document.getElementById("uploadProgressText");
+      if (loader) loader.classList.remove("hidden");
+      if (progressText) progressText.textContent = `Merging ${validFiles.length} file(s)...`;
+      try {
+        const results = await Promise.all(validFiles.map(f => parseCsvFile(f)));
+        if (!isAppend) PPM_FILES.clear();
+        results.forEach(({ file, data }) => PPM_FILES.set(file.name, { file, data }));
+        ppmRebuildFromFiles();
+      } catch (err) {
+        alert(`${currentLang === 'th' ? 'เกิดข้อผิดพลาดในการประมวลผลไฟล์' : 'Error processing file'}: ${err.message || err.error?.message || 'Error parsing CSV'}`);
+      } finally {
+        if (loader) loader.classList.add("hidden");
+      }
+    }
+
+    function ppmRemoveFile(name) {
+      PPM_FILES.delete(name);
+      ppmRebuildFromFiles();
+      if (typeof window.ppmOnFilesChanged === 'function') window.ppmOnFilesChanged();
+    }
+
+    function ppmRebuildFromFiles() {
+      globalCubeMap = {};
+      UNFINISH_TASKS_DATA = [];
+      globalTeamCatMap = {};
+      globalMonthSet = new Set();
+      globalFreqSet = new Set();
+      LOADED_FILE_NAMES.clear();
+      PPM_FILES.forEach(({ data }, name) => { LOADED_FILE_NAMES.add(name); integrateDataset(data); });
+
+      AGGREGATED_CUBE = Object.values(globalCubeMap).map(o => [o.m, o.team, o.cat, o.freq, o.stage, o.sla, o.count, o.dur, o.yr, o.wk, o.day, o.rsla]);
+      const MONTH_ORDER = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      AVAILABLE_MONTHS = Array.from(globalMonthSet).sort((a, b) => { const ia = MONTH_ORDER.indexOf(a), ib = MONTH_ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+      AVAILABLE_FREQS = Array.from(globalFreqSet);
+      CATEGORIES_BY_TEAM = {};
+      Object.keys(globalTeamCatMap).forEach(t => { CATEGORIES_BY_TEAM[t] = Array.from(globalTeamCatMap[t]); });
+
+      renderPpmFileChips();
+      if (PPM_FILES.size === 0) {
+        document.getElementById("dashboardWrapper").classList.add("hidden");
+        document.getElementById("dashboardWrapper").classList.remove("flex");
+        document.getElementById("initialUploadContainer").classList.remove("hidden");
+        return;
+      }
+      updateHeaderProjectName();
+      document.getElementById("initialUploadContainer").classList.add("hidden");
+      document.getElementById("dashboardWrapper").classList.remove("hidden");
+      document.getElementById("dashboardWrapper").classList.add("flex");
+      populateAllDropdowns();
+      updateDashboard();
+    }
+
+    function renderPpmFileChips() {
+      const host = document.getElementById('ppmFileChips');
+      if (!host) return;
+      const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      host.innerHTML = Array.from(PPM_FILES.entries()).map(([name, f]) => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-slate-200">
+          <i class="fa-solid fa-file-csv text-emerald-400"></i>${esc(name)}
+          <span class="font-mono text-[10px] text-slate-400">(${f.data.length.toLocaleString()})</span>
+          <button type="button" title="Remove" class="ml-0.5 text-slate-400 hover:text-rose-400" onclick="ppmRemoveFile(decodeURIComponent('${encodeURIComponent(name)}'))"><i class="fa-solid fa-xmark"></i></button>
+        </span>`).join('');
+    }
+
+    // =================================================================
+    // TIME FILTERS (Year / Sunday-to-Saturday Week / Day) + column detection
+    // =================================================================
+    const PPM_MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const ppmNorm = h => String(h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    function ppmFindCol(headers, cands, fuzzy) {
+      const map = {}; headers.forEach(h => { const n = ppmNorm(h); if (n && !(n in map)) map[n] = h; });
+      for (const c of cands) if (c in map) return map[c];
+      if (fuzzy) { const n = Object.keys(map).find(fuzzy); if (n) return map[n]; }
+      return null;
+    }
+    function ppmDetectCols(headers) {
+      return {
+        stage: ppmFindCol(headers, ['stage','status','taskstatus','wostatus','workorderstatus','ppmstatus','state']),
+        provider: ppmFindCol(headers, ['serviceprovider','serviceproviders','provider','vendor','contractor','serviceprovidername','team']),
+        category: ppmFindCol(headers, ['servicecategory','servicecategories','category','systemcategory']),
+        respFlag: ppmFindCol(headers, ['metslaresponsetime','meetslaresponsetime','metslaresponse','meetslaresponse','responsesla','slaresponse','responseslastatus','responseslamet','slaresponsemet','acksla','slaack','responsecompliance','acknowledgesla'],
+          n => n.includes('sla') && (n.includes('resp') || n.includes('ack')) && !n.includes('due') && !n.includes('date') && !n.includes('time')),
+        ack: ppmFindCol(headers, ['actualstartdate','actualstart','actualstartdatetime','acknowledgeddate','acknowledgedon','acknowledgeddatetime','ackdate','acktime','responsedate','respondedon','responsedatetime','starteddate','startedon','actualstart','actualstartdate']),
+        respDue: ppmFindCol(headers, ['responsedue','responseduedate','responsetarget','responsetargetdate','ackdue','acknowledgedue','targetresponse']),
+        slaFlag: ppmFindCol(headers, ['metslacompletetime','meetslacompletetime','metslacomplete','meetslacomplete','metslacompletiontime','meetslacompletiontime','metslacompletion','meetslacompletion','metslaresolutiontime','metslaresolution','completionsla','slacompletion','sla','slamet','slastatus','slaresult','completionslastatus','completionslamet','slacompliance','withinsla','kpisla','ppmsla'],
+          n => n.includes('sla') && !n.includes('due') && !n.includes('target') && !n.includes('date') && !n.includes('time')),
+        done: ppmFindCol(headers, ['completeddate','completeddatetime','completedon','completiondate','completiondatetime','actualfinish','actualfinishdate','actualend','actualenddate','finishdate','finisheddate','closeddate','closedon','closeddatetime','clientverifiedon','verifieddate','verifiedon','resolveddate']),
+        due: ppmFindCol(headers, ['duedate','duedatetime','targetdate','targetcompletion','targetcompletiondate','targetfinish','targetfinishdate','scheduledend','scheduledenddate','scheduleenddate','planend','planenddate','plannedend','plannedenddate','plannedfinish','deadline','sladuedate','sladue','completiondue']),
+        date: ppmFindCol(headers, ['createdon','createdondatetime','createddate','createddatetime','targetstartdate','targetstartdatetime','plannedstartdate','scheduledstartdate','scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
+          n => n.includes('date') && !n.includes('update') && !n.includes('complet') && !n.includes('finish') && !n.includes('close')),
+        id: ppmFindCol(headers, ['ppmid','ppmno','ppmnumber','ppmcode','workorderid','workorderno','workordernumber','woid','wono','wonumber','taskid','taskno','tasknumber','scheduleid','scheduleno','id'],
+          n => n.includes('ppm') && (n.endsWith('id') || n.endsWith('no') || n.includes('number')))
+      };
+    }
+    function ppmParseDate(v) {
+      const s = String(v ?? '').trim();
+      if (!s) return null;
+      let m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+      if (m) { let y = +m[3]; if (y < 100) y += 2000; if (y > 2400) y -= 543; let a = +m[1], b = +m[2], d = a, mo = b; if (b > 12 && a <= 12) { d = b; mo = a; } const r = new Date(y, mo - 1, d); return isNaN(r) ? null : r; }
+      m = s.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/);
+      if (m) { let y = +m[1]; if (y > 2400) y -= 543; const r = new Date(y, +m[2] - 1, +m[3]); return isNaN(r) ? null : r; }
+      const r = new Date(s); return isNaN(r) ? null : r;
+    }
+    // SLA per task: '1' met, '0' missed, '#NUM!' not evaluable.
+    // 1) a pre-computed SLA flag column (1/0, Yes/No, Met/Breach, Pass/Fail ...)
+    // 2) otherwise completion date vs due date (open tasks past due count as missed)
+    function ppmParseSlaFlag(v) {
+      const s = String(v ?? '').trim().toLowerCase();
+      if (!s || s === '-' || s === 'n/a' || s === 'na' || s === '#num!' || s === 'null') return null;
+      if (/(not\s*met|breach|fail|miss|over|late|exceed|overdue|^no$|^n$|^false$|^0$|ไม่ผ่าน|เกิน)/.test(s)) return '0';
+      if (/(^1$|^true$|^yes$|^y$|met|pass|achiev|within|on\s*time|ontime|in\s*sla|^ok$|ผ่าน)/.test(s)) return '1';
+      const n = Number(s.replace('%', ''));
+      if (!isNaN(n)) return n > 0 ? '1' : '0';
+      return null;
+    }
+    function ppmComputeSla(r, C, stage) {
+      if (C.slaFlag) { const f = ppmParseSlaFlag(r[C.slaFlag]); if (f !== null) return f; }
+      if (C.due) {
+        const due = ppmParseDate(r[C.due]);
+        const done = C.done ? ppmParseDate(r[C.done]) : null;
+        const finished = ['CLIENTVERIFIED', 'COMPLETED', 'CLOSED'].includes(String(stage || '').toUpperCase());
+        if (due && done) return done <= due ? '1' : '0';
+        if (due && !finished && due < new Date()) return '0';
+      }
+      return '#NUM!';
+    }
+
+    // Date + time (dd/mm/yyyy hh:mm [AM|PM]) for SLA comparisons
+    function ppmParseDateTime(v) {
+      const s = String(v ?? '').trim(); if (!s) return null;
+      const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?)?/);
+      if (m) {
+        let y = +m[3]; if (y < 100) y += 2000; if (y > 2400) y -= 543;
+        let a = +m[1], b = +m[2], d = a, mo = b; if (b > 12 && a <= 12) { d = b; mo = a; }
+        let hh = +(m[4] || 0); const mi = +(m[5] || 0), ss = +(m[6] || 0);
+        if (m[7]) { const pm = /p/i.test(m[7]); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
+        const r = new Date(y, mo - 1, d, hh, mi, ss); return isNaN(r) ? null : r;
+      }
+      const r = new Date(s); return isNaN(r) ? null : r;
+    }
+    // Response SLA (agreed rule): met when the task STARTED within its PPM window,
+    // i.e. Actual Start <= Target Completion Date. Not started and window already closed = missed.
+    // The exported "Met SLA Response Time?" flag is used only when those dates are missing.
+    function ppmComputeRespSla(r, C) {
+      if (C.ack && C.due) {
+        const start = ppmParseDateTime(r[C.ack]), due = ppmParseDateTime(r[C.due]);
+        if (start && due) return start <= due ? '1' : '0';
+        if (!start && due && due < new Date()) return '0';
+        if (!start && due) return '#NUM!';
+      }
+      if (C.respFlag) { const f = ppmParseSlaFlag(r[C.respFlag]); if (f !== null) return f; }
+      if (C.respDue) {
+        const due = ppmParseDate(r[C.respDue]), ack = C.ack ? ppmParseDate(r[C.ack]) : null;
+        if (due && ack) return ack <= due ? '1' : '0';
+        if (due && !ack && due < new Date()) return '0';
+      }
+      return '#NUM!';
+    }
+
+    function ppmTimeFields(d) {
+      if (!d) return { yr: '', wk: '', day: '' };
+      const p2 = n => String(n).padStart(2, '0');
+      const sun = new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+      return { yr: String(d.getFullYear()), day: `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`, wk: `${sun.getFullYear()}-${p2(sun.getMonth() + 1)}-${p2(sun.getDate())}` };
+    }
+    function ppmWeekLabel(wk) {
+      const [y, m, d] = wk.split('-').map(Number); const sun = new Date(y, m - 1, d), sat = new Date(y, m - 1, d + 6);
+      const p2 = n => String(n).padStart(2, '0');
+      return `${p2(sun.getDate())} ${PPM_MON3[sun.getMonth()]} - ${p2(sat.getDate())} ${PPM_MON3[sat.getMonth()]} ${sat.getFullYear()}`;
+    }
+    function ppmTimeOk(yr, wk, day) {
+      if (selectedYear !== 'All' && yr !== selectedYear) return false;
+      if (selectedWeek !== 'All' && wk !== selectedWeek) return false;
+      if (selectedDay !== 'All' && day !== selectedDay) return false;
+      return true;
+    }
+    // Cascading options built from the loaded data; invalid selections fall back to All
+    function refreshPpmTimeFilters() {
+      const th = currentLang === 'th';
+      const DOW = th ? ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const fill = (id, items, allLbl, cur) => {
+        const sel = document.getElementById(id); if (!sel) return 'All';
+        const key = items.map(i => i[0]).join('|') + currentLang;
+        if (sel.dataset.key !== key) { sel.innerHTML = `<option value="All">${allLbl}</option>` + items.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); sel.dataset.key = key; }
+        sel.value = items.some(i => i[0] === cur) ? cur : 'All';
+        return sel.value;
+      };
+      const rows = AGGREGATED_CUBE;
+      const years = [...new Set(rows.map(r => r[8]).filter(Boolean))].sort().reverse();
+      selectedYear = fill('filterYear', years.map(y => [y, y]), th ? 'ทุกปี' : 'All Years', selectedYear);
+      const inY = rows.filter(r => (selectedYear === 'All' || r[8] === selectedYear) && (selectedMonth === 'All' || r[0] === selectedMonth));
+      const weeks = [...new Set(inY.map(r => r[9]).filter(Boolean))].sort();
+      selectedWeek = fill('filterWeek', weeks.map(w => [w, ppmWeekLabel(w)]), th ? 'ทุกสัปดาห์' : 'All Weeks', selectedWeek);
+      const days = [...new Set(inY.filter(r => selectedWeek === 'All' || r[9] === selectedWeek).map(r => r[10]).filter(Boolean))].sort();
+      selectedDay = fill('filterDay', days.map(d => { const [y, m, dd] = d.split('-').map(Number); return [d, `${DOW[new Date(y, m - 1, dd).getDay()]} ${String(dd).padStart(2, '0')} ${PPM_MON3[m - 1]} ${y}`]; }), th ? 'ทุกวัน' : 'All Days', selectedDay);
+    }
+
+    function integrateDataset(rows) {
+      if (!rows || rows.length === 0) return;
+      const PCOLS = ppmDetectCols(Object.keys(rows[0] || {}));
+      console.info('[PPM] detected columns:', PCOLS);
+
+      rows.forEach(r => {
+        // skip blank / footer rows (no id, no status, no provider)
+        const idv = PCOLS.id ? String(r[PCOLS.id] || '').trim() : '';
+        const stv = PCOLS.stage ? String(r[PCOLS.stage] || '').trim() : String(r['Stage'] || '').trim();
+        if (!idv && !stv && !(PCOLS.provider && String(r[PCOLS.provider] || '').trim())) return;
+        const pDate = PCOLS.date ? ppmParseDate(r[PCOLS.date]) : null;
+        const T = ppmTimeFields(pDate);
+        const m = (r['Month'] || '').trim() || (pDate ? PPM_MON3[pDate.getMonth()] : 'Jan');
+        const team = String((PCOLS.provider && r[PCOLS.provider]) || r['Team'] || 'Unassigned').trim() || 'Unassigned';
+        const cat = String((PCOLS.category && r[PCOLS.category]) || r['Service Categories'] || 'General').trim() || 'General';
+        const rsla = ppmComputeRespSla(r, PCOLS);
+        const freq = (r['Frequency Type'] || 'Monthly').trim();
+        const stage = (String((PCOLS.stage && r[PCOLS.stage]) || r['Stage'] || 'COMPLETED').trim() || 'COMPLETED').toUpperCase();
+        const sla = ppmComputeSla(r, PCOLS, stage);
+        const dur = parseFloat(r['Completion Taken Time (Min)']) || 0;
+
+        globalMonthSet.add(m);
+        globalFreqSet.add(freq);
+        if (!globalTeamCatMap[team]) globalTeamCatMap[team] = new Set();
+        globalTeamCatMap[team].add(cat);
+
+        const key = `${m}|${team}|${cat}|${freq}|${stage}|${sla}|${rsla}|${T.day}`;
+        if (!globalCubeMap[key]) {
+          globalCubeMap[key] = { m, team, cat, freq, stage, sla, rsla, count: 0, dur: 0, yr: T.yr, wk: T.wk, day: T.day };
+        }
+        globalCubeMap[key].count += 1;
+        globalCubeMap[key].dur += dur;
+
+        const finishedStages = ['CLIENTVERIFIED', 'COMPLETED', 'CLOSED'];
+        if (!finishedStages.includes(stage.toUpperCase())) {
+          UNFINISH_TASKS_DATA.push({
+            id: String((PCOLS.id && r[PCOLS.id]) || r['PPM_ID'] || `PPM-${UNFINISH_TASKS_DATA.length + 1}`).trim(),
+            yr: T.yr, wk: T.wk, day: T.day,
+            group_th: r['Servicing Group'] || r['Description'] || 'N/A',
+            group_en: r['Servicing Group'] || r['Description'] || 'N/A',
+            team: team,
+            category: cat,
+            frequency: freq,
+            component: r['Component'] || 'CI',
+            stage: stage,
+            month: m
+          });
+        }
+      });
+    }
+
+    function updateHeaderProjectName() {
+      const fileNames = Array.from(LOADED_FILE_NAMES);
+      const fileCount = fileNames.length;
+      const joinedNames = fileNames.join(" ").toUpperCase();
+      
+      let detectedName = "Consolidated District Command Centre";
+      
+      if (joinedNames.includes("OBK") || joinedNames.includes("ONE BANGKOK")) {
+        detectedName = "One Bangkok Master Tracking Dashboard";
+      } else if (joinedNames.includes("TPQ") || joinedNames.includes("PARQ")) {
+        detectedName = "The PARQ Master Tracking Dashboard";
+      } else if (joinedNames.includes("FYI")) {
+        detectedName = "FYI Center Master Tracking Dashboard";
+      } else if (joinedNames.includes("SYMT")) {
+        detectedName = "Samyan Mitrtown Tower Master Tracking Dashboard";
+      } else if (joinedNames.includes("SYMR")) {
+        detectedName = "Samyan Mitrtown Retail Master Tracking Dashboard";
+      } else if (fileCount === 1) {
+        detectedName = `${fileNames[0].replace(/\.[^/.]+$/, "")} Dashboard`;
+      }
+
+      document.getElementById("projectTitle").textContent = detectedName;
+      document.getElementById("headerTag").textContent = fileCount > 1 ? `Multi-Dataset (${fileCount} Sources)` : fileNames[0].replace(/\.[^/.]+$/, "");
+      document.getElementById("fileCountBadge").textContent = `${fileCount} ${fileCount === 1 ? 'File' : 'Files Combined'}`;
+      document.getElementById("fileCountBadge").title = fileNames.join(", ");
+    }
+
+    // -------------------------------------------------------------
+    // DROPDOWNS & FILTERS
+    // -------------------------------------------------------------
+    function populateAllDropdowns() {
+      const teamSel = document.getElementById("filterTeam");
+      if (teamSel) {
+        const teams = Object.keys(CATEGORIES_BY_TEAM).sort();
+        const cur = selectedTeams.size === 1 ? Array.from(selectedTeams)[0] : "All";
+        teamSel.innerHTML = `<option value="All">${currentLang === 'th' ? 'ทุกทีม' : 'All Teams'}</option>` + teams.map(t => `<option value="${t}">${t}</option>`).join('');
+        teamSel.value = teams.includes(cur) ? cur : "All";
+        if (teamSel.value === "All") selectedTeams = new Set();
+      }
+      const monthSelect = document.getElementById("filterMonth");
+      monthSelect.innerHTML = `<option value="All">${I18N[currentLang].allMonths}</option>`;
+      AVAILABLE_MONTHS.forEach(m => {
+        monthSelect.innerHTML += `<option value="${m}">${m}</option>`;
+      });
+      monthSelect.value = AVAILABLE_MONTHS.includes(selectedMonth) ? selectedMonth : "All";
+      selectedMonth = monthSelect.value;
+
+      const freqSelect = document.getElementById("filterFrequency");
+      freqSelect.innerHTML = `<option value="All">${I18N[currentLang].allFrequencies}</option>`;
+      AVAILABLE_FREQS.forEach(f => {
+        freqSelect.innerHTML += `<option value="${f}">${f}</option>`;
+      });
+      freqSelect.value = AVAILABLE_FREQS.includes(selectedFrequency) ? selectedFrequency : "All";
+      selectedFrequency = freqSelect.value;
+
+      const statSelect = document.getElementById("filterStatus");
+      if (currentLang === 'en') {
+        statSelect.innerHTML = `
+          <option value="All">All Statuses</option>
+          <option value="CLIENTVERIFIED">CLIENTVERIFIED</option>
+          <option value="COMPLETED">COMPLETED</option>
+          <option value="CLOSED">CLOSED</option>
+          <option value="INPROGRESS">INPROGRESS</option>
+          <option value="ASSIGNMENT">ASSIGNMENT</option>
+          <option value="ACKNOWLEDGEMENT">ACKNOWLEDGEMENT</option>
+          <option value="NEW">NEW</option>
+        `;
+      } else {
+        statSelect.innerHTML = `
+          <option value="All">ทุกสถานะ (All Statuses)</option>
+          <option value="CLIENTVERIFIED">CLIENTVERIFIED (ตรวจสอบแล้ว)</option>
+          <option value="COMPLETED">COMPLETED (เสร็จสิ้น)</option>
+          <option value="CLOSED">CLOSED (ปิดงาน)</option>
+          <option value="INPROGRESS">INPROGRESS (กำลังดำเนินการ)</option>
+          <option value="ASSIGNMENT">ASSIGNMENT (มอบหมายแล้ว)</option>
+          <option value="ACKNOWLEDGEMENT">ACKNOWLEDGEMENT (รับทราบงาน)</option>
+          <option value="NEW">NEW (งานใหม่)</option>
+        `;
+      }
+      statSelect.value = selectedStatus;
+
+      buildCategoryDropdown();
+    }
+
+    function buildCategoryDropdown() {
+      const catSelect = document.getElementById("filterCategory");
+      catSelect.innerHTML = `<option value="All">${I18N[currentLang].allCategories}</option>`;
+
+      const teams = selectedTeams.size === 0 ? Object.keys(CATEGORIES_BY_TEAM) : Array.from(selectedTeams);
+      let availableCategories = Array.from(new Set(teams.flatMap(t => CATEGORIES_BY_TEAM[t] || [])));
+
+      availableCategories.sort().forEach(cat => {
+        catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+
+      if (availableCategories.includes(selectedCategory)) {
+        catSelect.value = selectedCategory;
+      } else {
+        selectedCategory = "All";
+        catSelect.value = "All";
+      }
+    }
+
+    function toggleTeam(teamName) {
+      if (selectedTeams.has(teamName)) {
+        selectedTeams.delete(teamName);
+      } else {
+        selectedTeams.add(teamName);
+      }
+
+      const btnHard = document.getElementById("btnTeamHard");
+      const iconHard = document.getElementById("iconTeamHard");
+      if (selectedTeams.has("FM Hard")) {
+        btnHard.className = "flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center transition bg-indigo-600/30 border-indigo-500 text-indigo-200";
+        iconHard.className = "fa-solid fa-check mr-1.5 text-xs text-indigo-400";
+      } else {
+        btnHard.className = "flex-1 py-1.5 px-3 rounded-lg border text-xs font-medium flex items-center justify-center transition bg-slate-800/80 border-slate-700 text-slate-500 hover:text-slate-300";
+        iconHard.className = "hidden";
+      }
+
+      const btnSoft = document.getElementById("btnTeamSoft");
+      const iconSoft = document.getElementById("iconTeamSoft");
+      if (selectedTeams.has("FM Soft")) {
+        btnSoft.className = "flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center transition bg-teal-600/30 border-teal-500 text-teal-200";
+        iconSoft.className = "fa-solid fa-check mr-1.5 text-xs text-teal-400";
+      } else {
+        btnSoft.className = "flex-1 py-1.5 px-3 rounded-lg border text-xs font-medium flex items-center justify-center transition bg-slate-800/80 border-slate-700 text-slate-500 hover:text-slate-300";
+        iconSoft.className = "hidden";
+      }
+
+      buildCategoryDropdown();
+      onFilterChange();
+    }
+
+    function onFilterChange() {
+      selectedMonth = document.getElementById("filterMonth").value;
+      selectedYear = document.getElementById("filterYear")?.value || "All";
+      const teamVal = document.getElementById("filterTeam")?.value || "All";
+      const prevTeams = Array.from(selectedTeams).join('|');
+      selectedTeams = teamVal === "All" ? new Set() : new Set([teamVal]);
+      if (prevTeams !== Array.from(selectedTeams).join('|')) { try { buildCategoryDropdown(); selectedCategory = document.getElementById("filterCategory").value; } catch (e) {} }
+      selectedWeek = document.getElementById("filterWeek")?.value || "All";
+      selectedDay = document.getElementById("filterDay")?.value || "All";
+      selectedCategory = document.getElementById("filterCategory").value;
+      selectedFrequency = document.getElementById("filterFrequency").value;
+      selectedStatus = document.getElementById("filterStatus").value;
+
+      updateDashboard();
+    }
+
+    function resetAllFilters() {
+      selectedMonth = "All";
+      selectedYear = "All"; selectedWeek = "All"; selectedDay = "All";
+      const teamSel = document.getElementById("filterTeam"); if (teamSel) teamSel.value = "All";
+      selectedTeams = new Set(["FM Hard", "FM Soft"]);
+      
+      const btnHard = document.getElementById("btnTeamHard");
+      const iconHard = document.getElementById("iconTeamHard");
+      btnHard.className = "flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center transition bg-indigo-600/30 border-indigo-500 text-indigo-200";
+      iconHard.className = "fa-solid fa-check mr-1.5 text-xs text-indigo-400";
+
+      const btnSoft = document.getElementById("btnTeamSoft");
+      const iconSoft = document.getElementById("iconTeamSoft");
+      btnSoft.className = "flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center transition bg-teal-600/30 border-teal-500 text-teal-200";
+      iconSoft.className = "fa-solid fa-check mr-1.5 text-xs text-teal-400";
+
+      document.getElementById("filterMonth").value = "All";
+      document.getElementById("filterFrequency").value = "All";
+      document.getElementById("filterStatus").value = "All";
+      selectedCategory = "All";
+      selectedFrequency = "All";
+      selectedStatus = "All";
+      selectedTeams = new Set();
+
+      buildCategoryDropdown();
+      document.getElementById("pendingSearch").value = "";
+      updateDashboard();
+    }
+
+    // -------------------------------------------------------------
+    // LANGUAGE SWITCHER
+    // -------------------------------------------------------------
+    function setLanguage(lang) {
+      currentLang = lang;
+      const btnEN = document.getElementById("langEN");
+      const btnTH = document.getElementById("langTH");
+      
+      if (lang === 'en') {
+        btnEN.className = "px-2.5 py-1 rounded-md transition font-semibold bg-cyan-600 text-white";
+        btnTH.className = "px-2.5 py-1 rounded-md transition font-semibold text-slate-400 hover:text-white";
+      } else {
+        btnTH.className = "px-2.5 py-1 rounded-md transition font-semibold bg-cyan-600 text-white";
+        btnEN.className = "px-2.5 py-1 rounded-md transition font-semibold text-slate-400 hover:text-white";
+      }
+
+      const t = I18N[lang];
+      document.getElementById("dashboardSubtitle").textContent = t.projectSub;
+      document.getElementById("txtUploadBtn").textContent = t.uploadBtn;
+      document.getElementById("txtAppendBtn").textContent = t.appendBtn;
+      document.getElementById("presentModeText").textContent = isPresentMode ? t.exitPresentMode : t.presentMode;
+      document.getElementById("lblResetFilter").textContent = t.resetFilter;
+      document.getElementById("lblFilterTeam").textContent = t.filterTeam;
+      document.getElementById("lblFilterMonth").textContent = t.filterMonth;
+      document.getElementById("lblFilterCategory").textContent = t.filterCategory;
+      document.getElementById("lblFilterFrequency").textContent = t.filterFrequency;
+      document.getElementById("lblFilterStatus").textContent = t.filterStatus;
+      
+      document.getElementById("lblKpiTotal").textContent = t.kpiTotal;
+      document.getElementById("lblKpiTotalSub").textContent = t.kpiTotalSub;
+      document.getElementById("lblKpiDoneRate").textContent = t.kpiDoneRate;
+      document.getElementById("lblKpiDoneSub").textContent = t.kpiDoneSub;
+      document.getElementById("lblKpiSla").textContent = t.kpiSla;
+      document.getElementById("lblKpiSlaSub").textContent = t.kpiSlaSub;
+      document.getElementById("lblKpiPending").textContent = t.kpiPending;
+
+      document.getElementById("lblAnalyzeHeading").textContent = t.analyzeHeading;
+      document.getElementById("lblAnalyzeSub").textContent = t.analyzeSub;
+      document.getElementById("lblBtnEdit").textContent = t.btnEdit;
+      document.getElementById("lblBtnSave").textContent = t.btnSave;
+      document.getElementById("lblBtnResetAuto").textContent = t.btnResetAuto;
+
+      document.getElementById("lblChartTrendTitle").innerHTML = `<i class="fa-solid fa-chart-column mr-2 text-cyan-400"></i> ${t.chartTrendTitle}`;
+      document.getElementById("lblChartTrendSub").textContent = t.chartTrendSub;
+      document.getElementById("lblChartSlaTrendTitle").innerHTML = `<i class="fa-solid fa-chart-line mr-2 text-emerald-400"></i> ${t.chartSlaTitle}`;
+      document.getElementById("lblChartSlaTrendSub").textContent = t.chartSlaSub;
+      document.getElementById("lblChartCategoryTitle").innerHTML = `<i class="fa-solid fa-chart-pie mr-2 text-indigo-400"></i> ${t.chartCatTitle}`;
+      document.getElementById("lblChartCategorySub").textContent = t.chartCatSub;
+      document.getElementById("lblChartFreqTitle").innerHTML = `<i class="fa-solid fa-wave-square mr-2 text-amber-400"></i> ${t.chartFreqTitle}`;
+      document.getElementById("lblChartFreqSub").textContent = t.chartFreqSub;
+
+      document.getElementById("lblTableTitle").textContent = t.tableTitle;
+      document.getElementById("pendingSearch").placeholder = t.searchPlaceholder;
+      document.getElementById("footerBrand").textContent = t.footerBrand;
+
+      document.getElementById("thPpmId").innerHTML = `${t.thPpmId} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thGroup").innerHTML = `${t.thGroup} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thTeam").innerHTML = `${t.thTeam} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thCat").innerHTML = `${t.thCat} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thFreq").innerHTML = `${t.thFreq} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thComp").innerHTML = `${t.thComp} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thStage").innerHTML = `${t.thStage} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+      document.getElementById("thMonth").innerHTML = `${t.thMonth} <i class="fa-solid fa-sort ml-1 text-slate-500"></i>`;
+
+      populateAllDropdowns();
+      updateDashboard();
+    }
+
+    // -------------------------------------------------------------
+    // FULLSCREEN PRESENT MODE
+    // -------------------------------------------------------------
+    function togglePresentMode() {
+      const elem = document.documentElement;
+      const btn = document.getElementById("presentModeBtn");
+      const icon = document.getElementById("presentModeIcon");
+      const text = document.getElementById("presentModeText");
+
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().then(() => {
+          isPresentMode = true;
+          btn.className = "inline-flex items-center px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md transition border border-rose-400";
+          icon.className = "fa-solid fa-compress mr-1.5";
+          text.textContent = currentLang === 'th' ? "ออกจากโหมดพรีเซนต์ (Exit Present)" : "Exit Present";
+        }).catch(err => {
+          alert(`Error entering fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen().then(() => {
+          isPresentMode = false;
+          btn.className = "inline-flex items-center px-3.5 py-1.5 rounded-lg bg-indigo-600/90 hover:bg-indigo-600 text-white text-xs font-semibold shadow-sm transition border border-indigo-500";
+          icon.className = "fa-solid fa-expand mr-1.5";
+          text.textContent = currentLang === 'th' ? "โหมดนำเสนอ (Present Mode)" : "Present Mode";
+        });
+      }
+    }
+
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) {
+        isPresentMode = false;
+        const btn = document.getElementById("presentModeBtn");
+        const icon = document.getElementById("presentModeIcon");
+        const text = document.getElementById("presentModeText");
+        btn.className = "inline-flex items-center px-3.5 py-1.5 rounded-lg bg-indigo-600/90 hover:bg-indigo-600 text-white text-xs font-semibold shadow-sm transition border border-indigo-500";
+        icon.className = "fa-solid fa-expand mr-1.5";
+        text.textContent = currentLang === 'th' ? "โหมดนำเสนอ (Present Mode)" : "Present Mode";
+      }
+    });
+
+    // -------------------------------------------------------------
+    // EXECUTIVE LIVE ANALYSIS
+    // -------------------------------------------------------------
+    function getFilterStorageKey() {
+      const teamsArr = Array.from(selectedTeams).sort().join("+") || "None";
+      const site = document.getElementById("headerTag").textContent.trim();
+      return `ppm_analysis_${site}_${selectedYear}_${selectedWeek}_${selectedDay}_${selectedMonth}_${teamsArr}_${selectedCategory}_${selectedFrequency}_${selectedStatus}`;
+    }
+
+    function generateDynamicLiveAnalysis(stats) {
+      const { totalTasks, completedTasks, compRate, slaRate, slaMissedTasks, unfinishTotal, unfinishHard, unfinishSoft } = stats;
+
+      if (currentLang === 'en') {
+        let bottleneckAnalysis = (slaMissedTasks > 0)
+          ? `Identified operational variance resulting in ${slaMissedTasks} tasks not meeting SLA standards. Requires workload pacing realignment.`
+          : `Zero SLA violations detected across the selected scope. High operational compliance maintained.`;
+
+        let actionDirective = (unfinishTotal > 0)
+          ? `Immediate Command Directive: Mobilize resources to clear ${unfinishTotal} unfinish items (FM Soft: ${unfinishSoft} items, FM Hard: ${unfinishHard} items) to reach full completion.`
+          : `Executive Recommendation: All tasks within this filter scope are 100% completed. Maintain standard telemetry monitoring.`;
+
+        return `• Executive Overview: Active scope encompasses ${totalTasks.toLocaleString()} preventive maintenance tasks across combined datasets with an overall completion efficiency of ${compRate}% and SLA adherence of ${slaRate}%.\n• Critical Bottleneck Diagnosis: ${bottleneckAnalysis}\n• Strategic Resource Allocation: Workload reflects active coordination between FM Hard and FM Soft teams.\n• Priority Action Directive: ${actionDirective}`;
+      } else {
+        let bottleneckAnalysisTH = (slaMissedTasks > 0)
+          ? `พบความล่าช้าสะสม ${slaMissedTasks} รายการที่ไม่เป็นไปตามข้อตกลง SLA จำเป็นต้องปรับความเร็วรอบการเข้าตรวจเช็ค`
+          : `ไม่พบรายการตกเกณฑ์ SLA ในสโคปที่เลือก ทุกระบบดำเนินงานตามมาตรฐานเวลา 100%`;
+
+        let actionDirectiveTH = (unfinishTotal > 0)
+          ? `ข้อสั่งการเร่งด่วน: เร่งรัดงานค้างที่ยังไม่เสร็จสิ้น ${unfinishTotal} รายการ (แยกเป็น FM Soft: ${unfinishSoft} งาน, FM Hard: ${unfinishHard} งาน) ให้ปิดงานตามเป้าหมาย`
+          : `ข้อเสนอแนะเชิงกลยุทธ์: แผนงานในสโคปนี้เสร็จสิ้นครบ 100% แนะนำให้มอนิเตอร์ระบบและเตรียมความพร้อมสำหรับรอบถัดไป`;
+
+        return `• สรุปผลการปฏิบัติการระดับบริหาร: สโคปข้อมูลที่รวบรวมมีแผนงานรวมทั้งสิ้น ${totalTasks.toLocaleString()} รายการ อัตราเสร็จสิ้นรวมอยู่ที่ ${compRate}% และอัตราความสำเร็จตาม SLA สูงถึง ${slaRate}%\n• การวิเคราะห์จุดวิกฤตและคอขวด: ${bottleneckAnalysisTH}\n• สัดส่วนทรัพยากรหน้างาน: การกระจายงานสะท้อนการปฏิบัติงานร่วมกันของทีม FM Hard และ FM Soft\n• ข้อสั่งการเชิงรุก (Action Plan): ${actionDirectiveTH}`;
+      }
+    }
+
+    function refreshAnalysisView(stats) {
+      const key = getFilterStorageKey();
+      const savedCustom = localStorage.getItem(key);
+      const viewMode = document.getElementById("analyzeViewMode");
+      const textarea = document.getElementById("analyzeTextarea");
+
+      if (savedCustom) {
+        viewMode.innerHTML = `<div class="whitespace-pre-line text-cyan-200">${savedCustom}</div><div class="mt-2 text-[10px] text-amber-400 font-mono"><i class="fa-solid fa-user-pen mr-1"></i> Custom Saved Analysis (Click "Reset to Auto" to revert)</div>`;
+        textarea.value = savedCustom;
+      } else {
+        const liveAnalysis = generateDynamicLiveAnalysis(stats);
+        viewMode.innerHTML = `<div class="whitespace-pre-line">${liveAnalysis}</div><div class="mt-2 text-[10px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i> Live Dynamic Analysis Synthesized</div>`;
+        textarea.value = liveAnalysis;
+      }
+
+      cancelEditAnalysis();
+    }
+
+    function toggleEditAnalysis() {
+      isEditingAnalysis = !isEditingAnalysis;
+      const viewDiv = document.getElementById("analyzeViewMode");
+      const editDiv = document.getElementById("analyzeEditMode");
+      const btnSave = document.getElementById("btnSaveAnalyze");
+
+      if (isEditingAnalysis) {
+        viewDiv.classList.add("hidden");
+        editDiv.classList.remove("hidden");
+        btnSave.classList.remove("hidden");
+        document.getElementById("lblBtnEdit").textContent = currentLang === 'en' ? "Cancel" : "ยกเลิก";
+      } else {
+        cancelEditAnalysis();
+      }
+    }
+
+    function cancelEditAnalysis() {
+      isEditingAnalysis = false;
+      document.getElementById("analyzeViewMode").classList.remove("hidden");
+      document.getElementById("analyzeEditMode").classList.add("hidden");
+      document.getElementById("btnSaveAnalyze").classList.add("hidden");
+      document.getElementById("lblBtnEdit").textContent = I18N[currentLang].btnEdit;
+    }
+
+    function saveCurrentAnalysis() {
+      const key = getFilterStorageKey();
+      const content = document.getElementById("analyzeTextarea").value.trim();
+      localStorage.setItem(key, content);
+
+      updateDashboard();
+
+      const ind = document.getElementById("saveStatusIndicator");
+      ind.innerHTML = `<i class="fa-solid fa-check-double mr-1"></i> ${I18N[currentLang].saveDone}`;
+      ind.classList.remove("hidden");
+      setTimeout(() => {
+        ind.classList.add("hidden");
+      }, 2500);
+    }
+
+    function resetAnalysisToAuto() {
+      const key = getFilterStorageKey();
+      localStorage.removeItem(key);
+      updateDashboard();
+    }
+
+    // -------------------------------------------------------------
+    // DASHBOARD DATA AGGREGATION & UPDATE
+    // -------------------------------------------------------------
+    function updateDashboard() {
+      try { refreshPpmTimeFilters(); } catch (e) { console.warn(e); }
+      let totalTasks = 0;
+      let completedTasks = 0;
+      let slaMetTasks = 0;
+      let slaMissedTasks = 0;
+
+      AGGREGATED_CUBE.forEach(row => {
+        if (!ppmTimeOk(row[8], row[9], row[10])) return;
+        const [m, team, cat, freq, stg, sla, cnt] = row;
+
+        const matchMonth = (selectedMonth === "All" || m === selectedMonth);
+        const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
+        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
+        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
+        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+
+        if (matchMonth && matchTeam && matchCat && matchFreq && matchStage) {
+          totalTasks += cnt;
+          if (stg === "CLIENTVERIFIED" || stg === "COMPLETED" || stg === "CLOSED") {
+            completedTasks += cnt;
+          }
+          if (sla === "1") slaMetTasks += cnt;
+          else if (sla === "0") slaMissedTasks += cnt;
+        }
+      });
+
+      filterUnfinishTasks();
+
+      const unfinishTotal = filteredPendingList.length;
+      const unfinishHard = filteredPendingList.filter(d => d.team === "FM Hard").length;
+      const unfinishSoft = filteredPendingList.filter(d => d.team === "FM Soft").length;
+
+      document.getElementById("kpiTotalTasks").textContent = totalTasks.toLocaleString();
+      const compRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(2) : "0.00";
+      document.getElementById("kpiCompletionRate").textContent = `${compRate}%`;
+      document.getElementById("kpiCompletedCount").textContent = `${completedTasks.toLocaleString()} ${currentLang === 'en' ? 'Tasks' : 'รายการ'}`;
+
+      const totalSlaEvaluated = slaMetTasks + slaMissedTasks;
+      const slaRate = totalSlaEvaluated > 0 ? ((slaMetTasks / totalSlaEvaluated) * 100).toFixed(2) : "0.00";
+      document.getElementById("kpiSlaRate").textContent = `${slaRate}%`;
+      document.getElementById("kpiSlaMetCount").textContent = slaMetTasks.toLocaleString();
+
+      document.getElementById("kpiPendingTasks").textContent = unfinishTotal.toLocaleString();
+      document.getElementById("pendingBadgeCount").textContent = `${unfinishTotal.toLocaleString()} ${currentLang === 'en' ? 'Tasks' : 'รายการ'}`;
+
+      document.getElementById("badgePendingHard").textContent = `FM Hard: ${unfinishHard}`;
+      document.getElementById("badgePendingSoft").textContent = `FM Soft: ${unfinishSoft}`;
+
+      refreshAnalysisView({
+        totalTasks,
+        completedTasks,
+        compRate,
+        slaRate,
+        slaMissedTasks,
+        unfinishTotal,
+        unfinishHard,
+        unfinishSoft
+      });
+
+      renderCharts();
+    }
+
+    // -------------------------------------------------------------
+    // UNFINISH TASKS TABLE
+    // -------------------------------------------------------------
+    function filterUnfinishTasks() {
+      const search = document.getElementById("pendingSearch").value.trim().toLowerCase();
+
+      filteredPendingList = UNFINISH_TASKS_DATA.filter(task => {
+        const matchMonth = (selectedMonth === "All" || task.month === selectedMonth);
+        const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(task.team));
+        const matchCat = (selectedCategory === "All" || task.category === selectedCategory);
+        const matchFreq = (selectedFrequency === "All" || task.frequency === selectedFrequency);
+        const matchStage = (selectedStatus === "All" || task.stage === selectedStatus);
+
+        const groupText = (currentLang === 'en' ? task.group_en : task.group_th).toLowerCase();
+        const matchSearch = search === "" ||
+          task.id.toLowerCase().includes(search) ||
+          groupText.includes(search) ||
+          task.team.toLowerCase().includes(search) ||
+          task.category.toLowerCase().includes(search) ||
+          task.stage.toLowerCase().includes(search);
+
+        return matchMonth && matchTeam && matchCat && matchFreq && matchStage && matchSearch && ppmTimeOk(task.yr, task.wk, task.day);
+      });
+
+      currentPendingPage = 1;
+      renderPendingTable();
+    }
+
+    function handleTableSearch() {
+      filterUnfinishTasks();
+    }
+
+    function sortPendingTable(key) {
+      if (sortPendingKey === key) {
+        sortPendingAsc = !sortPendingAsc;
+      } else {
+        sortPendingKey = key;
+        sortPendingAsc = true;
+      }
+      renderPendingTable();
+    }
+
+    function renderPendingTable() {
+      filteredPendingList.sort((a, b) => {
+        let vA = (sortPendingKey === 'group') ? (currentLang === 'en' ? a.group_en : a.group_th) : a[sortPendingKey];
+        let vB = (sortPendingKey === 'group') ? (currentLang === 'en' ? b.group_en : b.group_th) : b[sortPendingKey];
+        if (typeof vA === 'string') vA = vA.toLowerCase();
+        if (typeof vB === 'string') vB = vB.toLowerCase();
+        if (vA < vB) return sortPendingAsc ? -1 : 1;
+        if (vA > vB) return sortPendingAsc ? 1 : -1;
+        return 0;
+      });
+
+      const total = filteredPendingList.length;
+      const totalPages = Math.ceil(total / pendingPageSize) || 1;
+      if (currentPendingPage > totalPages) currentPendingPage = totalPages;
+
+      const startIndex = (currentPendingPage - 1) * pendingPageSize;
+      const rows = filteredPendingList.slice(startIndex, startIndex + pendingPageSize);
+
+      const tbody = document.getElementById("pendingTableBody");
+      tbody.innerHTML = "";
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-500 font-medium">${I18N[currentLang].emptyTable}</td></tr>`;
+      } else {
+        rows.forEach(item => {
+          let stageBadge = "bg-rose-950/80 text-rose-400 border border-rose-800";
+          if (item.stage === "INPROGRESS") stageBadge = "bg-amber-950/80 text-amber-400 border border-amber-800";
+          else if (item.stage === "ASSIGNMENT") stageBadge = "bg-blue-950/80 text-blue-400 border border-blue-800";
+          else if (item.stage === "ACKNOWLEDGEMENT") stageBadge = "bg-purple-950/80 text-purple-400 border border-purple-800";
+
+          const desc = currentLang === 'en' ? item.group_en : item.group_th;
+
+          const tr = `
+            <tr class="hover:bg-slate-800/40 transition border-b border-slate-800/40">
+              <td class="py-2.5 px-4 font-mono font-semibold text-cyan-400">${item.id}</td>
+              <td class="py-2.5 px-4 font-medium text-slate-200">${desc}</td>
+              <td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded text-xs ${item.team === 'FM Hard' ? 'bg-indigo-950 text-indigo-300 border border-indigo-800' : 'bg-teal-950 text-teal-300 border border-teal-800'}">${item.team}</span></td>
+              <td class="py-2.5 px-4 text-slate-300">${item.category}</td>
+              <td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono text-[11px]">${item.frequency}</span></td>
+              <td class="py-2.5 px-4 font-mono text-slate-400">${item.component}</td>
+              <td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${stageBadge}">${item.stage}</span></td>
+              <td class="py-2.5 px-4 text-center font-mono text-cyan-300 font-semibold">${item.month}</td>
+            </tr>
+          `;
+          tbody.innerHTML += tr;
+        });
+      }
+
+      const endItem = Math.min(startIndex + pendingPageSize, total);
+      document.getElementById("paginationInfo").textContent = currentLang === 'en'
+        ? `Showing ${total > 0 ? startIndex + 1 : 0} to ${endItem} of ${total} unfinish entries`
+        : `แสดง ${total > 0 ? startIndex + 1 : 0} ถึง ${endItem} จากทั้งหมด ${total} รายการที่ยังไม่เสร็จ`;
+
+      const btnContainer = document.getElementById("paginationButtons");
+      btnContainer.innerHTML = "";
+
+      const prevDisabled = currentPendingPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed px-2.5 py-1 border border-slate-800 rounded text-slate-500"' : 'class="px-2.5 py-1 border border-slate-700 rounded hover:bg-slate-800 text-slate-300"';
+      btnContainer.innerHTML += `<button onclick="changePendingPage(${currentPendingPage - 1})" ${prevDisabled}><i class="fa-solid fa-chevron-left"></i></button>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        const activeClass = p === currentPendingPage ? 'bg-cyan-600 text-white font-bold' : 'border border-slate-700 text-slate-400 hover:bg-slate-800';
+        btnContainer.innerHTML += `<button onclick="changePendingPage(${p})" class="px-2.5 py-1 rounded text-xs transition ${activeClass}">${p}</button>`;
+      }
+
+      const nextDisabled = currentPendingPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed px-2.5 py-1 border border-slate-800 rounded text-slate-500"' : 'class="px-2.5 py-1 border border-slate-700 rounded hover:bg-slate-800 text-slate-300"';
+      btnContainer.innerHTML += `<button onclick="changePendingPage(${currentPendingPage + 1})" ${nextDisabled}><i class="fa-solid fa-chevron-right"></i></button>`;
+    }
+
+    function changePendingPage(page) {
+      const totalPages = Math.ceil(filteredPendingList.length / pendingPageSize) || 1;
+      if (page >= 1 && page <= totalPages) {
+        currentPendingPage = page;
+        renderPendingTable();
+      }
+    }
+
+    // -------------------------------------------------------------
+    // CHARTS RENDERING
+    // -------------------------------------------------------------
+    function renderCharts() {
+      const displayMonths = (selectedMonth === "All") ? AVAILABLE_MONTHS : [selectedMonth];
+
+      // --- Chart 1: Monthly Workload Volume ---
+      const hardCounts = displayMonths.map(() => 0);
+      const softCounts = displayMonths.map(() => 0);
+
+      AGGREGATED_CUBE.forEach(row => {
+        if (!ppmTimeOk(row[8], row[9], row[10])) return;
+        const [m, team, cat, freq, stg, sla, cnt] = row;
+        const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
+        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
+        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
+        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+
+        if (matchTeam && matchCat && matchFreq && matchStage) {
+          const mIdx = displayMonths.indexOf(m);
+          if (mIdx !== -1) {
+            if (team === "FM Hard") hardCounts[mIdx] += cnt;
+            else softCounts[mIdx] += cnt;
+          }
+        }
+      });
+
+      const ctxMonthly = document.getElementById("monthlyChart").getContext("2d");
+      if (monthlyChart) monthlyChart.destroy();
+      monthlyChart = new Chart(ctxMonthly, {
+        type: 'bar',
+        data: {
+          labels: displayMonths,
+          datasets: [
+            {
+              label: 'FM Hard',
+              data: hardCounts,
+              backgroundColor: '#6366f1',
+              borderRadius: 4
+            },
+            {
+              label: 'FM Soft',
+              data: softCounts,
+              backgroundColor: '#06b6d4',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 20 } },
+          onClick: (evt, activeEls, chart) => {
+            const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+            if (points.length > 0) {
+              const clickedMonth = chart.data.labels[points[0].index];
+              selectedMonth = (selectedMonth === clickedMonth) ? "All" : clickedMonth;
+              document.getElementById("filterMonth").value = selectedMonth;
+              updateDashboard();
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' } }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#38bdf8',
+              padding: 10
+            },
+            datalabels: {
+              color: '#ffffff',
+              font: { weight: 'bold', size: 10 },
+              formatter: (val) => val > 0 ? val.toLocaleString() : '',
+              display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 30
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              ticks: { color: '#94a3b8' },
+              grid: { display: false }
+            },
+            y: {
+              stacked: true,
+              ticks: { color: '#94a3b8' },
+              grid: { color: '#1e293b' }
+            }
+          }
+        }
+      });
+
+      // --- Chart 2: SLA Compliance Trend ---
+      const slaMetByMonth = displayMonths.map(() => 0);
+      const slaMissedByMonth = displayMonths.map(() => 0);
+
+      AGGREGATED_CUBE.forEach(row => {
+        if (!ppmTimeOk(row[8], row[9], row[10])) return;
+        const [m, team, cat, freq, stg, sla, cnt] = row;
+        const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
+        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
+        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
+        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+
+        if (matchTeam && matchCat && matchFreq && matchStage) {
+          const mIdx = displayMonths.indexOf(m);
+          if (mIdx !== -1) {
+            if (sla === "1") slaMetByMonth[mIdx] += cnt;
+            else if (sla === "0") slaMissedByMonth[mIdx] += cnt;
+          }
+        }
+      });
+
+      const slaRates = displayMonths.map((m, idx) => {
+        const met = slaMetByMonth[idx];
+        const missed = slaMissedByMonth[idx];
+        const total = met + missed;
+        return total > 0 ? parseFloat(((met / total) * 100).toFixed(2)) : 100;
+      });
+
+      const ctxSla = document.getElementById("slaTrendChart").getContext("2d");
+      if (slaTrendChart) slaTrendChart.destroy();
+      slaTrendChart = new Chart(ctxSla, {
+        type: 'line',
+        data: {
+          labels: displayMonths,
+          datasets: [
+            {
+              label: currentLang === 'en' ? 'Actual SLA Rate (%)' : 'อัตราความสำเร็จตาม SLA (%)',
+              data: slaRates,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2.5,
+              pointBackgroundColor: '#059669',
+              pointRadius: 6,
+              pointHoverRadius: 8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 25, right: 10 } },
+          onClick: (evt, activeEls, chart) => {
+            const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
+            if (points.length > 0) {
+              const clickedMonth = chart.data.labels[points[0].index];
+              selectedMonth = (selectedMonth === clickedMonth) ? "All" : clickedMonth;
+              document.getElementById("filterMonth").value = selectedMonth;
+              updateDashboard();
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' } }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#34d399',
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+              }
+            },
+            datalabels: {
+              align: 'top',
+              anchor: 'end',
+              offset: 4,
+              color: '#34d399',
+              font: { weight: 'bold', size: 11 },
+              formatter: (val) => `${val}%`
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8' },
+              grid: { display: false }
+            },
+            y: {
+              min: 0,
+              max: 100,
+              ticks: { color: '#94a3b8', callback: (val) => `${val}%` },
+              grid: { color: '#1e293b' }
+            }
+          }
+        }
+      });
+
+      // --- Chart 3: Category Share Doughnut ---
+      const catCounts = {};
+      AGGREGATED_CUBE.forEach(row => {
+        if (!ppmTimeOk(row[8], row[9], row[10])) return;
+        const [m, team, cat, freq, stg, sla, cnt] = row;
+        const matchMonth = (selectedMonth === "All" || m === selectedMonth);
+        const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
+        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
+        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+
+        if (matchMonth && matchTeam && matchFreq && matchStage) {
+          catCounts[cat] = (catCounts[cat] || 0) + cnt;
+        }
+      });
+
+      const catLabels = Object.keys(catCounts);
+      const catData = Object.values(catCounts);
+      const totalCatSum = catData.reduce((acc, curr) => acc + curr, 0);
+
+      const ctxCategory = document.getElementById("categoryChart").getContext("2d");
+      if (categoryChart) categoryChart.destroy();
+      categoryChart = new Chart(ctxCategory, {
+        type: 'doughnut',
+        data: {
+          labels: catLabels,
+          datasets: [{
+            data: catData,
+            backgroundColor: [
+              '#38bdf8', '#818cf8', '#34d399', '#f43f5e', '#fbbf24',
+              '#a78bfa', '#2dd4bf', '#fb7185', '#94a3b8', '#e879f9', '#4ade80', '#60a5fa'
+            ],
+            borderWidth: 2,
+            borderColor: '#131b2b'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: (evt, activeEls, chart) => {
+            const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+            if (points.length > 0) {
+              const clickedCat = chart.data.labels[points[0].index];
+              selectedCategory = (selectedCategory === clickedCat) ? "All" : clickedCat;
+              document.getElementById("filterCategory").value = selectedCategory;
+              updateDashboard();
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } }
+            },
+            datalabels: {
+              color: '#ffffff',
+              font: { weight: 'bold', size: 10 },
+              formatter: (val) => {
+                const pct = totalCatSum > 0 ? ((val / totalCatSum) * 100).toFixed(1) : 0;
+                return pct > 4 ? `${pct}%` : '';
+              }
+            }
+          },
+          cutout: '66%'
+        }
+      });
+
+      // --- Chart 4: Maintenance Frequency Distribution ---
+      const freqCounts = {};
+      AVAILABLE_FREQS.forEach(f => freqCounts[f] = 0);
+
+      AGGREGATED_CUBE.forEach(row => {
+        if (!ppmTimeOk(row[8], row[9], row[10])) return;
+        const [m, team, cat, freq, stg, sla, cnt] = row;
+        const matchMonth = (selectedMonth === "All" || m === selectedMonth);
+        const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
+        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
+        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+
+        if (matchMonth && matchTeam && matchCat && matchStage) {
+          if (freqCounts[freq] !== undefined) {
+            freqCounts[freq] += cnt;
+          }
+        }
+      });
+
+      const freqLabels = (selectedFrequency === "All") ? AVAILABLE_FREQS : [selectedFrequency];
+      const freqData = freqLabels.map(f => freqCounts[f] || 0);
+
+      const ctxFrequency = document.getElementById("frequencyChart").getContext("2d");
+      if (frequencyChart) frequencyChart.destroy();
+      frequencyChart = new Chart(ctxFrequency, {
+        type: 'bar',
+        data: {
+          labels: freqLabels,
+          datasets: [{
+            label: currentLang === 'en' ? 'Task Volume' : 'จำนวนงาน (Tasks)',
+            data: freqData,
+            backgroundColor: '#fbbf24',
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 22 } },
+          onClick: (evt, activeEls, chart) => {
+            const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+            if (points.length > 0) {
+              const clickedF = chart.data.labels[points[0].index];
+              selectedFrequency = (selectedFrequency === clickedF) ? "All" : clickedF;
+              document.getElementById("filterFrequency").value = selectedFrequency;
+              updateDashboard();
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              align: 'top',
+              anchor: 'end',
+              color: '#fde68a',
+              font: { weight: 'bold', size: 10 },
+              formatter: (val) => val > 0 ? val.toLocaleString() : ''
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8' },
+              grid: { display: false }
+            },
+            y: {
+              ticks: { color: '#94a3b8' },
+              grid: { color: '#1e293b' }
+            }
+          }
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // FULLSCREEN MODAL
+    // -------------------------------------------------------------
+    function expandChartModal(sourceChartId, title) {
+      const modal = document.getElementById("chartModal");
+      document.getElementById("modalChartTitle").innerHTML = `<i class="fa-solid fa-chart-simple mr-2 text-cyan-400"></i> ${title} - Fullscreen View`;
+      modal.classList.remove("hidden");
+
+      let srcChart = null;
+      if (sourceChartId === 'monthlyChart') srcChart = monthlyChart;
+      else if (sourceChartId === 'slaTrendChart') srcChart = slaTrendChart;
+      else if (sourceChartId === 'categoryChart') srcChart = categoryChart;
+      else if (sourceChartId === 'frequencyChart') srcChart = frequencyChart;
+
+      if (!srcChart) return;
+
+      const modalCanvas = document.getElementById("modalChartCanvas");
+      if (modalChartInstance) modalChartInstance.destroy();
+
+      modalChartInstance = new Chart(modalCanvas.getContext("2d"), {
+        type: srcChart.config.type,
+        data: JSON.parse(JSON.stringify(srcChart.config.data)),
+        options: {
+          ...srcChart.config.options,
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    function closeChartModal() {
+      const modal = document.getElementById("chartModal");
+      modal.classList.add("hidden");
+      if (modalChartInstance) {
+        modalChartInstance.destroy();
+        modalChartInstance = null;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // EXPORTS
+    // -------------------------------------------------------------
+    function toggleExportMenu() {
+      const menu = document.getElementById("exportMenu");
+      menu.classList.toggle("hidden");
+    }
+
+    window.addEventListener("click", (e) => {
+      const container = document.getElementById("exportDropdownContainer");
+      if (container && !container.contains(e.target)) {
+        document.getElementById("exportMenu").classList.add("hidden");
+      }
+    });
+
+    function exportToPDF() {
+      document.getElementById("exportMenu").classList.add("hidden");
+      const element = document.getElementById("exportableArea");
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `PPM_Report_${selectedMonth}_${new Date().toISOString().slice(0,10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0b0f17' },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    function exportToPPTX() {
+      document.getElementById("exportMenu").classList.add("hidden");
+      const pptx = new PptxGenJS();
+      pptx.layout = "LAYOUT_16x9";
+
+      const slide1 = pptx.addSlide();
+      slide1.background = { color: "0b0f17" };
+
+      const siteTitle = document.getElementById("projectTitle").textContent;
+      slide1.addText(siteTitle, { x: 0.8, y: 0.6, fontSize: 22, bold: true, color: "38bdf8" });
+      slide1.addText(`District Command Centre Operations Management © 2026 | Combined: ${Array.from(LOADED_FILE_NAMES).join(', ')}`, { x: 0.8, y: 1.1, fontSize: 13, color: "94a3b8" });
+
+      const total = document.getElementById("kpiTotalTasks").textContent;
+      const compRate = document.getElementById("kpiCompletionRate").textContent;
+      const slaRate = document.getElementById("kpiSlaRate").textContent;
+      const pending = document.getElementById("kpiPendingTasks").textContent;
+
+      slide1.addShape(pptx.ShapeType.rect, { x: 0.8, y: 1.8, w: 2.8, h: 1.4, fill: { color: "131b2b" }, line: { color: "1e293b", width: 1 } });
+      slide1.addText("Total Tasks\n" + total, { x: 0.9, y: 2.1, w: 2.6, fontSize: 16, bold: true, color: "ffffff", align: "center" });
+
+      slide1.addShape(pptx.ShapeType.rect, { x: 3.9, y: 1.8, w: 2.8, h: 1.4, fill: { color: "131b2b" }, line: { color: "1e293b", width: 1 } });
+      slide1.addText("Completion Rate\n" + compRate, { x: 4.0, y: 2.1, w: 2.6, fontSize: 16, bold: true, color: "34d399", align: "center" });
+
+      slide1.addShape(pptx.ShapeType.rect, { x: 7.0, y: 1.8, w: 2.8, h: 1.4, fill: { color: "131b2b" }, line: { color: "1e293b", width: 1 } });
+      slide1.addText("SLA Met Rate\n" + slaRate, { x: 7.1, y: 2.1, w: 2.6, fontSize: 16, bold: true, color: "38bdf8", align: "center" });
+
+      slide1.addShape(pptx.ShapeType.rect, { x: 10.1, y: 1.8, w: 2.8, h: 1.4, fill: { color: "131b2b" }, line: { color: "1e293b", width: 1 } });
+      slide1.addText("Unfinish Tasks\n" + pending, { x: 10.2, y: 2.1, w: 2.6, fontSize: 16, bold: true, color: "f43f5e", align: "center" });
+
+      const rawAnalysis = document.getElementById("analyzeViewMode").innerText;
+      slide1.addShape(pptx.ShapeType.rect, { x: 0.8, y: 3.6, w: 12.1, h: 3.2, fill: { color: "131b2b" }, line: { color: "1e293b", width: 1 } });
+      slide1.addText("Executive Directives & Syntheses:\n\n" + rawAnalysis, { x: 1.1, y: 3.8, w: 11.5, h: 2.8, fontSize: 11, color: "e2e8f0" });
+
+      const slide2 = pptx.addSlide();
+      slide2.background = { color: "0b0f17" };
+      slide2.addText("Visual Analytics Summary", { x: 0.8, y: 0.5, fontSize: 20, bold: true, color: "38bdf8" });
+
+      const canvas1 = document.getElementById("monthlyChart");
+      const canvas2 = document.getElementById("slaTrendChart");
+      const canvas3 = document.getElementById("categoryChart");
+      const canvas4 = document.getElementById("frequencyChart");
+
+      slide2.addImage({ data: canvas1.toDataURL("image/png"), x: 0.8, y: 1.2, w: 5.8, h: 2.8 });
+      slide2.addImage({ data: canvas2.toDataURL("image/png"), x: 7.0, y: 1.2, w: 5.8, h: 2.8 });
+      slide2.addImage({ data: canvas3.toDataURL("image/png"), x: 0.8, y: 4.2, w: 5.8, h: 2.8 });
+      slide2.addImage({ data: canvas4.toDataURL("image/png"), x: 7.0, y: 4.2, w: 5.8, h: 2.8 });
+
+      pptx.writeFile({ fileName: `PPM_Executive_Deck_${new Date().toISOString().slice(0,10)}.pptx` });
+    }
+
+    function exportToWord() {
+      document.getElementById("exportMenu").classList.add("hidden");
+      const siteTitle = document.getElementById("projectTitle").textContent;
+      const total = document.getElementById("kpiTotalTasks").textContent;
+      const compRate = document.getElementById("kpiCompletionRate").textContent;
+      const slaRate = document.getElementById("kpiSlaRate").textContent;
+      const pending = document.getElementById("kpiPendingTasks").textContent;
+      const analysis = document.getElementById("analyzeViewMode").innerText.replace(/\n/g, '<br/>');
+
+      let tableRowsHtml = "";
+      filteredPendingList.forEach(item => {
+        tableRowsHtml += `<tr>
+          <td style="border:1px solid #cbd5e1; padding:6px;">${item.id}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px;">${item.group_en}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px;">${item.team}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px;">${item.category}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px;">${item.stage}</td>
+          <td style="border:1px solid #cbd5e1; padding:6px;">${item.month}</td>
+        </tr>`;
+      });
+
+      const wordHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><title>PPM Operational Report</title>
+        <style>
+          body { font-family: 'Calibri', sans-serif; font-size: 11pt; color: #1e293b; }
+          h1 { color: #0284c7; }
+          .kpi-table td { padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: bold; }
+        </style>
+        </head>
+        <body>
+          <h1>${siteTitle}</h1>
+          <p>District Command Centre Operations Management © 2026 | Loaded Files: ${Array.from(LOADED_FILE_NAMES).join(', ')} | Generated: ${new Date().toLocaleDateString()}</p>
+          <hr/>
+          <h3>1. Executive Key Performance Indicators</h3>
+          <table class="kpi-table" style="width:100%; text-align:center;">
+            <tr>
+              <td>Total Tasks<br/><span style="font-size:18pt; color:#0f172a;">${total}</span></td>
+              <td>Completion Rate<br/><span style="font-size:18pt; color:#16a34a;">${compRate}</span></td>
+              <td>SLA Met Rate<br/><span style="font-size:18pt; color:#0284c7;">${slaRate}</span></td>
+              <td>Unfinish Tasks<br/><span style="font-size:18pt; color:#dc2626;">${pending}</span></td>
+            </tr>
+          </table>
+          <br/>
+          <h3>2. Operational Data Analysis & Directives</h3>
+          <div style="background:#f1f5f9; padding:15px; border-left:4px solid #0284c7;">
+            ${analysis}
+          </div>
+          <br/>
+          <h3>3. Unfinish Tasks Registry (${filteredPendingList.length} items)</h3>
+          <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+            <tr style="background:#e2e8f0; font-weight:bold;">
+              <th style="border:1px solid #cbd5e1; padding:6px;">PPM ID</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">Servicing Group</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">Team</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">Category</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">Stage</th>
+              <th style="border:1px solid #cbd5e1; padding:6px;">Month</th>
+            </tr>
+            ${tableRowsHtml}
+          </table>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff' + wordHtml], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `PPM_Executive_Report_${new Date().toISOString().slice(0,10)}.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportUnfinishTasksToExcel() {
+      document.getElementById("exportMenu").classList.add("hidden");
+      if (filteredPendingList.length === 0) {
+        alert(currentLang === 'en' ? "No unfinish tasks available to export" : "ไม่มีรายการงานค้างที่จะส่งออก");
+        return;
+      }
+
+      const headers = ["PPM_ID", "Task_Description_Servicing_Group", "Team", "System_Category", "Frequency_Type", "Component", "Stage", "Month"];
+      const csvRows = [headers.join(",")];
+
+      filteredPendingList.forEach(item => {
+        const desc = currentLang === 'en' ? item.group_en : item.group_th;
+        const row = [
+          `"${item.id}"`,
+          `"${desc.replace(/"/g, '""')}"`,
+          `"${item.team}"`,
+          `"${item.category}"`,
+          `"${item.frequency}"`,
+          `"${item.component}"`,
+          `"${item.stage}"`,
+          `"${item.month}"`
+        ];
+        csvRows.push(row.join(","));
+      });
+
+      const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "application/vnd.ms-excel;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Unfinish_PPM_Tasks_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+  <script>
+    // ======================================================================
+    // PPM: provider-aware charts, deep-dive analysis (Response SLA removed from display)
+    // ======================================================================
+    const PPM_DONE = ['CLIENTVERIFIED', 'COMPLETED', 'CLOSED'];
+    const PPM_PROVIDER_COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#94a3b8'];
+    function ppmRowMatch(row, ignoreMonth) {
+      if (!ppmTimeOk(row[8], row[9], row[10])) return false;
+      const [m, team, cat, freq, stg] = row;
+      return (ignoreMonth || selectedMonth === 'All' || m === selectedMonth) && (selectedTeams.size === 0 || selectedTeams.has(team)) &&
+        (selectedCategory === 'All' || cat === selectedCategory) && (selectedFrequency === 'All' || freq === selectedFrequency) && (selectedStatus === 'All' || stg === selectedStatus);
+    }
+    function ppmAgg(rows) {
+      const a = { total: 0, done: 0, met: 0, miss: 0, rmet: 0, rmiss: 0 };
+      rows.forEach(r => { const c = r[6]; a.total += c; if (PPM_DONE.includes(String(r[4]).toUpperCase())) a.done += c;
+        if (r[5] === '1') a.met += c; else if (r[5] === '0') a.miss += c; if (r[11] === '1') a.rmet += c; else if (r[11] === '0') a.rmiss += c; });
+      a.comp = a.total ? a.done / a.total * 100 : null;
+      a.sla = (a.met + a.miss) ? a.met / (a.met + a.miss) * 100 : null;
+      a.rsla = (a.rmet + a.rmiss) ? a.rmet / (a.rmet + a.rmiss) * 100 : null;
+      return a;
+    }
+
+    // Charts: workload stacked by Service Provider (top 6 + Others); Completion SLA trend line
+    const _ppmRenderCharts = renderCharts;
+    window.renderCharts = function () {
+      _ppmRenderCharts.apply(this, arguments);
+      try {
+        const months = (selectedMonth === 'All') ? AVAILABLE_MONTHS : [selectedMonth];
+        const rows = AGGREGATED_CUBE.filter(r => ppmRowMatch(r, true) && months.includes(r[0]));
+        const provTotals = new Map(); rows.forEach(r => provTotals.set(r[1], (provTotals.get(r[1]) || 0) + r[6]));
+        const provs = [...provTotals.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
+        const keep = provs.slice(0, 6), other = provs.length > 6;
+        const ds = keep.map((p, i) => ({ label: p, data: months.map(m => rows.filter(r => r[0] === m && r[1] === p).reduce((s, r) => s + r[6], 0)), backgroundColor: PPM_PROVIDER_COLORS[i], borderRadius: 4 }));
+        if (other) ds.push({ label: currentLang === 'th' ? 'อื่นๆ' : 'Others', data: months.map(m => rows.filter(r => r[0] === m && !keep.includes(r[1])).reduce((s, r) => s + r[6], 0)), backgroundColor: PPM_PROVIDER_COLORS[6], borderRadius: 4 });
+        if (monthlyChart) { monthlyChart.data.labels = months; monthlyChart.data.datasets = ds; monthlyChart.options.plugins.legend.position = 'bottom'; monthlyChart.update(); }
+        if (slaTrendChart) {
+          const comp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.sla === null ? null : +a.sla.toFixed(1); });
+          slaTrendChart.data.labels = months;
+          slaTrendChart.data.datasets = [
+            { label: currentLang === 'th' ? 'SLA ปิดงาน (%)' : 'Completion SLA (%)', data: comp, borderColor: '#10b981', backgroundColor: '#10b981', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
+              datalabels: { color: '#34d399', anchor: 'end', align: 'top', offset: 6, font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
+          ];
+          slaTrendChart.options.plugins.legend = { display: false, position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 11 } } };
+          slaTrendChart.options.layout = { padding: { top: 26, bottom: 4, right: 12 } };
+          slaTrendChart.update();
+        }
+      } catch (e) { console.warn('[PPM] chart post-process', e); }
+    };
+
+    // KPIs: Completion SLA naming, backlog badges by top providers
+    const _ppmUpdateDashboard = updateDashboard;
+    window.updateDashboard = function () {
+      _ppmUpdateDashboard.apply(this, arguments);
+      try {
+        const a = ppmAgg(AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false)));
+        const byProv = new Map(); filteredPendingList.forEach(t => byProv.set(t.team, (byProv.get(t.team) || 0) + 1));
+        const top = [...byProv.entries()].sort((x, y) => y[1] - x[1]);
+        const b1 = document.getElementById('badgePendingHard'), b2 = document.getElementById('badgePendingSoft');
+        if (b1) { b1.textContent = top[0] ? `${top[0][0]}: ${top[0][1]}` : '—'; b1.title = top[0]?.[0] || ''; }
+        if (b2) { b2.textContent = top[1] ? `${top[1][0]}: ${top[1][1]}` : ''; b2.classList.toggle('hidden', !top[1]); }
+        ppmDeepAnalysis(a);
+      } catch (e) { console.warn('[PPM] kpi post-process', e); }
+    };
+
+    // Deep-dive executive analysis (4 cards). A saved custom analysis is respected.
+    function ppmDeepAnalysis(a) {
+      if (isEditingAnalysis || localStorage.getItem(getFilterStorageKey())) return;
+      const th = currentLang === 'th', L = (en, t) => th ? t : en;
+      const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const b = v => `<b class="text-white">${v}</b>`, f = v => v === null || v === undefined ? 'N/A' : v.toFixed(1) + '%';
+      const act = t => `<span class="text-emerald-400 font-bold">${L('Action', 'แนวทาง')}:</span> ${t}`;
+      const ul = items => `<ul class="list-disc pl-4 mt-2 space-y-1.5">${items.filter(Boolean).map(i => `<li>${i}</li>`).join('')}</ul>`;
+      const rows = AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false));
+      if (!a.total) return;
+      const group = idx => { const m = new Map(); rows.forEach(r => { if (!m.has(r[idx])) m.set(r[idx], []); m.get(r[idx]).push(r); }); return [...m.entries()].map(([k, v]) => ({ k, a: ppmAgg(v) })); };
+      const months = AVAILABLE_MONTHS.filter(m => rows.some(r => r[0] === m));
+      const mA = months.map(m => ({ m, a: ppmAgg(rows.filter(r => r[0] === m)) }));
+      const last = mA[mA.length - 1], prev = mA[mA.length - 2];
+      const cats = group(2).sort((x, y) => y.a.total - x.a.total);
+      const provs = group(1).sort((x, y) => y.a.total - x.a.total);
+      const freqs = group(3).sort((x, y) => y.a.total - x.a.total);
+      const pend = filteredPendingList;
+      const pendCat = (() => { const m = new Map(); pend.forEach(t => m.set(t.category, (m.get(t.category) || 0) + 1)); return [...m.entries()].sort((x, y) => y[1] - x[1])[0]; })();
+      const pendProv = (() => { const m = new Map(); pend.forEach(t => m.set(t.team, (m.get(t.team) || 0) + 1)); return [...m.entries()].sort((x, y) => y[1] - x[1])[0]; })();
+      const MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const oldestPendM = [...new Set(pend.map(t => t.month))].sort((x, y) => MO.indexOf(x) - MO.indexOf(y))[0];
+      const stages = (() => { const m = new Map(); pend.forEach(t => m.set(t.stage, (m.get(t.stage) || 0) + 1)); return [...m.entries()].sort((x, y) => y[1] - x[1]).map(([s, c]) => `${esc(s)} ${c}`).join(' · '); })();
+      const worstProv = provs.filter(p => p.a.total >= 10 && p.a.sla !== null).sort((x, y) => x.a.sla - y.a.sla)[0];
+      const bestProv = provs.filter(p => p.a.total >= 10 && p.a.sla !== null).sort((x, y) => y.a.sla - x.a.sla)[0];
+      const worstCat = cats.filter(c => c.a.total >= 10 && c.a.comp !== null).sort((x, y) => x.a.comp - y.a.comp)[0];
+      const needSla = a.sla !== null && a.sla < 95 ? Math.ceil(0.95 * (a.met + a.miss) - a.met) : 0;
+      const card = (title, color, body) => `<div class="bg-slate-900/70 border border-${color}-500/20 rounded-xl p-4"><div class="text-xs font-bold text-${color}-400 uppercase mb-2">${title}</div><div class="text-xs text-slate-300 leading-relaxed">${body}</div></div>`;
+      const c1 = L(
+        `${b(a.total.toLocaleString())} scheduled tasks · completion ${b(f(a.comp))}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} vs ${esc(prev.m)} ${prev.a.total}` : ''}.` + ul([
+          cats[0] ? `Largest category: ${b(esc(cats[0].k))} (${cats[0].a.total}, ${(cats[0].a.total / a.total * 100).toFixed(0)}%).` : null,
+          freqs.length ? `Frequency mix: ${freqs.slice(0, 3).map(x => `${esc(x.k)} ${x.a.total}`).join(' · ')}.` : null,
+          worstCat ? `Lowest completion: ${b(esc(worstCat.k))} at ${b(f(worstCat.a.comp))}.` : null,
+          act(worstCat ? `re-plan ${b(esc(worstCat.k))} schedules with the provider and lock resources for its peak week; target ≥ 95% completion.` : 'keep the current schedule; review monthly.')]),
+        `แผนงาน ${b(a.total.toLocaleString())} รายการ · ปิดงาน ${b(f(a.comp))}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} เทียบ ${esc(prev.m)} ${prev.a.total}` : ''}` + ul([
+          cats[0] ? `หมวดที่มีงานมากที่สุด: ${b(esc(cats[0].k))} (${cats[0].a.total}, ${(cats[0].a.total / a.total * 100).toFixed(0)}%)` : null,
+          freqs.length ? `สัดส่วนความถี่: ${freqs.slice(0, 3).map(x => `${esc(x.k)} ${x.a.total}`).join(' · ')}` : null,
+          worstCat ? `หมวดที่ปิดงานได้ต่ำสุด: ${b(esc(worstCat.k))} ที่ ${b(f(worstCat.a.comp))}` : null,
+          act(worstCat ? `วางแผนงาน ${b(esc(worstCat.k))} ใหม่ร่วมกับผู้ให้บริการและจองทรัพยากรช่วงสัปดาห์งานหนาแน่น ตั้งเป้าปิดงาน ≥ 95%` : 'คงแผนงานปัจจุบัน และทบทวนรายเดือน')]));
+      const c2 = L(
+        `Completion SLA ${b(f(a.sla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
+          needSla ? `Gap to 95%: ${b(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'Completion SLA meets the 95% target.' : 'No SLA data in the file.'),
+          worstProv ? `Lowest provider SLA: ${b(esc(worstProv.k))} ${b(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? `; best ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}.` : null,
+          act(worstProv ? `hold a monthly SLA review with ${b(esc(worstProv.k))}; agree a recovery plan and apply KPI deductions if below target for 2 months.` : 'monitor weekly.')]),
+        `SLA ปิดงาน ${b(f(a.sla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
+          needSla ? `ส่วนต่างถึงเป้า 95%: ต้องปิดงานตรงเวลาเพิ่ม ${b(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'SLA ปิดงานถึงเป้า 95%' : 'ไม่มีข้อมูล SLA ในไฟล์'),
+          worstProv ? `ผู้ให้บริการที่ SLA ต่ำสุด: ${b(esc(worstProv.k))} ${b(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? ` ดีที่สุด ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}` : null,
+          act(worstProv ? `ประชุมทบทวน SLA รายเดือนกับ ${b(esc(worstProv.k))} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หากต่ำกว่าเป้า 2 เดือนติด` : 'ติดตามรายสัปดาห์')]));
+      const c3 = L(
+        `${b(pend.length.toLocaleString())} unfinished tasks — ${stages || '-'}.` + ul([
+          pendProv ? `Most backlog with ${b(esc(pendProv[0]))} (${pendProv[1]}).` : null,
+          pendCat ? `Most backlog in ${b(esc(pendCat[0]))} (${pendCat[1]}).` : null,
+          oldestPendM ? `Oldest open tasks date back to ${b(esc(oldestPendM))}.` : null,
+          act(`issue a catch-up plan to ${b(esc(pendProv?.[0] || 'the provider'))} with weekly burn-down; close items from ${esc(oldestPendM || 'earlier months')} first.`)]),
+        `งานค้าง ${b(pend.length.toLocaleString())} รายการ — ${stages || '-'}` + ul([
+          pendProv ? `ผู้ให้บริการที่มีงานค้างมากที่สุด: ${b(esc(pendProv[0]))} (${pendProv[1]})` : null,
+          pendCat ? `หมวดที่มีงานค้างมากที่สุด: ${b(esc(pendCat[0]))} (${pendCat[1]})` : null,
+          oldestPendM ? `งานค้างเก่าที่สุดตั้งแต่เดือน ${b(esc(oldestPendM))}` : null,
+          act(`ให้ ${b(esc(pendProv?.[0] || 'ผู้ให้บริการ'))} ส่งแผนเร่งรัดพร้อมติดตามรายสัปดาห์ และปิดงานเดือน ${esc(oldestPendM || 'ก่อนหน้า')} ก่อน`)]));
+      const rank = provs.slice(0, 5).map((p, i) => `${i + 1}. ${b(esc(p.k))} — ${p.a.total} ${L('tasks', 'งาน')} · ${L('done', 'ปิด')} ${f(p.a.comp)} · SLA ${f(p.a.sla)}`).join('<br>');
+      const c4 = L(`${b(provs.length)} service provider(s) in scope.<div class="mt-2 font-mono text-[11px] leading-relaxed">${rank}</div>` + ul([act('share this scorecard with providers monthly; agree targets of ≥ 95% completion and SLA.')]),
+                   `ผู้ให้บริการ ${b(provs.length)} ราย<div class="mt-2 font-mono text-[11px] leading-relaxed">${rank}</div>` + ul([act('ส่ง scorecard นี้ให้ผู้ให้บริการทุกเดือน และตกลงเป้า ปิดงานและ SLA ≥ 95%')]));
+      const vm = document.getElementById('analyzeViewMode');
+      vm.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">${card(L('Workload & Completion', 'ปริมาณงานและการปิดงาน'), 'sky', c1)}${card(L('SLA Performance', 'ประสิทธิภาพ SLA'), 'emerald', c2)}${card(L('Backlog Risk', 'ความเสี่ยงงานค้าง'), 'rose', c3)}${card(L('Service Provider Scorecard', 'Scorecard ผู้ให้บริการ'), 'indigo', c4)}</div>` +
+        `<div class="mt-2 text-[10px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i> ${L('Live deep-dive analysis', 'วิเคราะห์เชิงลึกจากข้อมูลสด')}</div>`;
+      const tmp = document.createElement('div'); tmp.innerHTML = vm.innerHTML;
+      document.getElementById('analyzeTextarea').value = [...tmp.querySelectorAll('.rounded-xl')].map(d => d.innerText.trim()).join('\n\n');
+    }
+
+    // Labels: Service Provider / Service Category / Completion SLA
+    function ppmFieldLabels() {
+      const th = currentLang === 'th';
+      const set = (id, en, t) => {
+        const el = document.getElementById(id); if (!el) return;
+        const txt = th ? t : en;
+        if (!el.children.length) { el.textContent = txt; return; }
+        const nodes = [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim());
+        if (nodes.length) { nodes[0].textContent = ' ' + txt + ' '; nodes.slice(1).forEach(n => { n.textContent = ' '; }); }
+        else el.insertBefore(document.createTextNode(' ' + txt + ' '), el.lastElementChild);
+      };
+      set('lblFilterTeam', 'Service Provider', 'ผู้ให้บริการ'); set('lblFilterCategory', 'Service Category', 'หมวดบริการ');
+      set('lblFilterFrequency', 'Frequency', 'ความถี่'); set('lblFilterStatus', 'Status', 'สถานะ'); set('lblFilterMonth', 'Month', 'เดือน');
+      set('lblKpiSla', 'Completion SLA', 'SLA ปิดงาน'); set('lblKpiSlaSub', 'Tasks Met Completion Target', 'งานที่ปิดตาม SLA');
+      set('ppmLblFilters', 'Filters', 'ตัวกรอง'); set('lblResetFilter', 'Reset', 'รีเซ็ต');
+      set('lblChartCategoryTitle', 'Service Category Share (%)', 'สัดส่วนหมวดบริการ (%)'); set('lblChartCategorySub', 'Click slice to filter by service category', 'คลิกที่ชิ้นกราฟเพื่อกรองตามหมวดบริการ');
+      set('thTeam', 'Service Provider', 'ผู้ให้บริการ'); set('thCat', 'Service Category', 'หมวดบริการ');
+      set('lblChartTrendSub', 'Stacked by service provider · click a bar to filter by month', 'แยกตามผู้ให้บริการ · คลิกแท่งเพื่อกรองตามเดือน');
+      set('lblChartSlaTrendTitle', 'Monthly Completion SLA Trend (%)', 'แนวโน้ม SLA ปิดงานรายเดือน (%)');
+      const cat = document.getElementById('filterCategory'); if (cat && cat.options[0]) cat.options[0].textContent = th ? 'ทุกหมวดบริการ' : 'All Categories';
+      const tm = document.getElementById('filterTeam'); if (tm && tm.options[0]) tm.options[0].textContent = th ? 'ทุกผู้ให้บริการ' : 'All Providers';
+    }
+    const _ppmPopulate = populateAllDropdowns;
+    window.populateAllDropdowns = function () { const r = _ppmPopulate.apply(this, arguments); ppmFieldLabels(); return r; };
+    const _ppmBuildCat = buildCategoryDropdown;
+    window.buildCategoryDropdown = function () { const r = _ppmBuildCat.apply(this, arguments); ppmFieldLabels(); return r; };
+    const _ppmSetLang2 = setLanguage;
+    window.setLanguage = function (l) { const r = _ppmSetLang2(l); ppmFieldLabels(); try { if (!document.getElementById('dashboardWrapper').classList.contains('hidden')) updateDashboard(); } catch (e) {} return r; };
+    window.addEventListener('DOMContentLoaded', ppmFieldLabels);
+  </script>
+
+  <!-- Shared look (matches the Case Management tab) -->
+  <style>
+    body, .bg-darkbg { background-color: #0b1120 !important; font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'Sarabun', sans-serif !important; }
+    .bg-cardbg, .bg-cardbg\/95 { background-color: rgba(15, 23, 42, 0.78) !important; }
+    .bg-cardbg.rounded-xl { border-radius: 0.875rem !important; }
+    .border-bordercol { border-color: rgba(51, 65, 85, 0.6) !important; }
+    .dcc-filter-strip { top: 53px; }
+    html.dcc-embedded .dcc-filter-strip { top: 0; }
+    html.dcc-embedded #dashboardWrapper > header { display: none !important; }
+    html.dcc-embedded .max-w-\[1750px\] { max-width: none !important; }
+    html.dcc-embedded #exportableArea { padding: 0.75rem 0.75rem 2rem !important; }
+    html.dcc-embedded #exportableArea > * + * { margin-top: 1rem !important; }
+    html.dcc-embedded #dashboardWrapper > div:first-of-type > div { padding-left: 0.75rem !important; }
+    html.dcc-embedded #dashboardWrapper > footer { display: none !important; }
+    @media (min-width: 640px) { html.dcc-embedded #exportableArea { padding-left: 1.5rem !important; padding-right: 1.5rem !important; } html.dcc-embedded #dashboardWrapper > div:first-of-type > div { padding-left: 1.5rem !important; } }
+    @media (min-width: 1024px) { html.dcc-embedded #exportableArea { padding-left: 2rem !important; padding-right: 2rem !important; } html.dcc-embedded #dashboardWrapper > div:first-of-type > div { padding-left: 2rem !important; } }
+    html.ppm-light .dcc-filter-strip { background-color: rgba(255, 255, 255, 0.96) !important; border-color: #e2e8f0 !important; }
+    html.ppm-light .bg-slate-950 { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
+    html.ppm-light .border-bordercol { border-color: #cbd5e1 !important; }
+    html.ppm-light body { background-color: #f8fafc !important; }
+    html.ppm-light .bg-slate-900\/70 { background-color: #f8fafc !important; }
+    html.ppm-light [class*="border-sky-500/20"] { border-color: #bae6fd !important; }
+    html.ppm-light [class*="border-emerald-500/20"] { border-color: #a7f3d0 !important; }
+    html.ppm-light [class*="border-rose-500/20"] { border-color: #fecdd3 !important; }
+    html.ppm-light [class*="border-indigo-500/20"] { border-color: #c7d2fe !important; }
+  </style>
+  <!-- ================================================================== -->
+  <!-- DAY MODE (light theme) via html.ppm-light + DCC EMBED BRIDGE        -->
+  <!-- ================================================================== -->
+  <style>
+    html.dcc-embedded #ppmThemeToggle, html.dcc-embedded div:has(> #langEN) { display: none !important; }
+    html.ppm-light body, html.ppm-light .bg-darkbg { background-color: #f1f5f9 !important; color: #0f172a !important; }
+    html.ppm-light .bg-cardbg, html.ppm-light .bg-cardbg\/60, html.ppm-light .bg-cardbg\/95, html.ppm-light .hover\:bg-cardbg:hover { background-color: #ffffff !important; }
+    html.ppm-light .border-bordercol, html.ppm-light .border-slate-800, html.ppm-light .border-slate-800\/80, html.ppm-light .border-slate-800\/40 { border-color: #e2e8f0 !important; }
+    html.ppm-light .border-slate-700 { border-color: #cbd5e1 !important; }
+    html.ppm-light .divide-slate-800\/60 > * + * { border-color: #e2e8f0 !important; }
+    html.ppm-light .bg-slate-800, html.ppm-light .bg-slate-800\/80, html.ppm-light .bg-slate-800\/90 { background-color: #f1f5f9 !important; }
+    html.ppm-light .bg-slate-900, html.ppm-light .bg-slate-900\/60 { background-color: #f8fafc !important; }
+    html.ppm-light .hover\:bg-slate-800:hover, html.ppm-light .hover\:bg-slate-700:hover, html.ppm-light .hover\:bg-slate-800\/40:hover { background-color: #e2e8f0 !important; }
+    html.ppm-light .text-white, html.ppm-light .hover\:text-white:hover { color: #0f172a !important; }
+    html.ppm-light .text-slate-100, html.ppm-light .text-slate-200, html.ppm-light .text-slate-300, html.ppm-light .hover\:text-slate-300:hover { color: #334155 !important; }
+    html.ppm-light .text-slate-400 { color: #475569 !important; }
+    html.ppm-light .text-slate-500, html.ppm-light .text-slate-600 { color: #64748b !important; }
+    html.ppm-light [class*="bg-cyan-950"], html.ppm-light [class*="hover:bg-cyan-900"]:hover { background-color: #ecfeff !important; }
+    html.ppm-light [class*="border-cyan-8"], html.ppm-light [class*="border-cyan-7"] { border-color: #a5f3fc !important; }
+    html.ppm-light .text-cyan-200, html.ppm-light .text-cyan-300, html.ppm-light .text-cyan-400, html.ppm-light .hover\:text-cyan-400:hover { color: #0891b2 !important; }
+    html.ppm-light [class*="bg-teal-950"], html.ppm-light [class*="hover:bg-teal-900"]:hover { background-color: #f0fdfa !important; }
+    html.ppm-light [class*="border-teal-8"], html.ppm-light [class*="border-teal-7"] { border-color: #99f6e4 !important; }
+    html.ppm-light .text-teal-200, html.ppm-light .text-teal-300, html.ppm-light .text-teal-400, html.ppm-light .hover\:text-teal-400:hover { color: #0d9488 !important; }
+    html.ppm-light [class*="bg-indigo-950"], html.ppm-light [class*="hover:bg-indigo-900"]:hover { background-color: #eef2ff !important; }
+    html.ppm-light [class*="border-indigo-8"], html.ppm-light [class*="border-indigo-7"] { border-color: #c7d2fe !important; }
+    html.ppm-light .text-indigo-200, html.ppm-light .text-indigo-300, html.ppm-light .text-indigo-400, html.ppm-light .hover\:text-indigo-400:hover { color: #4f46e5 !important; }
+    html.ppm-light [class*="bg-rose-950"], html.ppm-light [class*="hover:bg-rose-900"]:hover { background-color: #fff1f2 !important; }
+    html.ppm-light [class*="border-rose-8"], html.ppm-light [class*="border-rose-7"] { border-color: #fecdd3 !important; }
+    html.ppm-light .text-rose-200, html.ppm-light .text-rose-300, html.ppm-light .text-rose-400, html.ppm-light .hover\:text-rose-400:hover { color: #e11d48 !important; }
+    html.ppm-light [class*="bg-sky-950"], html.ppm-light [class*="hover:bg-sky-900"]:hover { background-color: #f0f9ff !important; }
+    html.ppm-light [class*="border-sky-8"], html.ppm-light [class*="border-sky-7"] { border-color: #bae6fd !important; }
+    html.ppm-light .text-sky-200, html.ppm-light .text-sky-300, html.ppm-light .text-sky-400, html.ppm-light .hover\:text-sky-400:hover { color: #0284c7 !important; }
+    html.ppm-light [class*="bg-emerald-950"], html.ppm-light [class*="hover:bg-emerald-900"]:hover { background-color: #ecfdf5 !important; }
+    html.ppm-light [class*="border-emerald-8"], html.ppm-light [class*="border-emerald-7"] { border-color: #a7f3d0 !important; }
+    html.ppm-light .text-emerald-200, html.ppm-light .text-emerald-300, html.ppm-light .text-emerald-400, html.ppm-light .hover\:text-emerald-400:hover { color: #059669 !important; }
+    html.ppm-light [class*="bg-purple-950"], html.ppm-light [class*="hover:bg-purple-900"]:hover { background-color: #faf5ff !important; }
+    html.ppm-light [class*="border-purple-8"], html.ppm-light [class*="border-purple-7"] { border-color: #e9d5ff !important; }
+    html.ppm-light .text-purple-200, html.ppm-light .text-purple-300, html.ppm-light .text-purple-400, html.ppm-light .hover\:text-purple-400:hover { color: #9333ea !important; }
+    html.ppm-light [class*="bg-blue-950"], html.ppm-light [class*="hover:bg-blue-900"]:hover { background-color: #eff6ff !important; }
+    html.ppm-light [class*="border-blue-8"], html.ppm-light [class*="border-blue-7"] { border-color: #bfdbfe !important; }
+    html.ppm-light .text-blue-200, html.ppm-light .text-blue-300, html.ppm-light .text-blue-400, html.ppm-light .hover\:text-blue-400:hover { color: #2563eb !important; }
+    html.ppm-light [class*="bg-amber-950"], html.ppm-light [class*="hover:bg-amber-900"]:hover { background-color: #fffbeb !important; }
+    html.ppm-light [class*="border-amber-8"], html.ppm-light [class*="border-amber-7"] { border-color: #fde68a !important; }
+    html.ppm-light .text-amber-200, html.ppm-light .text-amber-300, html.ppm-light .text-amber-400, html.ppm-light .hover\:text-amber-400:hover { color: #d97706 !important; }
+    /* keep white text on solid / gradient buttons */
+    html.ppm-light [class*="bg-indigo-6"], html.ppm-light [class*="bg-indigo-6"] *, html.ppm-light [class*="bg-emerald-6"], html.ppm-light [class*="bg-emerald-6"] *,
+    html.ppm-light [class*="bg-emerald-5"], html.ppm-light [class*="bg-emerald-5"] *, html.ppm-light [class*="bg-cyan-6"], html.ppm-light [class*="bg-cyan-6"] *,
+    html.ppm-light [class*="bg-gradient-to"], html.ppm-light [class*="bg-gradient-to"] * { color: #ffffff !important; }
+    html.ppm-light [class*="bg-indigo-600/30"], html.ppm-light [class*="bg-indigo-600/30"] * { color: #3730a3 !important; }
+    html.ppm-light [class*="bg-teal-600/30"], html.ppm-light [class*="bg-teal-600/30"] * { color: #115e59 !important; }
+    html.ppm-light select option { background: #ffffff; color: #0f172a; }
+    html.ppm-light input, html.ppm-light select, html.ppm-light textarea { color: #0f172a !important; }
+    html.ppm-light ::-webkit-scrollbar-track { background: #f1f5f9; }
+    html.ppm-light ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+    html.ppm-light .shadow, html.ppm-light .shadow-md, html.ppm-light .shadow-xl { box-shadow: 0 1px 3px rgba(15,23,42,.08), 0 4px 12px rgba(15,23,42,.05) !important; }
+  </style>
+  <script>
+    // Chart colours that flip between Night and Day (charts are rebuilt on every update,
+    // so a global plugin re-maps each new chart before its first draw)
+    const PPM_CHART_PAIRS = [['#94a3b8', '#526077'], ['#1e293b', '#e2e8f0'], ['#fde68a', '#b45309'], ['#34d399', '#059669'], ['#cbd5e1', '#344256']];
+    let ppmTheme = 'dark';
+    function ppmColorMap() { const m = {}; PPM_CHART_PAIRS.forEach(([d, l]) => { if (ppmTheme === 'light') m[d] = l; else m[l] = d; }); return m; }
+    function ppmRemap(obj, map, depth) {
+      if (!obj || typeof obj !== 'object' || depth > 7) return;
+      for (const k of Object.keys(obj)) {
+        const v = obj[k];
+        if (k === 'color' && typeof v === 'string' && map[v]) obj[k] = map[v];
+        else if (v && typeof v === 'object' && !Array.isArray(v) && [Object.prototype, null].includes(Object.getPrototypeOf(v))) ppmRemap(v, map, depth + 1);
+      }
+    }
+    if (typeof Chart !== 'undefined') Chart.register({ id: 'ppmTheme', beforeInit(chart) { ppmRemap(chart.config.options, ppmColorMap(), 0); } });
+
+    function applyPpmTheme(theme) {
+      ppmTheme = theme === 'light' ? 'light' : 'dark';
+      document.documentElement.classList.toggle('ppm-light', ppmTheme === 'light');
+      const icon = document.getElementById('ppmThemeIcon');
+      if (icon) icon.className = ppmTheme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+      const map = ppmColorMap();
+      if (typeof Chart !== 'undefined') Object.values(Chart.instances || {}).forEach(ch => { try { ppmRemap(ch.config.options, map, 0); ch.update('none'); } catch (e) {} });
+    }
+    function togglePpmTheme() {
+      const next = ppmTheme === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem('DCC_THEME', next); } catch (e) {}
+      applyPpmTheme(next);
+    }
+    // Year / Week / Day labels follow the language
+    function ppmTimeLabels() {
+      const th = currentLang === 'th';
+      const set = (id, en, t) => { const el = document.getElementById(id); if (el) el.textContent = th ? t : en; };
+      set('lblFilterYear', 'Year', 'ปี'); set('lblFilterTeam', 'Service Provider', 'ผู้ให้บริการ'); set('lblUploadedFiles', 'Uploaded Files:', 'ไฟล์ที่อัปโหลด:'); set('lblFilterWeek', 'Week (Sun - Sat)', 'สัปดาห์ (อา. - ส.)'); set('lblFilterDay', 'Day', 'วัน');
+    }
+    const _ppmSetLanguage = setLanguage;
+    window.setLanguage = function (lang) { const r = _ppmSetLanguage(lang); ppmTimeLabels(); try { refreshPpmTimeFilters(); } catch (e) {} return r; };
+
+    // Read-only snapshot for the main dashboard's shared export template
+    window.getPpmExportData = function () {
+      return { title: document.getElementById('projectTitle')?.textContent || 'PPM Dashboard', files: Array.from(LOADED_FILE_NAMES || []), pending: filteredPendingList, lang: currentLang,
+               isDataLoaded: !document.getElementById('dashboardWrapper').classList.contains('hidden') };
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      let saved = 'dark';
+      try { saved = localStorage.getItem('DCC_THEME') || 'dark'; } catch (e) {}
+      applyPpmTheme(saved);
+    });
+
+    // ---------------- Embed bridge (only when hosted inside index.html) ----------------
+    (function () {
+      const EMBEDDED = window.parent && window.parent !== window;
+      if (!EMBEDDED) return;
+      document.documentElement.classList.add('dcc-embedded');
+      const toParent = (msg) => { try { window.parent.postMessage(Object.assign({ source: 'dcc-ppm' }, msg), '*'); } catch (e) {} };
+      let fromHost = false;
+      window.ppmOnFilesChanged = function () { toParent({ type: 'ppm-files', files: Array.from(PPM_FILES.values()).map(v => v.file), append: false }); };
+      const _process = processMultipleFiles;
+      window.processMultipleFiles = async function (files, isAppend = false) {
+        await _process(files, isAppend);
+        if (!fromHost) window.ppmOnFilesChanged();
+        toParent({ type: 'toast', message: `PPM Dashboard: ${LOADED_FILE_NAMES.size} file(s) loaded` });
+      };
+      // PDF / PowerPoint use the host's shared corporate template
+      window.exportToPDF = function () { document.getElementById('exportMenu')?.classList.add('hidden'); toParent({ type: 'export-request', kind: 'pdf' }); };
+      window.exportToPPTX = function () { document.getElementById('exportMenu')?.classList.add('hidden'); toParent({ type: 'export-request', kind: 'pptx' }); };
+      window.addEventListener('message', async (e) => {
+        const d = e.data || {};
+        if (d.source !== 'dcc-host') return;
+        if (d.type === 'lang') { const l = String(d.lang || 'en').toLowerCase() === 'th' ? 'th' : 'en'; if (l !== currentLang) window.setLanguage(l); }
+        else if (d.type === 'theme') applyPpmTheme(d.theme);
+        else if (d.type === 'files') { fromHost = true; try { await window.processMultipleFiles(d.files, false); } finally { fromHost = false; } }
+        else if (d.type === 'export' && d.kind === 'xlsx') exportUnfinishTasksToExcel();
+      });
+      window.addEventListener('DOMContentLoaded', () => toParent({ type: 'ready' }));
+    })();
+  </script>
+
+  <style>
+    /* Mobile: filter strip collapses to one row; tap "Filters" to open (same as Case) */
+    .dcc-mchev { display: none; }
+    @media (max-width: 767px) {
+      .dcc-filter-strip { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
+      .dcc-filter-strip:not(.m-open) > div > *:not(.dcc-mtitle) { display: none !important; }
+      .dcc-filter-strip > div > .dcc-mtitle { border-right: 0 !important; cursor: pointer; width: 100%; padding: 0.15rem 0 !important; align-self: auto !important; }
+      .dcc-filter-strip.m-open > div > *:not(.dcc-mtitle) { flex: 1 1 calc(50% - 0.5rem) !important; min-width: calc(50% - 0.5rem) !important; max-width: none !important; margin-left: 0 !important; }
+      .dcc-filter-strip.m-open .dcc-mchev { transform: rotate(180deg); }
+      .dcc-mchev { display: inline-block !important; transition: transform .2s; }
+    }
+  </style>
+  <script>
+    (function () {
+      function countActive(strip) {
+        let n = 0; strip.querySelectorAll('select').forEach(s => { if (s.value && !/^all$/i.test(s.value)) n++; });
+        const b = strip.querySelector('.dcc-mcount'); if (b) { b.textContent = n; b.classList.toggle('hidden', !n); }
+      }
+      function wire() {
+        document.querySelectorAll('.dcc-filter-strip').forEach(strip => {
+          if (strip.dataset.mwired) return; strip.dataset.mwired = '1';
+          const t = strip.querySelector('.dcc-mtitle');
+          if (t && !t.querySelector('.dcc-mchev')) {
+            const span = t.querySelector('span');
+            span?.insertAdjacentHTML('beforeend', '<span class="dcc-mcount hidden ml-1 px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[9px] font-mono font-bold leading-none border border-indigo-500/30"></span><i class="dcc-mchev fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>');
+          }
+          t?.addEventListener('click', e => { if (window.innerWidth >= 768 || e.target.closest('button, select, input')) return; strip.classList.toggle('m-open'); });
+          strip.addEventListener('change', () => countActive(strip));
+        });
+      }
+      window.addEventListener('DOMContentLoaded', wire);
+    })();
+  </script>
+</body>
+</html>
