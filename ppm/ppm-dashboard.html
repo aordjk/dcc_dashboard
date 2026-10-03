@@ -742,7 +742,7 @@
     async function processMultipleFiles(fileList, isAppend = false) {
       const validFiles = fileList.filter(f => f.name.toLowerCase().endsWith('.csv'));
       if (validFiles.length === 0) {
-        alert(currentLang === 'th' ? "กรุณาเลือกไฟล์ .csv" : "Please select .csv files");
+        alert(currentLang === 'th' ? "กรุณาเลือกไฟล์รูปแบบ .csv เท่านั้น" : "Please select .csv files only");
         return;
       }
       const loader = document.getElementById("uploadLoader");
@@ -833,7 +833,7 @@
           n => n.includes('sla') && !n.includes('due') && !n.includes('target') && !n.includes('date') && !n.includes('time')),
         done: ppmFindCol(headers, ['completeddate','completeddatetime','completedon','completiondate','completiondatetime','actualfinish','actualfinishdate','actualend','actualenddate','finishdate','finisheddate','closeddate','closedon','closeddatetime','clientverifiedon','verifieddate','verifiedon','resolveddate']),
         due: ppmFindCol(headers, ['duedate','duedatetime','targetdate','targetcompletion','targetcompletiondate','targetfinish','targetfinishdate','scheduledend','scheduledenddate','scheduleenddate','planend','planenddate','plannedend','plannedenddate','plannedfinish','deadline','sladuedate','sladue','completiondue']),
-        date: ppmFindCol(headers, ['targetstartdate','targetstartdatetime','plannedstartdate','scheduledstartdate','scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
+        date: ppmFindCol(headers, ['scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
           n => n.includes('date') && !n.includes('update') && !n.includes('complet') && !n.includes('finish') && !n.includes('close')),
         id: ppmFindCol(headers, ['ppmid','ppmno','ppmnumber','ppmcode','workorderid','workorderno','workordernumber','woid','wono','wonumber','taskid','taskno','tasknumber','scheduleid','scheduleno','id'],
           n => n.includes('ppm') && (n.endsWith('id') || n.endsWith('no') || n.includes('number')))
@@ -872,7 +872,6 @@
       return '#NUM!';
     }
 
-    // Response SLA per task: response flag column, otherwise acknowledged date vs response due date
     function ppmComputeRespSla(r, C) {
       if (C.respFlag) { const f = ppmParseSlaFlag(r[C.respFlag]); if (f !== null) return f; }
       if (C.respDue) {
@@ -934,7 +933,7 @@
         const cat = String((PCOLS.category && r[PCOLS.category]) || r['Service Categories'] || 'General').trim() || 'General';
         const rsla = ppmComputeRespSla(r, PCOLS);
         const freq = (r['Frequency Type'] || 'Monthly').trim();
-        const stage = (r['Stage'] || 'COMPLETED').trim().toUpperCase();
+        const stage = (r['Stage'] || 'COMPLETED').trim();
         const sla = ppmComputeSla(r, PCOLS, stage);
         const dur = parseFloat(r['Completion Taken Time (Min)']) || 0;
 
