@@ -69,6 +69,10 @@
         border: 1px solid #cbd5e1 !important;
       }
     }
+  
+    /* Full event type / location text (no ellipsis) */
+    #exportableArea .truncate { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; overflow-wrap: anywhere; }
+#exportableArea button .truncate, #exportableArea select, #exportableArea .dropdown-container .truncate, #exportableArea .ms-btn .truncate { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
   </style>
 </head>
 <body id="dashboardBody" class="bg-darkbg text-slate-200 antialiased min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">

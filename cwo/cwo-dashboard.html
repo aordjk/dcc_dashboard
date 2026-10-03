@@ -76,6 +76,12 @@
       border-color: #38bdf8;
       background: rgba(56, 189, 248, 0.1);
     }
+  
+    /* Full event type / location text (no ellipsis) */
+    #dashboardMain .truncate { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; overflow-wrap: anywhere; }
+#dashboardMain button .truncate, #dashboardMain select, #dashboardMain .dropdown-container .truncate, #dashboardMain .ms-btn .truncate { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    #compareMain .truncate { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; overflow-wrap: anywhere; }
+#compareMain button .truncate, #compareMain select, #compareMain .dropdown-container .truncate, #compareMain .ms-btn .truncate { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 antialiased selection:bg-cyan-500 selection:text-white transition-all duration-200">
@@ -2461,7 +2467,7 @@
           { text: r.p, options: { color: "F43F5E", fontSize: 9, bold: true } },
           { text: r.st, options: { color: "F43F5E", fontSize: 9, bold: true } },
           { text: r.comp, options: { color: "FFFFFF", fontSize: 9 } },
-          { text: r.d.substring(0, 50), options: { color: "E2E8F0", fontSize: 9 } }
+          { text: String(r.d || ""), options: { color: "E2E8F0", fontSize: 9 } }
         ]);
       });
 
@@ -3121,7 +3127,7 @@
           <td class="py-2.5 px-2.5">${cmpEsc(loc ? loc[0] : '-')}</td>
           <td class="py-2.5 px-2 text-center font-mono text-[11px]">${cmpEsc(mix)}</td>
           <td class="py-2.5 px-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${closed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">${closed ? cmpT('Closed', 'ปิดแล้ว') : `${it.open} ${cmpT('Open', 'ค้าง')}`}</span></td>
-          <td class="py-2.5 px-3 text-slate-400 break-words">${cmpEsc(String(it.note).slice(0, 120))}</td></tr>`;
+          <td class="py-2.5 px-3 text-slate-400 break-words">${cmpEsc(String(it.note))}</td></tr>`;
       }).join('') : `<tr><td colspan="6" class="py-8 text-center text-slate-400 italic">${periods.length > 1 ? cmpT('No emerging problem types in the latest month.', 'ไม่พบประเภทปัญหาใหม่ในเดือนล่าสุด') : cmpT('Need at least two months to detect new types.', 'ต้องมีอย่างน้อย 2 เดือน')}</td></tr>`;
 
       // ---- deep-dive executive briefing
