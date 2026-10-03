@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title id="pageTitle">Operations Command Center - Executive Dashboard 2026</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1407,6 +1410,7 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                                         <span data-i18n="commander_shift">Shift Alpha &bull; Active Duty</span>
                                     </span>
+                                    <span class="text-[8.5px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.5 rounded mt-1 inline-block w-fit">v2.8 Live &bull; PPTX Charts OK</span>
                                 </div>
                             </div>
 
@@ -5329,9 +5333,25 @@
             let chartInst = null;
             try {
                 if (typeof Chart !== 'undefined') {
-                    chartInst = Chart.getChart(canvas);
+                    chartInst = Chart.getChart(canvas) || Chart.getChart(targetId);
                 }
             } catch (e) {}
+
+            if (!chartInst) {
+                const globalCharts = {
+                    'trendChart': trendChart,
+                    'slaTrendChart': slaTrendChart,
+                    'categoryDonutChart': categoryDonutChart,
+                    'createdByChart': createdByChart,
+                    'zoneChart': zoneChart,
+                    'top10Chart': top10Chart,
+                    'shiftChart': (typeof compareCharts !== 'undefined' ? compareCharts.shiftChart : null),
+                    'trueEventChart': (typeof compareCharts !== 'undefined' ? compareCharts.trueEventChart : null),
+                    'falseEventChart': (typeof compareCharts !== 'undefined' ? compareCharts.falseEventChart : null),
+                    'recurringChart': (typeof compareCharts !== 'undefined' ? compareCharts.recurringChart : null)
+                };
+                chartInst = globalCharts[targetId];
+            }
 
             // Ensure canvas is rendered if canvas was recently unhidden or resized
             if (chartInst && (canvas.width === 0 || canvas.height === 0)) {
@@ -5502,6 +5522,10 @@
             if (typeof PptxGenJS === 'undefined') {
                 alert('PowerPoint library is initializing. Please try again.');
                 return;
+            }
+
+            if (typeof showToastNotification === 'function') {
+                showToastNotification(CURRENT_LANG === 'TH' ? 'กำลังสร้าง PowerPoint พร้อมข้อมูลกราฟและสถิติ...' : 'Generating PowerPoint presentation with full telemetry...');
             }
 
             // Temporarily unhide dashboard container if currently on compare view so charts and DOM exist
@@ -5881,7 +5905,13 @@
                 });
 
                 // Save Presentation
-                pptx.writeFile({ fileName: `${CURRENT_PROJECT_NAME}_Daily_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
+                pptx.writeFile({ fileName: `${CURRENT_PROJECT_NAME}_Daily_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` }).then(() => {
+                    if (typeof showToastNotification === 'function') {
+                        showToastNotification(CURRENT_LANG === 'TH' ? 'ดาวน์โหลด PowerPoint เรียบร้อยแล้ว' : 'PowerPoint exported successfully!');
+                    }
+                }).catch(e => {
+                    console.error('PPTX write error:', e);
+                });
             } finally {
                 if (wasHidden && viewDash) {
                     viewDash.style.position = '';
@@ -8334,6 +8364,10 @@
                 return;
             }
 
+            if (typeof showToastNotification === 'function') {
+                showToastNotification(CURRENT_LANG === 'TH' ? 'กำลังสร้าง Compare PowerPoint...' : 'Generating Compare PowerPoint...');
+            }
+
             // Temporarily unhide compare container if currently hidden so charts and DOM exist
             const viewComp = document.getElementById('viewCompare');
             const wasCompHidden = viewComp && viewComp.classList.contains('hidden');
@@ -8764,7 +8798,13 @@
                 }
 
                 // Save Presentation
-                pptx.writeFile({ fileName: `DCC_Executive_Compare_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
+                pptx.writeFile({ fileName: `DCC_Executive_Compare_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` }).then(() => {
+                    if (typeof showToastNotification === 'function') {
+                        showToastNotification(CURRENT_LANG === 'TH' ? 'ดาวน์โหลด Compare PowerPoint เรียบร้อยแล้ว' : 'Compare PowerPoint exported successfully!');
+                    }
+                }).catch(e => {
+                    console.error('Compare PPTX write error:', e);
+                });
             } finally {
                 if (wasCompHidden && viewComp) {
                     viewComp.style.position = '';
