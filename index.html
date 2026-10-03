@@ -849,6 +849,16 @@
             scrollbar-width: thin;
             scrollbar-color: #334155 transparent;
         }
+        @media (min-width: 1024px) {
+            #leftSidebarNav {
+                position: sticky !important;
+                top: 86px !important;
+                height: calc(100vh - 96px) !important;
+                align-self: flex-start !important;
+                overflow-y: auto !important;
+                z-index: 35 !important;
+            }
+        }
         body.light-mode #leftSidebarNav {
             scrollbar-color: #cbd5e1 transparent;
         }
@@ -1127,7 +1137,7 @@
         <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9990] hidden lg:hidden transition-opacity" onclick="toggleSidebarDrawer()"></div>
 
         <!-- Mobile Quick Action & Filter Bar (<lg screens) -->
-        <div class="lg:hidden sticky top-12 z-30 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 mb-3 flex items-center justify-between gap-2 shadow-lg">
+        <div class="lg:hidden sticky top-14 z-40 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-3 py-1.5 mb-3 flex items-center justify-between gap-2 shadow-lg">
             <!-- Filter Toggle Button (Opens off-canvas drawer on mobile) -->
             <button type="button" onclick="toggleSidebarDrawer()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow transition shrink-0" title="Open Telemetry & Slicer Filters">
                 <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
@@ -1145,7 +1155,7 @@
         <div class="flex flex-col lg:flex-row gap-5 items-start">
             
             <!-- LEFT SIDEBAR: Locked Dock on Desktop (lg:), Drawer on Mobile (<lg) -->
-            <aside id="leftSidebarNav" class="fixed inset-y-0 left-0 z-[9995] w-80 max-w-[88vw] bg-slate-900 border-r border-slate-800 p-4 shadow-2xl overflow-y-auto custom-scrollbar transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:overflow-y-auto lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none space-y-3 pb-8">
+            <aside id="leftSidebarNav" class="fixed inset-y-0 left-0 z-[9995] w-80 max-w-[88vw] bg-slate-900 border-r border-slate-800 p-4 shadow-2xl overflow-y-auto custom-scrollbar transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:flex lg:flex-col lg:w-72 xl:w-80 shrink-0 lg:sticky lg:top-[86px] lg:h-[calc(100vh-96px)] lg:overflow-y-auto lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none space-y-3 pb-8">
                 
                 <!-- Mobile Drawer Header with Close Button (<lg only) -->
                 <div class="lg:hidden flex items-center justify-between pb-3 border-b border-slate-800">
@@ -2572,35 +2582,51 @@
             return `DCC_STATE_${CURRENT_LANG}_${sanitizedProject}_M[${m}]_C[${c}]_P[${p}]_Z[${z}]_F[${f}]_S[${statusStr}]_T[${teamStr}]_E[${eventStr}]`;
         }
 
-        // Helper: Parse Date String to valid JavaScript Date
+        // Helper: Parse Date String to valid JavaScript Date (Fast & Multi-format)
         function parseFlexDate(dateStr) {
             if (!dateStr || dateStr === '-' || dateStr === 'N/A') return null;
+            const str = String(dateStr).trim();
+            if (str.length < 8) return null;
+
             try {
-                const clean = String(dateStr).trim().replace(/-/g, '/');
-                const parts = clean.split(' ');
+                const parts = str.split(' ');
                 const datePart = parts[0];
                 const timePart = parts[1] || '00:00:00';
+                const ampm = parts[2] ? parts[2].toUpperCase() : null;
 
-                const dSegs = datePart.split('/');
-                if (dSegs.length === 3) {
-                    let y, m, d;
-                    if (dSegs[0].length === 4) {
-                        y = parseInt(dSegs[0]);
-                        m = parseInt(dSegs[1]) - 1;
-                        d = parseInt(dSegs[2]);
-                    } else if (dSegs[2].length === 4) {
-                        d = parseInt(dSegs[0]);
-                        m = parseInt(dSegs[1]) - 1;
-                        y = parseInt(dSegs[2]);
-                    }
-                    const tSegs = timePart.split(':');
-                    const hh = parseInt(tSegs[0]) || 0;
-                    const mm = parseInt(tSegs[1]) || 0;
-                    const ss = parseInt(tSegs[2]) || 0;
-                    return new Date(y, m, d, hh, mm, ss);
+                const dSegs = datePart.split(/[\/\-\.]/);
+                if (dSegs.length !== 3) return null;
+
+                let y, m, d;
+                if (dSegs[0].length === 4) {
+                    y = parseInt(dSegs[0], 10);
+                    m = parseInt(dSegs[1], 10) - 1;
+                    d = parseInt(dSegs[2], 10);
+                } else {
+                    d = parseInt(dSegs[0], 10);
+                    m = parseInt(dSegs[1], 10) - 1;
+                    y = parseInt(dSegs[2], 10);
                 }
-            } catch (e) {}
-            return null;
+
+                if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+
+                if (y > 2500) y -= 543;
+                else if (y < 100) y += 2000;
+
+                let hh = 0, mm = 0, ss = 0;
+                if (timePart) {
+                    const tSegs = timePart.split(':');
+                    hh = parseInt(tSegs[0], 10) || 0;
+                    mm = parseInt(tSegs[1], 10) || 0;
+                    ss = parseInt(tSegs[2], 10) || 0;
+                    if (ampm === 'PM' && hh < 12) hh += 12;
+                    else if (ampm === 'AM' && hh === 12) hh = 0;
+                }
+
+                return new Date(y, m, d, hh, mm, ss);
+            } catch (e) {
+                return null;
+            }
         }
 
         function extractMonthFromDate(createdStr) {
@@ -2803,8 +2829,11 @@
 
         function cleanEventType(ev) {
             if (!ev) return 'Operational Alarm';
-            let s = ev.replace(/\?+/g, '').replace(/-\s*$/, '').trim();
+            let s = String(ev).replace(/\?+/g, '').replace(/-\s*$/, '').trim();
             s = s.replace(/\s*-\s*\(CAT\s*\d+\)$/i, '');
+            if (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG === 'EN') {
+                s = s.replace(/\s*-\s*[\u0E00-\u0E7F].*$/, '').trim();
+            }
             if (!s) return 'Operational Alarm';
             return s;
         }
@@ -3081,45 +3110,38 @@
 
                         processed++;
                         if (processed === files.length) {
-                            try {
-                                resetActiveFiltersToAll();
-                                renderUploadedFilesChips();
-                                rebuildUnifiedDataset();
-                                rebuildFullDataset();
+                            try { resetActiveFiltersToAll(); } catch (e) { console.error('resetActiveFiltersToAll error:', e); }
+                            try { renderUploadedFilesChips(); } catch (e) { console.error('renderUploadedFilesChips error:', e); }
+                            try { rebuildUnifiedDataset(); } catch (e) { console.error('rebuildUnifiedDataset error:', e); }
+                            try { rebuildFullDataset(); } catch (e) { console.error('rebuildFullDataset error:', e); }
 
+                            try {
                                 if (CURRENT_VIEW === 'compare') {
                                     renderCompareDashboard();
                                 }
+                            } catch (e) { console.error('renderCompareDashboard error:', e); }
 
-                                const successMsg = (CURRENT_LANG === 'TH')
-                                    ? `นำเข้า ${files.length} ไฟล์สำเร็จ (${totalRowsImported.toLocaleString()} รายการ)`
-                                    : `Imported ${files.length} file(s) successfully (${totalRowsImported.toLocaleString()} records)`;
-                                showToastNotification(successMsg);
-                                updateDataStatusBadge();
-                            } catch (err) {
-                                console.error('Error during post-upload rebuild:', err);
-                                if (badge) {
-                                    badge.textContent = (CURRENT_LANG === 'TH') ? "ข้อผิดพลาด" : "PARSING ERROR";
-                                    badge.className = "px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap shrink-0 inline-flex items-center";
-                                }
-                            }
+                            try { updateDataStatusBadge(); } catch (e) { console.error('updateDataStatusBadge error:', e); }
+
+                            const successMsg = (CURRENT_LANG === 'TH')
+                                ? `นำเข้า ${files.length} ไฟล์สำเร็จ (${totalRowsImported.toLocaleString()} รายการ)`
+                                : `Imported ${files.length} file(s) successfully (${totalRowsImported.toLocaleString()} records)`;
+                            showToastNotification(successMsg);
                         }
                     },
                     error: function(err) {
                         console.error(`Error parsing ${file.name}:`, err);
                         processed++;
                         if (processed === files.length) {
+                            try { renderUploadedFilesChips(); } catch (e) {}
+                            try { rebuildUnifiedDataset(); } catch (e) {}
+                            try { rebuildFullDataset(); } catch (e) {}
                             try {
-                                renderUploadedFilesChips();
-                                rebuildUnifiedDataset();
-                                rebuildFullDataset();
                                 if (CURRENT_VIEW === 'compare') {
                                     renderCompareDashboard();
                                 }
-                                updateDataStatusBadge();
-                            } catch (e) {
-                                console.error('Error handling upload error:', e);
-                            }
+                            } catch (e) {}
+                            try { updateDataStatusBadge(); } catch (e) {}
                         }
                     }
                 });
@@ -3141,7 +3163,7 @@
             if (!sampleRow) return [];
 
             const colCaseNo = resolveColumnKey(sampleRow, ['Case No', 'CaseNo', 'Case_No', 'Incident ID', 'Work Order']);
-            const colCreated = resolveColumnKey(sampleRow, ['Created on', 'Created On', 'CreatedDate', 'Incident Date', 'Date']);
+            const colCreated = resolveColumnKey(sampleRow, ['Incident Date', 'Created on', 'Created On', 'CreatedDate', 'Date']);
             const colResolved = resolveColumnKey(sampleRow, ['Resolved on', 'Resolved On', 'Completed On', 'Closed Date', 'Closed On']);
             const colCat = resolveColumnKey(sampleRow, ['Event Category', 'Category', 'System']);
             const colPrio = resolveColumnKey(sampleRow, ['Priority', 'Severity', 'Level']);
@@ -3155,18 +3177,55 @@
             const colCompSLA = resolveColumnKey(sampleRow, ['Meet SLA Completion', 'MeetSLACompletion', 'CompletionSLA']);
             const colRespSLA = resolveColumnKey(sampleRow, ['SLA Response Time', 'SLAResponseTime', 'ResponseSLA']);
 
-            const list = [];
+            const list = new Array(rows.length);
+            let validCount = 0;
             let autoIdCounter = 1;
             const isOBK = (fileName || '').toLowerCase().includes('obk') || (sampleRow['Location'] && sampleRow['Location'].includes('One Bangkok'));
+            const todayMs = Date.now();
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             for (let i = 0; i < rows.length; i++) {
                 const r = rows[i];
-                if (!r || Object.values(r).every(v => !v || String(v).trim() === '')) continue;
+                if (!r) continue;
+                const rawCase = colCaseNo ? r[colCaseNo] : null;
+                const rawCreated = colCreated ? r[colCreated] : null;
+                const rawCat = colCat ? r[colCat] : null;
+                if (!rawCase && !rawCreated && !rawCat) continue;
 
-                const caseNo = (colCaseNo && r[colCaseNo]) ? String(r[colCaseNo]).trim() : `CASE-${String(autoIdCounter++).padStart(5, '0')}`;
-                const createdOnStr = (colCreated && r[colCreated]) ? String(r[colCreated]).trim() : '-';
+                const caseNo = rawCase ? String(rawCase).trim() : `CASE-${String(autoIdCounter++).padStart(5, '0')}`;
+                const createdOnStr = rawCreated ? String(rawCreated).trim() : '-';
                 const resolvedOnStr = (colResolved && r[colResolved]) ? String(r[colResolved]).trim() : '-';
-                const month = extractMonthFromDate(createdOnStr);
+
+                // Fast single-pass date derivation
+                let yr = '2026', mo = 'Unknown', wkKey = 'ALL', wkLabel = 'All Weeks', agingDays = 0;
+                let cDate = null;
+                if (createdOnStr !== '-') {
+                    cDate = parseFlexDate(createdOnStr);
+                    if (cDate && !isNaN(cDate.getTime())) {
+                        let y = cDate.getFullYear();
+                        if (y > 2500) y -= 543;
+                        else if (y < 100) y += 2000;
+                        yr = String(y);
+                        const mIdx = cDate.getMonth();
+                        mo = monthNames[mIdx] || 'Unknown';
+                        const mStr = String(mIdx + 1).padStart(2, '0');
+                        const dStr = String(cDate.getDate()).padStart(2, '0');
+                        const info = getSundayToSaturdayWeekInfo(`${y}-${mStr}-${dStr}`);
+                        wkKey = info.key;
+                        wkLabel = info.label;
+                        const diffDays = Math.floor((todayMs - cDate.getTime()) / 86400000);
+                        agingDays = diffDays >= 0 ? diffDays : 0;
+                    }
+                }
+
+                let mttrMins = 0;
+                if (cDate && resolvedOnStr && resolvedOnStr !== '-') {
+                    const rDate = parseFlexDate(resolvedOnStr);
+                    if (rDate && !isNaN(rDate.getTime())) {
+                        const diffMs = rDate.getTime() - cDate.getTime();
+                        if (diffMs > 0) mttrMins = diffMs / 60000;
+                    }
+                }
 
                 const faRaw = (colFA && r[colFA]) ? String(r[colFA]).trim().toLowerCase() : 'no';
                 const isFA = (faRaw === 'yes' || faRaw === 'true' || faRaw === '1' || faRaw === 'y');
@@ -3176,9 +3235,6 @@
 
                 const respSLARaw = (colRespSLA && r[colRespSLA]) ? String(r[colRespSLA]).trim().toLowerCase() : '';
                 const respSLA = respSLARaw.includes('pass');
-
-                const mttrMins = calculateMTTRMinutes(createdOnStr, resolvedOnStr);
-                const hasMTTR = mttrMins > 0;
 
                 const status = (colStatus && r[colStatus]) ? String(r[colStatus]).trim() : 'Open';
                 const woStatus = (colWOStatus && r[colWOStatus]) ? String(r[colWOStatus]).trim() : '';
@@ -3205,18 +3261,16 @@
                 const evType = cleanEventType(rawEvType);
 
                 const prio = (colPrio && r[colPrio]) ? String(r[colPrio]).trim() : 'CAT 3';
-                const agingDays = calculateDaysAging(createdOnStr);
 
-                const rowWeekInfo = extractWeekInfoFromDate(createdOnStr);
-                list.push({
+                list[validCount++] = {
                     caseNo: caseNo,
                     date: createdOnStr,
                     resolvedDate: resolvedOnStr,
                     aging: agingDays,
-                    year: extractYearFromDate(createdOnStr),
-                    month: month,
-                    week: rowWeekInfo.key,
-                    weekLabel: rowWeekInfo.label,
+                    year: yr,
+                    month: mo,
+                    week: wkKey,
+                    weekLabel: wkLabel,
                     cat: cat,
                     prio: prio,
                     comp: siteZone,
@@ -3228,10 +3282,11 @@
                     compSLA: compSLA,
                     respSLA: respSLA,
                     mttrMins: mttrMins,
-                    hasMTTR: hasMTTR,
+                    hasMTTR: mttrMins > 0,
                     loc: locStr
-                });
+                };
             }
+            list.length = validCount;
             return list;
         }
 
@@ -3536,9 +3591,7 @@
                         weekSelect.appendChild(opt);
                     });
                 }
-                if (weeksMap && weeksMap.has(currentWeek)) {
-                    weekSelect.value = currentWeek;
-                }
+                weekSelect.value = 'ALL';
             }
 
             const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -3567,7 +3620,7 @@
 
         function setupSelect(id, values, defaultLabel) {
             const sel = document.getElementById(id);
-            const current = sel.value;
+            if (!sel) return;
             sel.innerHTML = `<option value="ALL">${defaultLabel}</option>`;
             values.forEach(v => {
                 const opt = document.createElement('option');
@@ -3576,11 +3629,7 @@
                 opt.title = v;
                 sel.appendChild(opt);
             });
-            if (values.includes(current)) {
-                sel.value = current;
-            } else {
-                sel.value = 'ALL';
-            }
+            sel.value = 'ALL';
         }
 
         function renderStatusMultiSelect() {
@@ -4198,11 +4247,12 @@
         }
 
         function renderAllCharts() {
-            renderMonthlyTrends();
-            renderCategoryDonut();
-            renderCreatedByTeams();
-            renderZonesChart();
-            renderTop10EventTypes();
+            if (CURRENT_VIEW !== 'dashboard') return;
+            try { renderMonthlyTrends(); } catch (e) { console.warn('renderMonthlyTrends error:', e); }
+            try { renderCategoryDonut(); } catch (e) { console.warn('renderCategoryDonut error:', e); }
+            try { renderCreatedByTeams(); } catch (e) { console.warn('renderCreatedByTeams error:', e); }
+            try { renderZonesChart(); } catch (e) { console.warn('renderZonesChart error:', e); }
+            try { renderTop10EventTypes(); } catch (e) { console.warn('renderTop10EventTypes error:', e); }
         }
 
         function renderMonthlyTrends() {
@@ -5213,10 +5263,13 @@
             const parts = dateStr.split('-');
             if (parts.length !== 3) return { key: '', label: '', startStr: '', endStr: '' };
 
-            const y = parseInt(parts[0], 10);
+            let y = parseInt(parts[0], 10);
+            if (y > 2500) y -= 543;
+            else if (y < 100) y += 2000;
             const m = parseInt(parts[1], 10) - 1;
             const d = parseInt(parts[2], 10);
             const curDate = new Date(y, m, d);
+            if (isNaN(curDate.getTime())) return { key: '', label: '', startStr: '', endStr: '' };
 
             const dayOfWeek = curDate.getDay(); 
             const sundayDate = new Date(curDate);
@@ -5550,44 +5603,38 @@
             const colComments = resolveColumnKey(sampleRow, ['Operator Comments', 'Comments', 'Remarks']);
 
             const isOBK = (fileName || '').toLowerCase().includes('obk') || (sampleRow['Location'] && sampleRow['Location'].includes('One Bangkok'));
-            const loaded = [];
+            const loaded = new Array(rows.length);
+            let validCount = 0;
 
             for (let idx = 0; idx < rows.length; idx++) {
                 const r = rows[idx];
-                if (!r || Object.values(r).every(v => !v || String(v).trim() === '')) continue;
+                if (!r) continue;
+                const rawCase = colCaseNo ? r[colCaseNo] : null;
+                const rawCreated = colCreated ? r[colCreated] : null;
+                const rawCat = colCat ? r[colCat] : null;
+                if (!rawCase && !rawCreated && !rawCat) continue;
 
-                const rawDate = (colCreated && r[colCreated]) ? String(r[colCreated]).trim() : '';
+                const rawDate = rawCreated ? String(rawCreated).trim() : '';
                 let dateOnlyStr = '';
                 let dayNum = 1;
-                let yr = r.Year;
-                let mo = r.MonthOrder || r.Month;
+                let yr = 2026;
+                let mo = 1;
 
                 if (rawDate) {
-                    const cleanD = rawDate.split(' ')[0].trim();
-                    const parts = cleanD.split(/[-/.]/);
-                    if (parts.length === 3) {
-                        if (parts[0].length === 4) {
-                            yr = parseInt(parts[0], 10);
-                            mo = parseInt(parts[1], 10);
-                            dayNum = parseInt(parts[2], 10);
-                        } else {
-                            dayNum = parseInt(parts[0], 10);
-                            mo = parseInt(parts[1], 10);
-                            yr = parseInt(parts[2], 10);
-                        }
-                        if (yr > 2500) yr -= 543;
+                    const dt = parseFlexDate(rawDate);
+                    if (dt && !isNaN(dt.getTime())) {
+                        let y = dt.getFullYear();
+                        if (y > 2500) y -= 543;
+                        else if (y < 100) y += 2000;
+                        yr = y;
+                        mo = dt.getMonth() + 1;
+                        dayNum = dt.getDate();
                         dateOnlyStr = `${yr}-${String(mo).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
                     }
                 }
 
                 if (!dateOnlyStr) {
-                    dateOnlyStr = `${yr || 2026}-${String(mo || 1).padStart(2,'0')}-01`;
-                }
-
-                if (typeof mo === 'string') {
-                    const mNorm = mo.substring(0,3).toLowerCase();
-                    const mIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(mNorm);
-                    mo = mIdx !== -1 ? mIdx + 1 : 1;
+                    dateOnlyStr = `2026-01-01`;
                 }
 
                 const weekInfo = getSundayToSaturdayWeekInfo(dateOnlyStr);
@@ -5620,9 +5667,9 @@
                 const isFA = (faRaw === 'yes' || faRaw === 'true' || faRaw === '1' || faRaw === 'y') ? 'Yes' : 'No';
                 const status = (colStatus && r[colStatus]) ? String(r[colStatus]).trim() : 'Closed';
 
-                loaded.push({
+                loaded[validCount++] = {
                     SourceFileName: fileName,
-                    CaseNo: (colCaseNo && r[colCaseNo]) ? String(r[colCaseNo]).trim() : `CASE-${String(idx + 1).padStart(5, '0')}`,
+                    CaseNo: rawCase ? String(rawCase).trim() : `CASE-${String(idx + 1).padStart(5, '0')}`,
                     Year: parseInt(yr) || 2026,
                     Month: parseInt(mo) || 1,
                     MonthOrder: parseInt(mo) || 1,
@@ -5644,8 +5691,9 @@
                     Findings: findingsStr,
                     ReportedBy: reportedBy,
                     PendingReason: commentsStr || findingsStr || descStr || 'Normal inspection closed'
-                });
+                };
             }
+            loaded.length = validCount;
             return loaded;
         }
 
@@ -6059,6 +6107,7 @@
         }
 
         function renderCompareDashboard() {
+            if (CURRENT_VIEW !== 'compare') return;
             if (fullDataset.length === 0) return;
 
             const filtered = fullDataset.filter(d => {
@@ -6999,55 +7048,62 @@
             document.getElementById('modalChartTitle').innerHTML = `<i class="fa-solid fa-chart-simple text-indigo-400"></i> ${title}`;
             modal.classList.add('show');
 
-            const mCanvas = document.getElementById('modalCanvas');
-            if (modalChartInstance) modalChartInstance.destroy();
+            if (modalChartInstance) {
+                modalChartInstance.destroy();
+                modalChartInstance = null;
+            }
 
-            const isLight = document.body.classList.contains('light-mode');
-            const clonedLabels = [...(src.data.labels || [])];
-            const clonedDatasets = (src.data.datasets || []).map(ds => ({
-                label: ds.label,
-                data: [...(ds.data || [])],
-                backgroundColor: ds.backgroundColor,
-                borderColor: ds.borderColor,
-                borderWidth: ds.borderWidth || 1,
-                borderRadius: ds.borderRadius || 4
-            }));
+            requestAnimationFrame(() => {
+                const mCanvas = document.getElementById('modalCanvas');
+                if (!mCanvas) return;
+                const isLight = document.body.classList.contains('light-mode');
+                const clonedLabels = [...(src.data.labels || [])];
+                const clonedDatasets = (src.data.datasets || []).map(ds => ({
+                    label: ds.label,
+                    data: [...(ds.data || [])],
+                    backgroundColor: ds.backgroundColor,
+                    borderColor: ds.borderColor,
+                    borderWidth: ds.borderWidth || 1,
+                    borderRadius: ds.borderRadius || 4
+                }));
 
-            modalChartInstance = new Chart(mCanvas, {
-                type: (src.config && src.config.type) || 'bar',
-                data: {
-                    labels: clonedLabels,
-                    datasets: clonedDatasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            position: 'top', 
-                            labels: { color: isLight ? '#0f172a' : '#cbd5e1', font: { size: 12, weight: 'bold' } } 
-                        },
-                        datalabels: {
-                            color: isLight ? '#0f172a' : '#fff',
-                            anchor: 'end',
-                            align: 'top',
-                            offset: -2,
-                            font: { size: 11, weight: 'bold' },
-                            formatter: (v) => v > 0 ? v : ''
-                        }
+                modalChartInstance = new Chart(mCanvas, {
+                    type: (src.config && src.config.type) || 'bar',
+                    data: {
+                        labels: clonedLabels,
+                        datasets: clonedDatasets
                     },
-                    scales: {
-                        x: { 
-                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 11 } }, 
-                            grid: { display: false } 
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                position: 'top', 
+                                labels: { color: isLight ? '#0f172a' : '#cbd5e1', font: { size: 12, weight: 'bold' } } 
+                            },
+                            datalabels: {
+                                color: isLight ? '#0f172a' : '#fff',
+                                anchor: 'end',
+                                align: 'top',
+                                offset: -2,
+                                font: { size: 11, weight: 'bold' },
+                                formatter: (v) => v > 0 ? v : ''
+                            }
                         },
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 11 } },
-                            grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' } 
+                        scales: {
+                            x: { 
+                                ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 11 } }, 
+                                grid: { display: false } 
+                            },
+                            y: { 
+                                beginAtZero: true, 
+                                ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 11 } },
+                                grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' } 
+                            }
                         }
                     }
-                }
+                });
+                modalChartInstance.resize();
             });
         }
 
@@ -7303,6 +7359,14 @@
                     document.getElementById('emptyStatePlaceholder')?.classList.remove('hidden');
                     document.getElementById('dashboardContent')?.classList.add('hidden');
                     document.getElementById('filterRow')?.classList.add('opacity-60', 'pointer-events-none');
+                }
+            } else {
+                if (RAW_DATA.length > 0) {
+                    document.getElementById('uploadPrompt')?.classList.add('hidden');
+                    document.getElementById('emptyDashboardPlaceholder')?.classList.add('hidden');
+                    renderAllCharts();
+                    renderPendingTable();
+                    updateDynamicExecutiveAnalytics();
                 }
             }
 
