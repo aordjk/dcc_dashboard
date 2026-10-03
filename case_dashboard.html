@@ -1310,6 +1310,25 @@
             position: relative;
             z-index: 1;
         }
+
+        /* ===== Grouped view tabs (Case | CWO | PPM) ===== */
+        .view-tab { color: #94a3b8; }
+        .view-tab:hover { color: #fff; }
+        .view-tab.is-active { color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+        .view-tab-group[data-group="case"] .view-tab.is-active { background-color: #4f46e5; }
+        .view-tab-group[data-group="cwo"]  .view-tab.is-active { background-color: #0d9488; }
+        .view-tab-group[data-group="ppm"]  .view-tab.is-active { background-color: #d97706; }
+        .view-tab-group.has-active { border-color: rgba(148,163,184,.55); }
+        /* Labels: all visible on wide screens; only the active tab's label below 1536px; icons only on phones */
+        @media (max-width: 1535px) { .view-tab:not(.is-active) .tab-label { display: none; } }
+        @media (max-width: 639px)  { #viewTabGroups { display: none !important; } } /* phones: use the hamburger drawer, which lists all 5 views */
+        body.light-mode .view-tab { color: #475569; }
+        body.light-mode .view-tab.is-active { color: #fff; }
+        body.light-mode .view-tab-group { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
+        .ds-table th { position: sticky; top: 0; z-index: 1; background: #0f172a; }
+        body.light-mode .ds-table th { background: #f1f5f9; }
+        .ds-bar { height: 6px; border-radius: 9999px; background: rgba(148,163,184,.15); overflow: hidden; }
+        .ds-bar > span { display: block; height: 100%; border-radius: 9999px; }
 </style>
 
 </head>
@@ -1344,18 +1363,39 @@
 
                 <!-- Center: View Switcher Tabs (Case Management vs Case Comparison) -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <!-- View Switcher (Case Management vs Case Comparison) -->
-                    <div class="inline-flex items-center bg-slate-950/80 p-0.5 rounded-lg border border-slate-700/80 shadow-inner">
-                        <button id="navTabDashboard" onclick="switchView('dashboard')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 bg-indigo-600 text-white shadow" title="Dashboard 1: Case Management">
-                            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
-                            <span data-i18n="nav_dashboard" class="hidden sm:inline">Case Management</span>
-                        </button>
-                        <button id="navTabCompare" onclick="switchView('compare')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 text-slate-400 hover:text-white" title="Dashboard 2: Case Comparison">
-                            <i data-lucide="git-compare" class="w-3.5 h-3.5"></i>
-                            <span data-i18n="nav_compare" class="hidden sm:inline">Case Comparison</span>
-                        </button>
+                    <!-- View Switcher: grouped pills (Case | CWO | PPM). Each group has its own CSV dataset. -->
+                    <div id="viewTabGroups" class="flex items-center gap-1.5">
+                        <!-- Group 1: Case -->
+                        <div class="view-tab-group inline-flex items-center bg-slate-950/80 p-0.5 rounded-lg border border-slate-700/80 shadow-inner" data-group="case" title="Case dataset">
+                            <button id="navTabDashboard" data-view="dashboard" onclick="switchView('dashboard')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 view-tab" title="Case Management">
+                                <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                                <span data-i18n="nav_dashboard" class="tab-label">Case Management</span>
+                            </button>
+                            <button id="navTabCompare" data-view="compare" onclick="switchView('compare')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 view-tab" title="Case Comparison">
+                                <i data-lucide="git-compare" class="w-3.5 h-3.5"></i>
+                                <span data-i18n="nav_compare" class="tab-label">Case Comparison</span>
+                            </button>
+                        </div>
+                        <!-- Group 2: CWO -->
+                        <div class="view-tab-group inline-flex items-center bg-slate-950/80 p-0.5 rounded-lg border border-slate-700/80 shadow-inner" data-group="cwo" title="CWO dataset">
+                            <button id="navTabCwoDashboard" data-view="cwo-dashboard" onclick="switchView('cwo-dashboard')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 view-tab" title="CWO Dashboard">
+                                <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
+                                <span data-i18n="nav_cwo_dashboard" class="tab-label">CWO Dashboard</span>
+                            </button>
+                            <button id="navTabCwoCompare" data-view="cwo-compare" onclick="switchView('cwo-compare')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 view-tab" title="CWO Comparison">
+                                <i data-lucide="git-compare-arrows" class="w-3.5 h-3.5"></i>
+                                <span data-i18n="nav_cwo_compare" class="tab-label">CWO Comparison</span>
+                            </button>
+                        </div>
+                        <!-- Group 3: PPM -->
+                        <div class="view-tab-group inline-flex items-center bg-slate-950/80 p-0.5 rounded-lg border border-slate-700/80 shadow-inner" data-group="ppm" title="PPM dataset">
+                            <button id="navTabPpmDashboard" data-view="ppm-dashboard" onclick="switchView('ppm-dashboard')" class="px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 view-tab" title="PPM Dashboard">
+                                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                                <span data-i18n="nav_ppm_dashboard" class="tab-label">PPM Dashboard</span>
+                            </button>
+                        </div>
                     </div>
-                    
+
                     <!-- Active Cross Filter Badge -->
                     <div id="activeCrossFilterBadge" class="hidden items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[11px] font-semibold shrink-0">
                         <span id="crossFilterLabel">Filtered</span>
@@ -1370,7 +1410,7 @@
                     <label class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition shadow-md shrink-0">
                         <i data-lucide="upload-cloud" class="w-4 h-4"></i>
                         <span data-i18n="sync_upload">Sync / Upload</span>
-                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
+                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleActiveGroupUpload(event)">
                     </label>
 
                     <!-- 2. Present Mode Icon Button -->
@@ -1420,7 +1460,7 @@
                                 <label class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-left text-emerald-400 hover:text-emerald-300 transition cursor-pointer">
                                     <i data-lucide="file-plus-2" class="w-3.5 h-3.5 text-emerald-400"></i>
                                     <span data-i18n="sync_csv">Upload CSV Dataset(s)</span>
-                                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleMultipleCSVUpload(event)">
+                                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleActiveGroupUpload(event)">
                                 </label>
                             </div>
 
@@ -1471,7 +1511,7 @@
                             <div class="pt-2 border-t border-slate-700/80 text-[10px] text-slate-400 text-center">
                                 Commander Session &bull; Active Duty
                             </div>
-                        </div></div>
+                        </div>
                     </div>
 
                 </div>
@@ -1761,13 +1801,25 @@
             <div class="space-y-2">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Select View</span>
                 <div class="grid grid-cols-1 gap-1.5">
-                    <button id="drawerTabDashboard" onclick="switchView('dashboard'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow transition">
+                    <button id="drawerTabDashboard" data-view="dashboard" onclick="switchView('dashboard'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow transition">
                         <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                         <span data-i18n="nav_dashboard">Case Management</span>
                     </button>
-                    <button id="drawerTabCompare" onclick="switchView('compare'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
+                    <button id="drawerTabCompare" data-view="compare" onclick="switchView('compare'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
                         <i data-lucide="git-compare" class="w-4 h-4"></i>
                         <span data-i18n="nav_compare">Case Comparison</span>
+                    </button>
+                    <button id="drawerTabCwoDashboard" data-view="cwo-dashboard" onclick="switchView('cwo-dashboard'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
+                        <i data-lucide="wrench" class="w-4 h-4"></i>
+                        <span data-i18n="nav_cwo_dashboard">CWO Dashboard</span>
+                    </button>
+                    <button id="drawerTabCwoCompare" data-view="cwo-compare" onclick="switchView('cwo-compare'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
+                        <i data-lucide="git-compare-arrows" class="w-4 h-4"></i>
+                        <span data-i18n="nav_cwo_compare">CWO Comparison</span>
+                    </button>
+                    <button id="drawerTabPpmDashboard" data-view="ppm-dashboard" onclick="switchView('ppm-dashboard'); toggleMobileDrawer();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
+                        <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                        <span data-i18n="nav_ppm_dashboard">PPM Dashboard</span>
                     </button>
                 </div>
             </div>
@@ -1794,6 +1846,70 @@
 
     <!-- Main Content Container (Full Width max-w-[1920px]) -->
     <main id="mainContainer" class="flex-1 max-w-[1920px] mx-auto w-full px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3 pb-8 transition-all duration-300">
+
+        <!-- ===================== VIEW GROUP: CWO (own CSV dataset) ===================== -->
+        <div id="view-cwo" class="ds-group-view hidden space-y-4" data-group="cwo">
+            <!-- Empty state: shown until a CWO CSV is uploaded -->
+            <div id="cwoEmpty" class="glass-card p-8 sm:p-10 text-center border-dashed border-2 border-slate-700 max-w-2xl mx-auto my-6">
+                <div class="w-16 h-16 mx-auto rounded-full bg-teal-600/10 border border-teal-500/30 flex items-center justify-center text-teal-400 mb-3">
+                    <i data-lucide="cloud-upload" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white mb-1.5">Ready for CWO Dataset</h2>
+                <p class="text-xs text-slate-400 max-w-md mx-auto mb-5 leading-relaxed">Upload your CWO CSV file(s). This dataset is separate from the other dashboards and powers the CWO Dashboard &amp; CWO Comparison tabs.</p>
+                <label class="cursor-pointer inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow transition">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    <span>Upload CWO CSV(s)</span>
+                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleGroupUpload('cwo', event)">
+                </label>
+            </div>
+
+            <!-- Active content: shown once data is loaded -->
+            <div id="cwoActive" class="hidden space-y-4">
+                <!-- Files bar -->
+                <div class="glass-card px-3 py-2 flex flex-wrap items-center gap-2 text-xs">
+                    <span class="flex items-center gap-1.5 text-slate-400 font-semibold text-[11px] shrink-0"><i data-lucide="files" class="w-3.5 h-3.5 text-teal-400"></i>CWO Files:</span>
+                    <div id="cwoFileChips" class="flex flex-wrap items-center gap-2 flex-1"></div>
+                    <label class="cursor-pointer inline-flex items-center gap-1 text-[11px] font-semibold text-teal-400 hover:text-teal-300 shrink-0">
+                        <i data-lucide="file-plus-2" class="w-3.5 h-3.5"></i> Add file
+                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleGroupUpload('cwo', event)">
+                    </label>
+                    <button type="button" onclick="clearGroupData('cwo')" class="text-[11px] text-rose-400 hover:text-rose-300 underline font-semibold shrink-0">Clear All</button>
+                </div>
+                <div id="cwoPanel"></div>
+            </div>
+        </div>
+
+        <!-- ===================== VIEW GROUP: PPM (own CSV dataset) ===================== -->
+        <div id="view-ppm" class="ds-group-view hidden space-y-4" data-group="ppm">
+            <!-- Empty state: shown until a PPM CSV is uploaded -->
+            <div id="ppmEmpty" class="glass-card p-8 sm:p-10 text-center border-dashed border-2 border-slate-700 max-w-2xl mx-auto my-6">
+                <div class="w-16 h-16 mx-auto rounded-full bg-amber-600/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3">
+                    <i data-lucide="cloud-upload" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white mb-1.5">Ready for PPM Dataset</h2>
+                <p class="text-xs text-slate-400 max-w-md mx-auto mb-5 leading-relaxed">Upload your PPM CSV file(s). This dataset is separate from the other dashboards and powers the PPM Dashboard tab.</p>
+                <label class="cursor-pointer inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow transition">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    <span>Upload PPM CSV(s)</span>
+                    <input type="file" accept=".csv" multiple class="hidden" onchange="handleGroupUpload('ppm', event)">
+                </label>
+            </div>
+
+            <!-- Active content: shown once data is loaded -->
+            <div id="ppmActive" class="hidden space-y-4">
+                <!-- Files bar -->
+                <div class="glass-card px-3 py-2 flex flex-wrap items-center gap-2 text-xs">
+                    <span class="flex items-center gap-1.5 text-slate-400 font-semibold text-[11px] shrink-0"><i data-lucide="files" class="w-3.5 h-3.5 text-amber-400"></i>PPM Files:</span>
+                    <div id="ppmFileChips" class="flex flex-wrap items-center gap-2 flex-1"></div>
+                    <label class="cursor-pointer inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:text-amber-300 shrink-0">
+                        <i data-lucide="file-plus-2" class="w-3.5 h-3.5"></i> Add file
+                        <input type="file" accept=".csv" multiple class="hidden" onchange="handleGroupUpload('ppm', event)">
+                    </label>
+                    <button type="button" onclick="clearGroupData('ppm')" class="text-[11px] text-rose-400 hover:text-rose-300 underline font-semibold shrink-0">Clear All</button>
+                </div>
+                <div id="ppmPanel"></div>
+            </div>
+        </div>
         <!-- Safety stubs for JS compatibility -->
         <div id="leftSidebarNav" class="hidden"></div>
         <div id="sidebarBackdrop" class="hidden"></div>
@@ -2591,6 +2707,9 @@
                 header_subtitle: "Interactive Telemetry • Cross-Filtering & Operational Intelligence",
                 nav_dashboard: "Case Management",
                 nav_compare: "Case Comparison",
+                nav_cwo_dashboard: "CWO Dashboard",
+                nav_cwo_compare: "CWO Comparison",
+                nav_ppm_dashboard: "PPM Dashboard",
                 filters: "Filters",
                 hide_filters: "Hide Filters",
                 show_filters: "Show Filters",
@@ -2687,6 +2806,9 @@
                 header_subtitle: "ระบบโทรมาตรและข้อมูลเชิงโต้ตอบ • ตัวกรองข้ามระบบและข่าวกรองปฏิบัติการ",
                 nav_dashboard: "Case Management",
                 nav_compare: "Case Comparison",
+                nav_cwo_dashboard: "CWO Dashboard",
+                nav_cwo_compare: "CWO Comparison",
+                nav_ppm_dashboard: "PPM Dashboard",
                 filters: "ตัวกรอง",
                 hide_filters: "ซ่อนตัวกรอง",
                 show_filters: "แสดงตัวกรอง",
@@ -2800,8 +2922,9 @@
         window.addEventListener('DOMContentLoaded', () => {
             syncStickyBarHeight();
             // Check initial URL hash or query param for view
-            if (window.location.hash === '#compare' || new URLSearchParams(window.location.search).get('view') === 'compare') {
-                setTimeout(() => { if (typeof switchView === 'function') switchView('compare'); }, 150);
+            const qsView = new URLSearchParams(window.location.search).get('view');
+            if (qsView && ALL_VIEWS.includes(qsView) && window.location.hash.replace('#','') !== qsView) {
+                setTimeout(() => { if (typeof switchView === 'function') switchView(qsView); }, 150);
             }
 
             initTheme();
@@ -2811,18 +2934,13 @@
             initCleanDatasetState();
 
             const initialHash = window.location.hash.replace('#', '').toLowerCase();
-            if (initialHash === 'compare') {
-                switchView('compare');
-            } else {
-                switchView('dashboard');
-            }
+            switchView(ALL_VIEWS.includes(initialHash) ? initialHash : 'dashboard');
             setTimeout(syncStickyBarHeight, 150);
         });
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#', '').toLowerCase();
-            if (h === 'compare') switchView('compare');
-            else switchView('dashboard');
+            if (h !== ACTIVE_VIEW) switchView(ALL_VIEWS.includes(h) ? h : 'dashboard');
             setTimeout(syncStickyBarHeight, 50);
         });
 
@@ -8851,7 +8969,7 @@
             XLSX.writeFile(wb, `DCC_Incident_Data_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        function switchView(viewName) {
+        function switchCaseView(viewName) {
             CURRENT_VIEW = viewName;
             const isDashboard = (viewName === 'dashboard');
 
@@ -9180,5 +9298,348 @@
         </div>
         <span id="globalToastMsg">Notification message</span>
     </div>
+    <!-- ================================================================== -->
+    <!-- MULTI-DATASET VIEW GROUPS: Case | CWO | PPM                         -->
+    <!-- Each group owns its own CSV upload + in-memory dataset.             -->
+    <!-- Case views keep the original engine (switchCaseView / RAW_DATA).    -->
+    <!-- CWO & PPM use the generic starter engine below until their         -->
+    <!-- column layouts are finalized and dedicated charts are built.        -->
+    <!-- ================================================================== -->
+    <script>
+        const ALL_VIEWS = ['dashboard', 'compare', 'cwo-dashboard', 'cwo-compare', 'ppm-dashboard'];
+        const VIEW_TAB_BASE = 'px-2.5 py-1 text-xs font-bold rounded-md transition flex items-center gap-1.5 view-tab';
+        const DRAWER_TAB_BASE = 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition';
+        const GROUP_ACCENT_BG = { case: 'bg-indigo-600', cwo: 'bg-teal-600', ppm: 'bg-amber-600' };
+
+        const DATA_GROUPS = {
+            cwo: { label: 'CWO', accent: 'teal', color: '#14b8a6', files: new Map(), view: 'dashboard', search: '', compareCol: null },
+            ppm: { label: 'PPM', accent: 'amber', color: '#f59e0b', files: new Map(), view: 'dashboard', search: '', compareCol: null }
+        };
+
+        let ACTIVE_VIEW = 'dashboard';
+        let ACTIVE_GROUP = 'case';
+
+        function viewGroupOf(v) { return v.startsWith('cwo') ? 'cwo' : v.startsWith('ppm') ? 'ppm' : 'case'; }
+
+        // ---------- View switching ----------
+        function switchView(viewName) {
+            if (!ALL_VIEWS.includes(viewName)) viewName = 'dashboard';
+            ACTIVE_VIEW = viewName;
+            ACTIVE_GROUP = viewGroupOf(viewName);
+
+            document.querySelectorAll('.ds-group-view').forEach(el => {
+                el.classList.toggle('hidden', el.dataset.group !== ACTIVE_GROUP);
+            });
+
+            if (ACTIVE_GROUP === 'case') {
+                switchCaseView(viewName);
+            } else {
+                ['viewDashboard', 'viewCompare', 'sidebarFiltersDashboard', 'sidebarFiltersCompare',
+                 'uploadedFilesBar', 'fixedSlicerContainer', 'compareSlicerContainer', 'sidebarTopicCard']
+                    .forEach(id => document.getElementById(id)?.classList.add('hidden'));
+                DATA_GROUPS[ACTIVE_GROUP].view = viewName.endsWith('compare') ? 'compare' : 'dashboard';
+                renderGroup(ACTIVE_GROUP);
+                if (window.location.hash.replace('#', '') !== viewName) window.location.hash = viewName;
+                try { updateDataStatusBadge(); } catch (e) {}
+                try { syncStickyBarHeight(); } catch (e) {}
+            }
+            updateViewTabs(viewName);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function updateViewTabs(viewName) {
+            document.querySelectorAll('#viewTabGroups button[data-view]').forEach(btn => {
+                const active = btn.dataset.view === viewName;
+                btn.className = VIEW_TAB_BASE + (active ? ' is-active' : '');
+            });
+            document.querySelectorAll('.view-tab-group').forEach(g => {
+                g.classList.toggle('has-active', g.dataset.group === viewGroupOf(viewName));
+            });
+            document.querySelectorAll('#mobileDrawer button[data-view]').forEach(btn => {
+                const v = btn.dataset.view;
+                const active = v === viewName;
+                btn.className = DRAWER_TAB_BASE + ' ' + (active
+                    ? GROUP_ACCENT_BG[viewGroupOf(v)] + ' text-white shadow'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white');
+            });
+        }
+
+
+        // ---------- Upload routing ----------
+        // Header "Sync / Upload" + profile-menu upload: send the file to whichever group is active.
+        function handleActiveGroupUpload(e) {
+            if (ACTIVE_GROUP === 'case') return handleMultipleCSVUpload(e);
+            return handleGroupUpload(ACTIVE_GROUP, e);
+        }
+
+        function handleGroupUpload(group, e) {
+            const g = DATA_GROUPS[group];
+            const files = Array.from(e.target.files || []).filter(f => /\.csv$/i.test(f.name));
+            e.target.value = '';
+            if (!files.length) return;
+            let done = 0, rowsAdded = 0;
+            files.forEach(file => {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: 'greedy',
+                    transformHeader: h => String(h || '').replace(/^﻿/, '').trim(),
+                    complete: res => {
+                        const columns = (res.meta.fields || []).filter(c => c !== '');
+                        const rows = res.data.map(r => { r.__file = file.name; return r; });
+                        g.files.set(file.name, { rows, columns });
+                        rowsAdded += rows.length;
+                        if (++done === files.length) {
+                            renderGroup(group);
+                            try { updateDataStatusBadge(); } catch (err) {}
+                            try { showToastNotification(`${g.label}: imported ${files.length} file(s), ${rowsAdded.toLocaleString()} records`); } catch (err) {}
+                        }
+                    },
+                    error: err => {
+                        console.error(err);
+                        if (++done === files.length) renderGroup(group);
+                    }
+                });
+            });
+        }
+
+        function removeGroupFile(group, name) {
+            DATA_GROUPS[group].files.delete(name);
+            renderGroup(group);
+            try { updateDataStatusBadge(); } catch (e) {}
+        }
+
+        function clearGroupData(group) {
+            const g = DATA_GROUPS[group];
+            if (!g.files.size || !confirm(`Remove all ${g.label} files?`)) return;
+            g.files.clear();
+            g.search = ''; g.compareCol = null;
+            renderGroup(group);
+            try { updateDataStatusBadge(); } catch (e) {}
+        }
+
+        // ---------- Data helpers ----------
+        function dsEsc(v) {
+            return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function groupRows(g) { const out = []; g.files.forEach(f => { for (const r of f.rows) out.push(r); }); return out; }
+        function groupColumns(g) { const set = new Set(); g.files.forEach(f => f.columns.forEach(c => set.add(c))); return Array.from(set); }
+        function parseLooseDate(v) {
+            const s = String(v || '').trim();
+            let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+            if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+            m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+            if (m) { let y = +m[3]; if (y > 2400) y -= 543; return new Date(y, +m[2] - 1, +m[1]); } // dd/mm/yyyy (Thai BE aware)
+            return null;
+        }
+        function fmtDate(d) { return d ? d.toISOString().slice(0, 10) : '—'; }
+
+        function profileColumns(rows, columns) {
+            return columns.map(col => {
+                let filled = 0, nums = 0, dates = 0, minD = null, maxD = null;
+                const counts = new Map();
+                for (const r of rows) {
+                    const v = r[col];
+                    if (v === undefined || v === null || String(v).trim() === '') continue;
+                    filled++;
+                    const s = String(v).trim();
+                    if (counts.size < 5000 || counts.has(s)) counts.set(s, (counts.get(s) || 0) + 1);
+                    if (s !== '' && !isNaN(Number(s.replace(/,/g, '')))) nums++;
+                    const d = parseLooseDate(s);
+                    if (d && !isNaN(d)) { dates++; if (!minD || d < minD) minD = d; if (!maxD || d > maxD) maxD = d; }
+                }
+                let type = 'text';
+                if (filled && dates / filled >= 0.9) type = 'date';
+                else if (filled && nums / filled >= 0.9) type = 'number';
+                const distinct = counts.size;
+                const top = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+                return { col, filled, fillPct: rows.length ? filled / rows.length : 0, distinct, type, top, minD, maxD };
+            });
+        }
+        function categoricalCols(profile) {
+            return profile.filter(p => p.type === 'text' && p.distinct >= 2 && p.distinct <= 40 && p.fillPct >= 0.3)
+                .sort((a, b) => b.fillPct - a.fillPct || a.distinct - b.distinct);
+        }
+
+        // ---------- Rendering ----------
+        function renderGroup(group) {
+            const g = DATA_GROUPS[group];
+            const empty = document.getElementById(group + 'Empty');
+            const active = document.getElementById(group + 'Active');
+            const hasData = g.files.size > 0;
+            empty?.classList.toggle('hidden', hasData);
+            active?.classList.toggle('hidden', !hasData);
+            if (!hasData) { if (typeof lucide !== 'undefined') lucide.createIcons(); return; }
+
+            document.getElementById(group + 'FileChips').innerHTML = Array.from(g.files.entries()).map(([name, f]) => `
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-200">
+                    <i data-lucide="file-spreadsheet" class="w-3 h-3 text-${g.accent}-400"></i>${dsEsc(name)}
+                    <span class="text-slate-500 font-mono text-[10px]">(${f.rows.length.toLocaleString()})</span>
+                    <button type="button" class="text-slate-500 hover:text-rose-400" title="Remove" onclick="removeGroupFile('${group}', decodeURIComponent('${encodeURIComponent(name)}'))"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </span>`).join('');
+
+            const rows = groupRows(g), columns = groupColumns(g);
+            const profile = profileColumns(rows, columns);
+            const panel = document.getElementById(group + 'Panel');
+            panel.innerHTML = (g.view === 'compare' ? renderGroupCompare(group, g, rows, columns, profile)
+                                                    : renderGroupDashboard(group, g, rows, columns, profile));
+            if (g.view !== 'compare') renderGroupPreviewTable(group);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function kpiCard(label, value, sub, color) {
+            return `<div class="glass-card p-3">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${label}</div>
+                <div class="text-xl font-black tracking-tight mt-1" style="color:${color}">${value}</div>
+                <div class="text-[10px] font-semibold text-slate-400 mt-0.5">${sub}</div></div>`;
+        }
+        function starterNotice(g) {
+            return `<div class="text-[11px] text-slate-400 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5 text-${g.accent}-400"></i>
+                Starter view: generic profile of the uploaded ${g.label} data. Dedicated ${g.label} KPIs &amp; charts will be added once the column layout is confirmed.</div>`;
+        }
+
+        function renderGroupDashboard(group, g, rows, columns, profile) {
+            const totalCells = rows.length * columns.length || 1;
+            const filledCells = profile.reduce((s, p) => s + p.filled, 0);
+            const dateCol = profile.find(p => p.type === 'date');
+            const cats = categoricalCols(profile).slice(0, 4);
+
+            const kpis = `<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+                ${kpiCard('Total Records', rows.length.toLocaleString(), `${g.files.size} file(s)`, g.color)}
+                ${kpiCard('Columns', columns.length, `${profile.filter(p => p.fillPct > 0).length} with data`, '#818cf8')}
+                ${kpiCard('Completeness', (filledCells / totalCells * 100).toFixed(1) + '%', 'non-empty cells', '#34d399')}
+                ${kpiCard('Date Range', dateCol ? fmtDate(dateCol.minD) : '—', dateCol ? `to ${fmtDate(dateCol.maxD)} · ${dsEsc(dateCol.col)}` : 'no date column detected', '#38bdf8')}
+                ${kpiCard('Categorical Fields', categoricalCols(profile).length, 'auto-detected (2–40 values)', '#f472b6')}
+            </div>`;
+
+            const topCards = cats.length ? `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">${cats.map(p => {
+                const max = p.top[0]?.[1] || 1;
+                return `<div class="glass-card p-3">
+                    <div class="text-xs font-bold text-white mb-2 truncate" title="${dsEsc(p.col)}">${dsEsc(p.col)}</div>
+                    <div class="space-y-1.5">${p.top.slice(0, 8).map(([v, n]) => `
+                        <div><div class="flex justify-between text-[11px] text-slate-300 gap-2"><span class="truncate" title="${dsEsc(v)}">${dsEsc(v)}</span><span class="font-mono text-slate-400 shrink-0">${n.toLocaleString()} · ${(n / rows.length * 100).toFixed(1)}%</span></div>
+                        <div class="ds-bar mt-0.5"><span style="width:${(n / max * 100).toFixed(1)}%;background:${g.color}"></span></div></div>`).join('')}
+                    </div></div>`;
+            }).join('')}</div>` : '';
+
+            const profileTable = `<div class="glass-card p-3">
+                <div class="text-sm font-bold text-white mb-2">Column Profile</div>
+                <div class="overflow-auto max-h-80 custom-scrollbar"><table class="ds-table w-full text-xs text-left">
+                    <thead><tr class="text-[10px] uppercase tracking-wider text-slate-400">
+                        <th class="py-2 px-2">Column</th><th class="py-2 px-2">Type</th><th class="py-2 px-2">Filled</th><th class="py-2 px-2">Distinct</th><th class="py-2 px-2">Most common</th></tr></thead>
+                    <tbody class="divide-y divide-slate-800/60">${profile.map(p => `
+                        <tr class="text-slate-300"><td class="py-1.5 px-2 font-semibold text-white">${dsEsc(p.col)}</td>
+                        <td class="py-1.5 px-2">${p.type}</td>
+                        <td class="py-1.5 px-2 w-40"><div class="flex items-center gap-2"><div class="ds-bar flex-1"><span style="width:${(p.fillPct * 100).toFixed(1)}%;background:#34d399"></span></div><span class="font-mono text-[10px] w-11 text-right">${(p.fillPct * 100).toFixed(0)}%</span></div></td>
+                        <td class="py-1.5 px-2 font-mono">${p.distinct >= 5000 ? '5000+' : p.distinct.toLocaleString()}</td>
+                        <td class="py-1.5 px-2 truncate max-w-xs" title="${dsEsc(p.top[0]?.[0])}">${dsEsc(p.top[0]?.[0] ?? '—')}</td></tr>`).join('')}
+                    </tbody></table></div></div>`;
+
+            const preview = `<div class="glass-card p-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div class="text-sm font-bold text-white">Records <span id="${group}PreviewCount" class="text-[11px] font-normal text-slate-400"></span></div>
+                    <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 w-64 max-w-full">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 mr-1.5"></i>
+                        <input type="text" placeholder="Search all columns..." value="${dsEsc(g.search)}" oninput="DATA_GROUPS['${group}'].search=this.value; renderGroupPreviewTable('${group}')" class="bg-transparent text-xs text-slate-200 focus:outline-none w-full">
+                    </div>
+                </div>
+                <div id="${group}PreviewTable" class="overflow-auto max-h-[480px] custom-scrollbar"></div></div>`;
+
+            return `<div class="space-y-4">${starterNotice(g)}${kpis}${topCards}${profileTable}${preview}</div>`;
+        }
+
+        function renderGroupPreviewTable(group) {
+            const g = DATA_GROUPS[group];
+            const host = document.getElementById(group + 'PreviewTable');
+            if (!host) return;
+            const rows = groupRows(g), columns = groupColumns(g);
+            const q = g.search.trim().toLowerCase();
+            const matched = q ? rows.filter(r => columns.some(c => String(r[c] ?? '').toLowerCase().includes(q))) : rows;
+            const LIMIT = 200;
+            const cnt = document.getElementById(group + 'PreviewCount');
+            if (cnt) cnt.textContent = `(${matched.length.toLocaleString()} match${matched.length === 1 ? '' : 'es'}${matched.length > LIMIT ? `, showing first ${LIMIT}` : ''})`;
+            host.innerHTML = `<table class="ds-table w-full text-xs text-left whitespace-nowrap">
+                <thead><tr class="text-[10px] uppercase tracking-wider text-slate-400">${columns.map(c => `<th class="py-2 px-2">${dsEsc(c)}</th>`).join('')}</tr></thead>
+                <tbody class="divide-y divide-slate-800/60">${matched.slice(0, LIMIT).map(r => `<tr class="text-slate-300">${columns.map(c => `<td class="py-1 px-2 max-w-[260px] truncate" title="${dsEsc(r[c])}">${dsEsc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+        }
+
+        function renderGroupCompare(group, g, rows, columns, profile) {
+            const fileStats = Array.from(g.files.entries()).map(([name, f]) => {
+                const p = profileColumns(f.rows, f.columns);
+                const cells = f.rows.length * f.columns.length || 1;
+                const filled = p.reduce((s, x) => s + x.filled, 0);
+                const dc = p.find(x => x.type === 'date');
+                return { name, rows: f.rows, count: f.rows.length, cols: f.columns.length, comp: filled / cells, dc };
+            });
+            const maxCount = Math.max(...fileStats.map(f => f.count), 1);
+            const summary = `<div class="glass-card p-3">
+                <div class="text-sm font-bold text-white mb-2">File Comparison</div>
+                <div class="overflow-auto custom-scrollbar"><table class="ds-table w-full text-xs text-left">
+                    <thead><tr class="text-[10px] uppercase tracking-wider text-slate-400"><th class="py-2 px-2">File</th><th class="py-2 px-2">Records</th><th class="py-2 px-2">Columns</th><th class="py-2 px-2">Completeness</th><th class="py-2 px-2">Date range</th></tr></thead>
+                    <tbody class="divide-y divide-slate-800/60">${fileStats.map(f => `<tr class="text-slate-300">
+                        <td class="py-1.5 px-2 font-semibold text-white">${dsEsc(f.name)}</td>
+                        <td class="py-1.5 px-2 w-56"><div class="flex items-center gap-2"><div class="ds-bar flex-1"><span style="width:${(f.count / maxCount * 100).toFixed(1)}%;background:${g.color}"></span></div><span class="font-mono w-16 text-right">${f.count.toLocaleString()}</span></div></td>
+                        <td class="py-1.5 px-2 font-mono">${f.cols}</td>
+                        <td class="py-1.5 px-2 font-mono">${(f.comp * 100).toFixed(1)}%</td>
+                        <td class="py-1.5 px-2">${f.dc ? `${fmtDate(f.dc.minD)} → ${fmtDate(f.dc.maxD)}` : '—'}</td></tr>`).join('')}
+                    </tbody></table></div></div>`;
+
+            const cats = categoricalCols(profile);
+            if (!g.compareCol || !cats.some(c => c.col === g.compareCol)) g.compareCol = cats[0]?.col || null;
+            let breakdown = '';
+            if (g.compareCol) {
+                const col = g.compareCol;
+                const prof = cats.find(c => c.col === col);
+                const values = prof.top.slice(0, 15).map(t => t[0]);
+                const perFile = fileStats.map(f => {
+                    const m = new Map(); for (const r of f.rows) { const v = String(r[col] ?? '').trim(); if (v) m.set(v, (m.get(v) || 0) + 1); }
+                    return m;
+                });
+                breakdown = `<div class="glass-card p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div class="text-sm font-bold text-white">Breakdown by field</div>
+                        <select onchange="DATA_GROUPS['${group}'].compareCol=this.value; renderGroup('${group}')" class="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:outline-none">
+                            ${cats.map(c => `<option value="${dsEsc(c.col)}" ${c.col === col ? 'selected' : ''}>${dsEsc(c.col)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="overflow-auto custom-scrollbar"><table class="ds-table w-full text-xs text-left">
+                        <thead><tr class="text-[10px] uppercase tracking-wider text-slate-400"><th class="py-2 px-2">${dsEsc(col)}</th>${fileStats.map(f => `<th class="py-2 px-2 text-right">${dsEsc(f.name)}</th>`).join('')}</tr></thead>
+                        <tbody class="divide-y divide-slate-800/60">${values.map(v => `<tr class="text-slate-300"><td class="py-1.5 px-2 font-semibold text-white">${dsEsc(v)}</td>${perFile.map((m, i) => {
+                            const n = m.get(v) || 0; const pct = fileStats[i].count ? n / fileStats[i].count * 100 : 0;
+                            return `<td class="py-1.5 px-2 text-right font-mono">${n.toLocaleString()} <span class="text-slate-500">(${pct.toFixed(1)}%)</span></td>`;
+                        }).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+            }
+            const hint = g.files.size < 2 ? `<div class="text-[11px] text-amber-300/90 flex items-center gap-1.5"><i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>Upload two or more ${g.label} files (e.g. different months) to compare them side by side.</div>` : '';
+            return `<div class="space-y-4">${starterNotice(g)}${hint}${summary}${breakdown}</div>`;
+        }
+
+        // ---------- Wrap shared header helpers so they respect the active group ----------
+        window.addEventListener('DOMContentLoaded', () => {
+            const origBadge = window.updateDataStatusBadge;
+            if (typeof origBadge === 'function') {
+                window.updateDataStatusBadge = function () {
+                    if (ACTIVE_GROUP === 'case') return origBadge.apply(this, arguments);
+                    const badge = document.getElementById('dataStatusBadge');
+                    if (!badge) return;
+                    const g = DATA_GROUPS[ACTIVE_GROUP];
+                    const n = groupRows(g).length;
+                    if (g.files.size) {
+                        badge.textContent = `${g.label}: ${g.files.size} FILES (${n.toLocaleString()} RECORDS)`;
+                        badge.className = 'hidden md:inline-flex px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap shrink-0';
+                    } else {
+                        badge.textContent = `${g.label}: READY FOR CSV`;
+                        badge.className = 'hidden md:inline-flex px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap shrink-0';
+                    }
+                };
+            }
+            const origChips = window.renderUploadedFilesChips;
+            if (typeof origChips === 'function') {
+                window.renderUploadedFilesChips = function () {
+                    if (ACTIVE_GROUP !== 'case') { document.getElementById('uploadedFilesBar')?.classList.add('hidden'); return; }
+                    return origChips.apply(this, arguments);
+                };
+            }
+        }, { once: true });
+    </script>
+
 </body>
 </html>
