@@ -135,7 +135,9 @@
         body.light-mode .bg-purple-600 *,
         body.light-mode .bg-sky-600,
         body.light-mode .bg-sky-600 *,
-        body.light-mode [class*="bg-gradient-to"] {
+        body.light-mode button[class*="bg-gradient-to"],
+        body.light-mode a[class*="bg-gradient-to"],
+        body.light-mode .badge-gradient {
             color: #ffffff !important;
         }
 
@@ -317,9 +319,16 @@
 
         /* Executive Briefing Section in Day Mode */
         body.light-mode #execBriefingSection {
-            background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f8fafc 100%) !important;
-            border-color: #c7d2fe !important;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%) !important;
+            border-color: #cbd5e1 !important;
             box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08) !important;
+            color: #0f172a !important;
+        }
+        body.light-mode #execBriefingSection h2 {
+            color: #0f172a !important;
+        }
+        body.light-mode #execBriefingSection .text-indigo-300\/80 {
+            color: #475569 !important;
         }
         body.light-mode .exec-summary-card {
             background-color: #ffffff !important;
@@ -327,22 +336,54 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
         }
         body.light-mode .exec-summary-card .analyst-editable,
-        body.light-mode .analyst-editable {
-            color: #0f172a !important;
+        body.light-mode .analyst-editable,
+        body.light-mode #dynInsightVolume,
+        body.light-mode #dynInsightFA,
+        body.light-mode #dynInsightSLA,
+        body.light-mode #dynInsightPending {
+            color: #1e293b !important;
         }
         body.light-mode .exec-summary-card .analyst-editable strong,
-        body.light-mode .analyst-editable strong {
-            font-weight: 800;
+        body.light-mode .analyst-editable strong,
+        body.light-mode #dynInsightVolume strong,
+        body.light-mode #dynInsightFA strong,
+        body.light-mode #dynInsightSLA strong,
+        body.light-mode #dynInsightPending strong {
+            font-weight: 800 !important;
+        }
+        body.light-mode #dynInsightVolume .text-indigo-400,
+        body.light-mode #dynInsightVolume .text-indigo-300 {
+            color: #3730a3 !important;
+        }
+        body.light-mode #dynInsightFA .text-amber-400,
+        body.light-mode #dynInsightFA .text-amber-300 {
+            color: #92400e !important;
+        }
+        body.light-mode #dynInsightSLA .text-sky-400,
+        body.light-mode #dynInsightSLA .text-sky-300 {
+            color: #0369a1 !important;
+        }
+        body.light-mode #dynInsightPending .text-rose-400,
+        body.light-mode #dynInsightPending .text-rose-300 {
+            color: #9f1239 !important;
         }
         body.light-mode .exec-section-card {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
         }
+        body.light-mode #analystSection1,
+        body.light-mode #analystSection2 {
+            color: #0f172a !important;
+        }
         body.light-mode .exec-subbox {
             background-color: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #cbd5e1 !important;
             color: #0f172a !important;
+        }
+        body.light-mode .exec-subbox .text-white {
+            color: #0f172a !important;
+            font-weight: 700 !important;
         }
         body.light-mode .exec-subbox .text-slate-300,
         body.light-mode .exec-subbox .text-slate-200 {
@@ -351,6 +392,14 @@
         body.light-mode .exec-subbox .bg-slate-800\/40 {
             background-color: #f1f5f9 !important;
             border: 1px solid #e2e8f0 !important;
+        }
+        body.light-mode .exec-subbox .text-indigo-400 {
+            color: #3730a3 !important;
+            font-weight: 700 !important;
+        }
+        body.light-mode .exec-subbox .text-rose-400 {
+            color: #9f1239 !important;
+            font-weight: 700 !important;
         }
 
         /* Inputs, Selects, Buttons in Day Mode */
@@ -745,6 +794,124 @@
         body.light-mode #compareDashboardContent td {
             color: #1e293b !important;
             border-color: #e2e8f0 !important;
+        }
+
+        /* Summary Breakdown Cards & Boxes in Day Mode */
+        body.light-mode #shiftSummaryList > div,
+        body.light-mode #trueEventSummaryList > div,
+        body.light-mode #falseEventSummaryList > div,
+        body.light-mode #recurringSummaryList > div {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        }
+        body.light-mode #shiftSummaryList > div:hover,
+        body.light-mode #trueEventSummaryList > div:hover,
+        body.light-mode #falseEventSummaryList > div:hover,
+        body.light-mode #recurringSummaryList > div:hover {
+            background-color: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+        }
+        body.light-mode #shiftSummaryList .text-white,
+        body.light-mode #trueEventSummaryList .text-white,
+        body.light-mode #falseEventSummaryList .text-white,
+        body.light-mode #recurringSummaryList .text-white {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        body.light-mode #shiftSummaryList .bg-slate-700\/60,
+        body.light-mode #trueEventSummaryList .bg-slate-700\/60,
+        body.light-mode #falseEventSummaryList .bg-slate-700\/60,
+        body.light-mode #recurringSummaryList .bg-slate-700\/60 {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        body.light-mode #shiftSummaryList .bg-slate-800\/50,
+        body.light-mode #trueEventSummaryList .bg-slate-800\/50,
+        body.light-mode #falseEventSummaryList .bg-slate-800\/50,
+        body.light-mode #recurringSummaryList .bg-slate-800\/50 {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode #shiftSummaryList .border-slate-700\/60,
+        body.light-mode #trueEventSummaryList .border-slate-700\/60,
+        body.light-mode #falseEventSummaryList .border-slate-700\/60,
+        body.light-mode #recurringSummaryList .border-slate-700\/60 {
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode #shiftSummaryList .text-slate-300,
+        body.light-mode #trueEventSummaryList .text-slate-300,
+        body.light-mode #falseEventSummaryList .text-slate-300,
+        body.light-mode #recurringSummaryList .text-slate-300 {
+            color: #1e293b !important;
+        }
+        body.light-mode .bg-emerald-500\/15,
+        body.light-mode .bg-emerald-500\/20 {
+            background-color: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+            color: #065f46 !important;
+        }
+        body.light-mode .bg-amber-500\/15,
+        body.light-mode .bg-amber-500\/20 {
+            background-color: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #92400e !important;
+        }
+        body.light-mode .bg-rose-500\/15,
+        body.light-mode .bg-rose-500\/20 {
+            background-color: #fff1f2 !important;
+            border-color: #fecdd3 !important;
+            color: #9f1239 !important;
+        }
+        body.light-mode .bg-indigo-500\/15,
+        body.light-mode .bg-indigo-500\/20 {
+            background-color: #eef2ff !important;
+            border-color: #c7d2fe !important;
+            color: #3730a3 !important;
+        }
+        body.light-mode #newEventTableBody tr,
+        body.light-mode #pendingTableBody tr {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        body.light-mode #newEventTableBody tr:hover,
+        body.light-mode #pendingTableBody tr:hover {
+            background-color: #f8fafc !important;
+        }
+        body.light-mode #newEventTableBody td,
+        body.light-mode #pendingTableBody td {
+            color: #1e293b !important;
+        }
+        body.light-mode #newEventTableBody .text-slate-400,
+        body.light-mode #pendingTableBody .text-slate-400 {
+            color: #475569 !important;
+        }
+        body.light-mode #newEventTableBody .text-slate-300,
+        body.light-mode #pendingTableBody .text-slate-300 {
+            color: #1e293b !important;
+        }
+        body.light-mode #highlightCasesContainer > div {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode #highlightCasesContainer .text-white {
+            color: #0f172a !important;
+        }
+        body.light-mode #highlightCasesContainer .text-slate-300,
+        body.light-mode #highlightCasesContainer .text-slate-400 {
+            color: #334155 !important;
+        }
+        body.light-mode .deep-dive-card {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode .deep-dive-card .text-white {
+            color: #0f172a !important;
+        }
+        body.light-mode .deep-dive-card .text-slate-300,
+        body.light-mode .deep-dive-card .text-slate-400 {
+            color: #334155 !important;
         }
 
         @media print {
@@ -4826,67 +4993,528 @@
             html2pdf().set(opt).from(element).save();
         }
 
+        // ========================================================
+        // FRASERS PROPERTY PPTX EXPORT ENGINE (16:9 Widescreen)
+        // Corporate Template Parity Matching PDF Pagination
+        // ========================================================
+        const FRASERS_LOGO_BASE64 = "data:image/png;base64,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";
+        const FRASERS_RED = "ED1C24";
+        const FRASERS_DARK = "1A1A1A";
+        const FRASERS_SLATE = "475569";
+        const FRASERS_LIGHT_BG = "F8FAFC";
+        const FRASERS_BORDER = "E2E8F0";
+
+        function getFrasersDateFormatted() {
+            const d = new Date();
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = String(d.getFullYear()).slice(-2);
+            return {
+                titleDate: `${dd} ${mm}  ${yy}`,
+                reportDate: `${dd}/${mm}/${d.getFullYear()}`
+            };
+        }
+
+        function captureCanvasImage(canvasId, bgColor = '#ffffff') {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || canvas.width === 0 || canvas.height === 0) return null;
+            try {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = canvas.width;
+                offCanvas.height = canvas.height;
+                const ctx = offCanvas.getContext('2d');
+                if (bgColor) {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+                }
+                ctx.drawImage(canvas, 0, 0);
+                return offCanvas.toDataURL('image/png');
+            } catch (e) {
+                try {
+                    return canvas.toDataURL('image/png');
+                } catch (err) {
+                    console.warn('Canvas capture fallback failed for ' + canvasId, err);
+                    return null;
+                }
+            }
+        }
+
+        function applyFrasersSlideHeaderFooter(slide, pptx, subjectTitle, slideNum, totalSlides, reportDateStr) {
+            slide.background = { color: 'FFFFFF' };
+
+            // Subject Header Title (matching "Subject" in Frasers corporate template)
+            slide.addText(subjectTitle, {
+                x: 0.5, y: 0.28, w: 10.0, h: 0.45,
+                fontSize: 18, bold: true, color: FRASERS_DARK, fontFace: 'Segoe UI'
+            });
+
+            // Header Frasers Logo (top-right, same as slide 2 & 3 in template)
+            try {
+                slide.addImage({
+                    data: FRASERS_LOGO_BASE64,
+                    x: 10.8, y: 0.30, w: 2.0, h: 0.24
+                });
+            } catch (e) {}
+
+            // Frasers Red Accent Divider Line under Header
+            slide.addShape(pptx.ShapeType.rect, {
+                x: 0.5, y: 0.78, w: 12.33, h: 0.025,
+                fill: { color: FRASERS_RED }, line: { color: FRASERS_RED }
+            });
+
+            // Footer Left: "We are Frasers Property | <date>" (from corporate slide master)
+            slide.addText(`We are Frasers Property  |  ${reportDateStr}`, {
+                x: 0.5, y: 7.05, w: 8.0, h: 0.3,
+                fontSize: 8.5, color: '888888', fontFace: 'Segoe UI'
+            });
+
+            // Footer Right: Slide Number
+            slide.addText(`${slideNum} / ${totalSlides}`, {
+                x: 11.5, y: 7.05, w: 1.33, h: 0.3,
+                fontSize: 8.5, color: '888888', fontFace: 'Segoe UI', align: 'right'
+            });
+        }
+
+        function createFrasersCoverSlide(pptx, mainTitle, subtitle, metaRows, reportDateStr) {
+            const slide = pptx.addSlide();
+            slide.background = { color: 'FFFFFF' };
+
+            // Red top banner bar
+            slide.addShape(pptx.ShapeType.rect, {
+                x: 0, y: 0, w: 13.33, h: 0.12,
+                fill: { color: FRASERS_RED }, line: { color: FRASERS_RED }
+            });
+
+            // Title format: "Daily Report  dd mm  yy" from template
+            const dateObj = getFrasersDateFormatted();
+            const coverDailyTitle = `Daily Report  ${dateObj.titleDate}`;
+
+            slide.addText(coverDailyTitle, {
+                x: 0.8, y: 0.65, w: 11.5, h: 0.9,
+                fontSize: 34, bold: true, color: FRASERS_DARK, fontFace: 'Segoe UI'
+            });
+
+            // Red accent line under title
+            slide.addShape(pptx.ShapeType.rect, {
+                x: 0.8, y: 1.58, w: 2.2, h: 0.04,
+                fill: { color: FRASERS_RED }, line: { color: FRASERS_RED }
+            });
+
+            // Subtitle & Project
+            slide.addText(mainTitle || `${CURRENT_PROJECT_NAME} Operations Command Centre`, {
+                x: 0.8, y: 1.78, w: 11.5, h: 0.45,
+                fontSize: 20, bold: true, color: FRASERS_RED, fontFace: 'Segoe UI'
+            });
+
+            slide.addText(subtitle || "Executive Operational Telemetry & Multi-Dimensional Intelligence Briefing", {
+                x: 0.8, y: 2.28, w: 11.5, h: 0.38,
+                fontSize: 13, color: FRASERS_SLATE, fontFace: 'Segoe UI'
+            });
+
+            // Metadata / Scope Box
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x: 0.8, y: 2.85, w: 11.7, h: 3.55,
+                fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+
+            slide.addText("Executive Briefing Scope & Operational Baseline", {
+                x: 1.1, y: 3.08, w: 11.0, h: 0.35,
+                fontSize: 13, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+
+            // Metadata rows
+            metaRows.forEach((item, idx) => {
+                const y = 3.58 + (idx * 0.44);
+                slide.addText(`•  ${item.label}:`, {
+                    x: 1.2, y: y, w: 3.2, h: 0.35,
+                    fontSize: 11, bold: true, color: '475569', fontFace: 'Segoe UI'
+                });
+                slide.addText(String(item.value), {
+                    x: 4.4, y: y, w: 7.7, h: 0.35,
+                    fontSize: 11, bold: true, color: item.color || FRASERS_DARK, fontFace: 'Segoe UI'
+                });
+            });
+
+            // Bottom Notice
+            slide.addText(`Generated by DCC Intelligent Telemetry Engine  |  Report Date: ${reportDateStr}`, {
+                x: 1.1, y: 5.92, w: 11.0, h: 0.3,
+                fontSize: 9.5, italic: true, color: '94A3B8', fontFace: 'Segoe UI'
+            });
+
+            // Frasers Logo at bottom-right (same as Slide 1 in corporate template)
+            try {
+                slide.addImage({
+                    data: FRASERS_LOGO_BASE64,
+                    x: 10.5, y: 6.75, w: 2.2, h: 0.28
+                });
+            } catch (e) {}
+
+            // Left footer brand
+            slide.addText("We are Frasers Property", {
+                x: 0.8, y: 6.85, w: 5.0, h: 0.3,
+                fontSize: 9, color: '888888', fontFace: 'Segoe UI'
+            });
+        }
+
+        // ========================================================
+        // DASHBOARD VIEW PPTX EXPORT (6 Well-Paginated Slides)
+        // ========================================================
         function exportToPPTX() {
+            if (typeof PptxGenJS === 'undefined') {
+                alert('PowerPoint library is initializing. Please try again.');
+                return;
+            }
             const pptx = new PptxGenJS();
             pptx.layout = 'LAYOUT_16x9';
 
-            const isLight = document.body.classList.contains('light-mode');
-            const bgColor = isLight ? 'ffffff' : '0b1120';
-            const titleColor = isLight ? '0f172a' : 'ffffff';
-            const cardColor = isLight ? 'f1f5f9' : '1e293b';
+            const TOTAL_SLIDES = 6;
+            const dateObj = getFrasersDateFormatted();
+            const reportDateStr = dateObj.reportDate;
 
-            const slideCover = pptx.addSlide();
-            slideCover.background = { color: bgColor };
-            slideCover.addText(`${CURRENT_PROJECT_NAME} COMMAND CENTER`, {
-                x: 0.8, y: 2.0, w: 11.5, fontSize: 32, bold: true, color: titleColor
-            });
-            slideCover.addText('Executive Operational Intelligence & Dynamic Telemetry Report 2026', {
-                x: 0.8, y: 2.8, w: 11.5, fontSize: 16, color: '6366f1'
-            });
-            slideCover.addText(`Total Active Records: ${document.getElementById('kpiTotal').textContent} | Generated on ${new Date().toLocaleDateString()}`, {
-                x: 0.8, y: 5.6, w: 11.5, fontSize: 11, color: '94a3b8'
-            });
+            const totalCount = document.getElementById('kpiTotal')?.textContent || '0';
+            const faRate = document.getElementById('kpiFARate')?.textContent || '0%';
+            const faCount = document.getElementById('kpiFACount')?.textContent || '0';
+            const compSLA = document.getElementById('kpiCompSLA')?.textContent || '0%';
+            const respSLA = document.getElementById('kpiRespSLA')?.textContent || '0%';
+            const mttr = document.getElementById('kpiMTTR')?.textContent || '0 hrs';
+            const pendingCount = document.getElementById('kpiPending')?.textContent || '0';
 
-            const slideKPI = pptx.addSlide();
-            slideKPI.background = { color: bgColor };
-            slideKPI.addText('Executive Operational Performance & SLA Overview', {
-                x: 0.6, y: 0.4, fontSize: 20, bold: true, color: titleColor
-            });
+            // ----------------------------------------------------
+            // SLIDE 1: Cover Slide
+            // ----------------------------------------------------
+            const coverMeta = [
+                { label: "Target Project / Facility", value: `${CURRENT_PROJECT_NAME} Operations Command Centre`, color: FRASERS_RED },
+                { label: "Total Filtered Records", value: `${totalCount} incident events`, color: '1E293B' },
+                { label: "False Alarm Overhead", value: `${faRate} (${faCount})`, color: 'D97706' },
+                { label: "Completion SLA Compliance", value: compSLA, color: '059669' },
+                { label: "Response SLA Compliance", value: respSLA, color: '0284C7' },
+                { label: "Unresolved Active Backlog", value: `${pendingCount} cases`, color: 'E11D48' }
+            ];
+            createFrasersCoverSlide(pptx, `${CURRENT_PROJECT_NAME} COMMAND CENTER`, "Executive Operational Telemetry & Dynamic Intelligence Briefing", coverMeta, reportDateStr);
 
-            const kpis = [
-                { label: 'Total Records', val: document.getElementById('kpiTotal').textContent, color: '818cf8' },
-                { label: 'False Alarm Rate', val: document.getElementById('kpiFARate').textContent, color: 'fbbf24' },
-                { label: 'Completion SLA', val: document.getElementById('kpiCompSLA').textContent, color: '34d399' },
-                { label: 'Response SLA', val: document.getElementById('kpiRespSLA').textContent, color: '38bdf8' },
-                { label: 'Mean TTR', val: document.getElementById('kpiMTTR').textContent, color: 'c084fc' },
-                { label: 'Pending Tasks', val: document.getElementById('kpiPending').textContent, color: 'fb7185' }
+            // ----------------------------------------------------
+            // SLIDE 2: Executive Overview - KPIs & Telemetry Briefing
+            // ----------------------------------------------------
+            const slide2 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide2, pptx, "Executive Operational Performance & SLA Overview", 2, TOTAL_SLIDES, reportDateStr);
+
+            // 6 KPI Scorecards Row
+            const kpiItems = [
+                { label: "TOTAL RECORDS", val: totalCount, sub: "100% Filtered", color: "3730A3" },
+                { label: "FALSE ALARM RATE", val: faRate, sub: faCount, color: "D97706" },
+                { label: "COMPLETION SLA", val: compSLA, sub: "Closed Target", color: "059669" },
+                { label: "RESPONSE SLA", val: respSLA, sub: "Initial Triage", color: "0284C7" },
+                { label: "MEAN TTR", val: mttr, sub: "Resolution Time", color: "7C3AED" },
+                { label: "PENDING TASKS", val: pendingCount, sub: "Active Queue", color: "E11D48" }
             ];
 
-            kpis.forEach((k, idx) => {
-                const xPos = 0.6 + (idx * 2.0);
-                slideKPI.addShape(pptx.ShapeType.roundRect, { x: xPos, y: 1.0, w: 1.85, h: 1.15, fill: { color: cardColor }, line: { color: '334155' } });
-                slideKPI.addText(k.label, { x: xPos, y: 1.1, w: 1.85, fontSize: 9, bold: true, color: '94a3b8', align: 'center' });
-                slideKPI.addText(k.val, { x: xPos, y: 1.5, w: 1.85, fontSize: 16, bold: true, color: k.color, align: 'center' });
+            const cardW = 1.92;
+            const gapX = 0.16;
+            kpiItems.forEach((k, idx) => {
+                const posX = 0.5 + idx * (cardW + gapX);
+                slide2.addShape(pptx.ShapeType.roundRect, {
+                    x: posX, y: 1.05, w: cardW, h: 1.25,
+                    fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
+                    rectRadius: 0.08
+                });
+                slide2.addText(k.label, {
+                    x: posX, y: 1.15, w: cardW, h: 0.25,
+                    fontSize: 8.5, bold: true, color: '64748B', align: 'center', fontFace: 'Segoe UI'
+                });
+                slide2.addText(k.val, {
+                    x: posX, y: 1.40, w: cardW, h: 0.45,
+                    fontSize: 17, bold: true, color: k.color, align: 'center', fontFace: 'Segoe UI'
+                });
+                slide2.addText(k.sub, {
+                    x: posX, y: 1.88, w: cardW, h: 0.25,
+                    fontSize: 8, color: '94A3B8', align: 'center', fontFace: 'Segoe UI'
+                });
             });
 
-            const note1 = document.getElementById('dynInsightVolume').innerText.replace(/\s+/g, ' ');
-            const note2 = document.getElementById('dynInsightFA').innerText.replace(/\s+/g, ' ');
-            const note3 = document.getElementById('dynInsightSLA').innerText.replace(/\s+/g, ' ');
-            const note4 = document.getElementById('dynInsightPending').innerText.replace(/\s+/g, ' ');
+            // 4 Executive Telemetry Briefing Cards (2x2 Grid)
+            const noteVol = (document.getElementById('dynInsightVolume')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+            const noteFA = (document.getElementById('dynInsightFA')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+            const noteSLA = (document.getElementById('dynInsightSLA')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
+            const notePending = (document.getElementById('dynInsightPending')?.innerText || 'Calculating...').replace(/\s+/g, ' ');
 
-            slideKPI.addShape(pptx.ShapeType.roundRect, { x: 0.6, y: 2.5, w: 12.0, h: 4.4, fill: { color: isLight ? 'f8fafc' : '131d31' }, line: { color: '4f46e5' } });
-            slideKPI.addText('Executive Operational Briefing Insights:', { x: 0.9, y: 2.8, fontSize: 14, bold: true, color: '6366f1' });
-            slideKPI.addText(`• Incident Volume Surge: ${note1}`, { x: 0.9, y: 3.3, w: 11.4, fontSize: 10.5, color: titleColor });
-            slideKPI.addText(`• False Alarm Overhead: ${note2}`, { x: 0.9, y: 4.2, w: 11.4, fontSize: 10.5, color: titleColor });
-            slideKPI.addText(`• SLA Compliance Gap: ${note3}`, { x: 0.9, y: 5.1, w: 11.4, fontSize: 10.5, color: titleColor });
-            slideKPI.addText(`• Unfinished Workload: ${note4}`, { x: 0.9, y: 6.0, w: 11.4, fontSize: 10.5, color: titleColor });
+            const briefingCards = [
+                { title: "Incident Volume Surge Drivers", text: noteVol, borderClr: "C7D2FE", accentClr: "3730A3", x: 0.5, y: 2.50 },
+                { title: "False Alarm Overhead & Tuning Focus", text: noteFA, borderClr: "FDE68A", accentClr: "B45309", x: 6.85, y: 2.50 },
+                { title: "SLA Compliance & Efficiency Gap", text: noteSLA, borderClr: "BAE6FD", accentClr: "0369A1", x: 0.5, y: 4.70 },
+                { title: "Unfinished Workload & Backlog Aging", text: notePending, borderClr: "FECDD3", accentClr: "BE123C", x: 6.85, y: 4.70 }
+            ];
 
-            pptx.writeFile({ fileName: `${CURRENT_PROJECT_NAME}_Executive_Briefing_2026.pptx` });
+            briefingCards.forEach(b => {
+                slide2.addShape(pptx.ShapeType.roundRect, {
+                    x: b.x, y: b.y, w: 5.95, h: 2.05,
+                    fill: { color: 'FFFFFF' }, line: { color: b.borderClr, width: 1.5 },
+                    rectRadius: 0.08
+                });
+                slide2.addText(b.title, {
+                    x: b.x + 0.2, y: b.y + 0.15, w: 5.55, h: 0.35,
+                    fontSize: 11.5, bold: true, color: b.accentClr, fontFace: 'Segoe UI'
+                });
+                slide2.addText(b.text, {
+                    x: b.x + 0.2, y: b.y + 0.52, w: 5.55, h: 1.40,
+                    fontSize: 9.5, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 13
+                });
+            });
+
+            // ----------------------------------------------------
+            // SLIDE 3: Top 3 Incidents & Top 3 Recurring Hotspots
+            // ----------------------------------------------------
+            const slide3 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide3, pptx, "Top 3 Incident Types & Top 3 Recurring Hotspots Telemetry", 3, TOTAL_SLIDES, reportDateStr);
+
+            // Compute Top 3 Events & Top 3 Hotspots
+            const evCounts = {};
+            const locCounts = {};
+            FILTERED_DATA.forEach(d => {
+                evCounts[d.eventType] = (evCounts[d.eventType] || 0) + 1;
+                locCounts[d.location] = (locCounts[d.location] || 0) + 1;
+            });
+            const top3Ev = Object.entries(evCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+            const top3Loc = Object.entries(locCounts).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+            // Left Section: Top 3 Incidents
+            slide3.addShape(pptx.ShapeType.roundRect, {
+                x: 0.5, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'C7D2FE', width: 1.2 },
+                rectRadius: 0.08
+            });
+            slide3.addText("Top 3 Incident Types & Frequent Locations", {
+                x: 0.7, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12.5, bold: true, color: '3730A3', fontFace: 'Segoe UI'
+            });
+
+            top3Ev.forEach(([evName, count], idx) => {
+                const evRecords = FILTERED_DATA.filter(d => d.eventType === evName);
+                const evTrue = evRecords.filter(d => d.isFalseAlarm === 'No').length;
+                const evFalse = evRecords.filter(d => d.isFalseAlarm === 'Yes').length;
+                const locSub = {};
+                evRecords.forEach(d => { locSub[d.location] = (locSub[d.location] || 0) + 1; });
+                const topLocs = Object.entries(locSub).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+                const boxY = 1.65 + idx * 1.65;
+                slide3.addShape(pptx.ShapeType.roundRect, {
+                    x: 0.7, y: boxY, w: 5.55, h: 1.50,
+                    fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
+                    rectRadius: 0.06
+                });
+                slide3.addText(`Rank ${idx + 1}: ${evName}`, {
+                    x: 0.85, y: boxY + 0.10, w: 3.5, h: 0.30,
+                    fontSize: 10.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
+                });
+                slide3.addText(`Total: ${count}  |  True: ${evTrue}  |  False: ${evFalse}`, {
+                    x: 2.8, y: boxY + 0.10, w: 3.3, h: 0.30,
+                    fontSize: 8.5, bold: true, color: '475569', align: 'right', fontFace: 'Segoe UI'
+                });
+
+                const locText = topLocs.map(([lName, lCount], lIdx) => {
+                    const lRecords = evRecords.filter(d => d.location === lName);
+                    const lTrue = lRecords.filter(d => d.isFalseAlarm === 'No').length;
+                    const lFalse = lRecords.filter(d => d.isFalseAlarm === 'Yes').length;
+                    return `#${lIdx + 1} ${lName}: ${lCount} cases (True: ${lTrue}, False: ${lFalse})`;
+                }).join('\n');
+                slide3.addText(locText || 'No specific location breakdown recorded.', {
+                    x: 0.85, y: boxY + 0.45, w: 5.25, h: 0.95,
+                    fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 12
+                });
+            });
+
+            // Right Section: Top 3 Hotspots
+            slide3.addShape(pptx.ShapeType.roundRect, {
+                x: 6.85, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'FECDD3', width: 1.2 },
+                rectRadius: 0.08
+            });
+            slide3.addText("Top 3 Recurring Hotspots & Frequent Event Types", {
+                x: 7.05, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12.5, bold: true, color: 'BE123C', fontFace: 'Segoe UI'
+            });
+
+            top3Loc.forEach(([locName, count], idx) => {
+                const locRecords = FILTERED_DATA.filter(d => d.location === locName);
+                const locTrue = locRecords.filter(d => d.isFalseAlarm === 'No').length;
+                const locFalse = locRecords.filter(d => d.isFalseAlarm === 'Yes').length;
+                const evSub = {};
+                locRecords.forEach(d => { evSub[d.eventType] = (evSub[d.eventType] || 0) + 1; });
+                const topEvs = Object.entries(evSub).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+                const boxY = 1.65 + idx * 1.65;
+                slide3.addShape(pptx.ShapeType.roundRect, {
+                    x: 7.05, y: boxY, w: 5.55, h: 1.50,
+                    fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
+                    rectRadius: 0.06
+                });
+                slide3.addText(`Rank ${idx + 1}: ${locName}`, {
+                    x: 7.20, y: boxY + 0.10, w: 3.5, h: 0.30,
+                    fontSize: 10.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
+                });
+                slide3.addText(`Total: ${count}  |  True: ${locTrue}  |  False: ${locFalse}`, {
+                    x: 9.15, y: boxY + 0.10, w: 3.3, h: 0.30,
+                    fontSize: 8.5, bold: true, color: '475569', align: 'right', fontFace: 'Segoe UI'
+                });
+
+                const evText = topEvs.map(([eName, eCount], eIdx) => {
+                    const eRecords = locRecords.filter(d => d.eventType === eName);
+                    const eTrue = eRecords.filter(d => d.isFalseAlarm === 'No').length;
+                    const eFalse = eRecords.filter(d => d.isFalseAlarm === 'Yes').length;
+                    return `#${eIdx + 1} ${eName}: ${eCount} cases (True: ${eTrue}, False: ${eFalse})`;
+                }).join('\n');
+                slide3.addText(evText || 'No specific event types recorded.', {
+                    x: 7.20, y: boxY + 0.45, w: 5.25, h: 0.95,
+                    fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 12
+                });
+            });
+
+            // ----------------------------------------------------
+            // SLIDE 4: Operational Trends (Monthly Incidents & SLA)
+            // ----------------------------------------------------
+            const slide4 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide4, pptx, "Incident Volume Trends & SLA Performance Telemetry", 4, TOTAL_SLIDES, reportDateStr);
+
+            const trendImg = captureCanvasImage('trendChart');
+            const slaImg = captureCanvasImage('slaChart');
+
+            // Left: Trend Chart
+            slide4.addShape(pptx.ShapeType.roundRect, {
+                x: 0.5, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+            slide4.addText("Monthly Incident Trend & False Alarms", {
+                x: 0.7, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+            if (trendImg) {
+                slide4.addImage({ data: trendImg, x: 0.65, y: 1.65, w: 5.65, h: 4.95 });
+            } else {
+                slide4.addText("Monthly trend chart data active in interactive view.", {
+                    x: 0.7, y: 3.5, w: 5.55, h: 0.5, fontSize: 11, color: '94A3B8', align: 'center'
+                });
+            }
+
+            // Right: SLA Chart
+            slide4.addShape(pptx.ShapeType.roundRect, {
+                x: 6.85, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+            slide4.addText("SLA Performance Trend (Response vs Completion %)", {
+                x: 7.05, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+            if (slaImg) {
+                slide4.addImage({ data: slaImg, x: 7.0, y: 1.65, w: 5.65, h: 4.95 });
+            } else {
+                slide4.addText("SLA performance trend chart active in interactive view.", {
+                    x: 7.05, y: 3.5, w: 5.55, h: 0.5, fontSize: 11, color: '94A3B8', align: 'center'
+                });
+            }
+
+            // ----------------------------------------------------
+            // SLIDE 5: Workload Distribution & Team Telemetry
+            // ----------------------------------------------------
+            const slide5 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide5, pptx, "Incident Category Distribution & Team Workload Telemetry", 5, TOTAL_SLIDES, reportDateStr);
+
+            const catImg = captureCanvasImage('categoryChart');
+            const teamImg = captureCanvasImage('teamWorkloadChart');
+
+            // Left: Category Distribution
+            slide5.addShape(pptx.ShapeType.roundRect, {
+                x: 0.5, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+            slide5.addText("Incident Category Distribution Breakdown", {
+                x: 0.7, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+            if (catImg) {
+                slide5.addImage({ data: catImg, x: 0.65, y: 1.65, w: 5.65, h: 4.95 });
+            } else {
+                slide5.addText("Category breakdown chart active in interactive view.", {
+                    x: 0.7, y: 3.5, w: 5.55, h: 0.5, fontSize: 11, color: '94A3B8', align: 'center'
+                });
+            }
+
+            // Right: Team Workload
+            slide5.addShape(pptx.ShapeType.roundRect, {
+                x: 6.85, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+            slide5.addText("Team Workload & Handling Capacity", {
+                x: 7.05, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+            if (teamImg) {
+                slide5.addImage({ data: teamImg, x: 7.0, y: 1.65, w: 5.65, h: 4.95 });
+            } else {
+                slide5.addText("Team workload chart active in interactive view.", {
+                    x: 7.05, y: 3.5, w: 5.55, h: 0.5, fontSize: 11, color: '94A3B8', align: 'center'
+                });
+            }
+
+            // ----------------------------------------------------
+            // SLIDE 6: Unresolved Operational Tickets & Critical Backlog
+            // ----------------------------------------------------
+            const slide6 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide6, pptx, "Unresolved Operational Tickets & Critical Backlog Telemetry", 6, TOTAL_SLIDES, reportDateStr);
+
+            const pendingRows = (typeof currentPendingData !== 'undefined' && currentPendingData.length > 0)
+                ? currentPendingData
+                : FILTERED_DATA.filter(d => {
+                    const st = (d.status || '').toLowerCase();
+                    return st.includes('pending') || st.includes('open') || st.includes('in progress');
+                });
+
+            const tableRows = [
+                [
+                    { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Category", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "TTR / Age", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
+                ]
+            ];
+
+            const sliceLimit = Math.min(pendingRows.length, 10);
+            for (let i = 0; i < sliceLimit; i++) {
+                const r = pendingRows[i];
+                const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
+                tableRows.push([
+                    { text: String(r.caseNo || r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                    { text: String(r.dateOnly || r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
+                    { text: String(r.category || r.EventCategory || '-'), options: { color: "1E293B", fill: { color: bg } } },
+                    { text: String(r.eventType || r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
+                    { text: String(r.location || r.Location || '-'), options: { color: "475569", fill: { color: bg } } },
+                    { text: String(r.status || r.Status || 'Pending'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
+                    { text: `${r.ttrHours || '-'} hrs`, options: { bold: true, color: "64748B", fill: { color: bg } } }
+                ]);
+            }
+
+            if (pendingRows.length === 0) {
+                tableRows.push([
+                    { text: "Zero unresolved tickets detected under current active filters.", options: { colspan: 7, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                ]);
+            }
+
+            slide6.addTable(tableRows, {
+                x: 0.5, y: 1.15, w: 12.33,
+                fontSize: 9.5,
+                border: { pt: 0.5, color: "CBD5E1" }
+            });
+
+            // Save Presentation
+            pptx.writeFile({ fileName: `${CURRENT_PROJECT_NAME}_Daily_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
         }
-    
 
-        
-        // ========================================================
         // CROSS-PERIOD & CASE COMPARE ENGINE
         // ========================================================
         const COMPARE_PROJECT_MAPPING = {
@@ -7307,6 +7935,9 @@
             });
         }
 
+        // ========================================================
+        // COMPARE VIEW PPTX EXPORT (6 Well-Paginated Slides)
+        // ========================================================
         function exportCompareToPPTX() {
             if (typeof PptxGenJS === 'undefined') {
                 alert('PowerPoint library is initializing. Please try again.');
@@ -7315,49 +7946,375 @@
             const pptx = new PptxGenJS();
             pptx.layout = 'LAYOUT_16x9';
 
-            let slide1 = pptx.addSlide();
-            slide1.background = { color: '060A14' };
-            slide1.addText("Command Centre Executive Incident Report", { x: 1, y: 2.5, fontSize: 32, color: 'FFFFFF', bold: true });
-            slide1.addText(`Generated on: ${new Date().toLocaleDateString()} | District Command Centre`, { x: 1, y: 3.5, fontSize: 16, color: '818CF8' });
-
-            let slide2 = pptx.addSlide();
-            slide2.background = { color: '0B1120' };
-            slide2.addText("Executive Incident KPI Overview", { x: 0.8, y: 0.6, fontSize: 22, color: 'FFFFFF', bold: true });
+            const TOTAL_SLIDES = 6;
+            const dateObj = getFrasersDateFormatted();
+            const reportDateStr = dateObj.reportDate;
 
             const totalVal = document.getElementById('kpiTotalVal')?.innerText || '-';
             const trueRate = document.getElementById('kpiTrueRateVal')?.innerText || '-';
             const backlog = document.getElementById('kpiBacklogVal')?.innerText || '-';
             const newType = document.getElementById('kpiNewTypeVal')?.innerText || '-';
 
-            slide2.addTable([
-                [
-                    { text: "Total Cases", options: { bold: true, color: "94A3B8" } },
-                    { text: "True Incident Rate", options: { bold: true, color: "34D399" } },
-                    { text: "Backlog / Pending", options: { bold: true, color: "FACC15" } },
-                    { text: "New Event Types", options: { bold: true, color: "38BDF8" } }
-                ],
-                [
-                    { text: totalVal, options: { fontSize: 24, bold: true, color: "FFFFFF" } },
-                    { text: trueRate, options: { fontSize: 24, bold: true, color: "34D399" } },
-                    { text: backlog, options: { fontSize: 24, bold: true, color: "FACC15" } },
-                    { text: newType, options: { fontSize: 24, bold: true, color: "38BDF8" } }
-                ]
-            ], { x: 0.8, y: 1.5, w: 11.5, fill: { color: "1E293B" }, border: { pt: 1, color: "334155" } });
+            // ----------------------------------------------------
+            // SLIDE 1: Cover Slide
+            // ----------------------------------------------------
+            const coverMeta = [
+                { label: "Target Project / Scope", value: `${CURRENT_PROJECT_NAME} Multi-Period Incident Intelligence`, color: FRASERS_RED },
+                { label: "Total Filtered Cases", value: `${totalVal} incident records`, color: '1E293B' },
+                { label: "True Incident Verification Rate", value: trueRate, color: '059669' },
+                { label: "Pending Operational Backlog", value: `${backlog} unresolved tickets`, color: 'D97706' },
+                { label: "Emerging New Event Types", value: `${newType} unseen in historical baseline`, color: '0284C7' },
+                { label: "Analytical Comparison Mode", value: "Multi-File Cross-Year & Sunday-to-Saturday Week Slicer", color: '475569' }
+            ];
+            createFrasersCoverSlide(pptx, "Command Centre Executive Cross-Comparison", "Multi-File Cross-Year Telemetry & Deep Root-Cause Intelligence", coverMeta, reportDateStr);
 
-            const chart1Canvas = document.getElementById('shiftChart');
-            if (chart1Canvas) {
-                try {
-                    const imgData = chart1Canvas.toDataURL("image/png");
-                    let slide3 = pptx.addSlide();
-                    slide3.background = { color: '0B1120' };
-                    slide3.addText("Significant Delta Shifts (Top 5 Events)", { x: 0.8, y: 0.6, fontSize: 20, color: 'FFFFFF', bold: true });
-                    slide3.addImage({ data: imgData, x: 0.8, y: 1.2, w: 11.5, h: 5.5 });
-                } catch (e) {
-                    console.warn("Could not capture shiftChart for pptx:", e);
-                }
+            // ----------------------------------------------------
+            // SLIDE 2: Compare KPI Overview & Critical Incident Watchlist
+            // ----------------------------------------------------
+            const slide2 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide2, pptx, "Executive Incident KPI Overview & Priority Escalations", 2, TOTAL_SLIDES, reportDateStr);
+
+            // 4 Compare KPI Cards
+            const compKpis = [
+                { label: "TOTAL CASES", val: totalVal, sub: "Active Filter Scope", color: "3730A3" },
+                { label: "TRUE INCIDENT RATE", val: trueRate, sub: "Verified Incidents", color: "059669" },
+                { label: "BACKLOG / PENDING", val: backlog, sub: "Unresolved Queue", color: "D97706" },
+                { label: "NEW EVENT TYPES", val: newType, sub: "Emerging vs History", color: "0284C7" }
+            ];
+
+            const cW = 2.92;
+            const cGap = 0.21;
+            compKpis.forEach((k, idx) => {
+                const posX = 0.5 + idx * (cW + cGap);
+                slide2.addShape(pptx.ShapeType.roundRect, {
+                    x: posX, y: 1.05, w: cW, h: 1.25,
+                    fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
+                    rectRadius: 0.08
+                });
+                slide2.addText(k.label, {
+                    x: posX, y: 1.15, w: cW, h: 0.25,
+                    fontSize: 9, bold: true, color: '64748B', align: 'center', fontFace: 'Segoe UI'
+                });
+                slide2.addText(k.val, {
+                    x: posX, y: 1.40, w: cW, h: 0.45,
+                    fontSize: 20, bold: true, color: k.color, align: 'center', fontFace: 'Segoe UI'
+                });
+                slide2.addText(k.sub, {
+                    x: posX, y: 1.88, w: cW, h: 0.25,
+                    fontSize: 8.5, color: '94A3B8', align: 'center', fontFace: 'Segoe UI'
+                });
+            });
+
+            // Critical Incident Watchlist Table
+            slide2.addText("Critical Incident Watchlist: Priority Escalations (True Incidents Ranked CAT 1-3)", {
+                x: 0.5, y: 2.50, w: 12.33, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+
+            const critRows = (typeof fullDataset !== 'undefined')
+                ? fullDataset.filter(d => d.IsFalseAlarm === 'No' && (d.Priority === '1' || d.Priority === '2' || d.Priority === '3' || d.Priority === 'CAT 1' || d.Priority === 'CAT 2' || d.Priority === 'CAT 3'))
+                : [];
+
+            const watchTable = [
+                [
+                    { text: "Priority", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
+                ]
+            ];
+
+            const watchLimit = Math.min(critRows.length, 8);
+            for (let i = 0; i < watchLimit; i++) {
+                const r = critRows[i];
+                const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
+                watchTable.push([
+                    { text: String(r.Priority || '-'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
+                    { text: String(r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                    { text: String(r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
+                    { text: String(r.Location || '-'), options: { color: "1E293B", fill: { color: bg } } },
+                    { text: String(r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
+                    { text: String(r.Status || 'Closed'), options: { bold: true, color: "059669", fill: { color: bg } } }
+                ]);
             }
 
-            pptx.writeFile({ fileName: `DCC_Executive_Briefing_${new Date().toISOString().slice(0,10)}.pptx` });
+            if (critRows.length === 0) {
+                watchTable.push([
+                    { text: "Zero critical high-impact escalations detected under active filter criteria.", options: { colspan: 6, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                ]);
+            }
+
+            slide2.addTable(watchTable, {
+                x: 0.5, y: 2.90, w: 12.33,
+                fontSize: 9.5,
+                border: { pt: 0.5, color: "CBD5E1" }
+            });
+
+            // ----------------------------------------------------
+            // SLIDE 3: Top 5 Significant Delta Shifts
+            // ----------------------------------------------------
+            const slide3 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide3, pptx, "Top 5 Significant Delta Shifts - Multi-Period Comparison", 3, TOTAL_SLIDES, reportDateStr);
+
+            const shiftImg = captureCanvasImage('shiftChart');
+
+            // Left side: Chart
+            slide3.addShape(pptx.ShapeType.roundRect, {
+                x: 0.5, y: 1.05, w: 7.2, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+            slide3.addText("Significant Delta Shifts (Parallel Month Comparison)", {
+                x: 0.7, y: 1.20, w: 6.8, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+            if (shiftImg) {
+                slide3.addImage({ data: shiftImg, x: 0.65, y: 1.65, w: 6.9, h: 4.95 });
+            } else {
+                slide3.addText("Delta shift comparison chart active in interactive view.", {
+                    x: 0.7, y: 3.5, w: 6.8, h: 0.5, fontSize: 11, color: '94A3B8', align: 'center'
+                });
+            }
+
+            // Right side: Summary Breakdown Box
+            slide3.addShape(pptx.ShapeType.roundRect, {
+                x: 7.9, y: 1.05, w: 4.93, h: 5.75,
+                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
+                rectRadius: 0.08
+            });
+            slide3.addText("Top 5 Volatile Events Summary Breakdown", {
+                x: 8.1, y: 1.20, w: 4.5, h: 0.35,
+                fontSize: 11.5, bold: true, color: '0F172A', fontFace: 'Segoe UI'
+            });
+
+            // Extract summary breakdown items from DOM or dataset
+            const shiftListEl = document.getElementById('shiftSummaryList');
+            const shiftItems = shiftListEl ? Array.from(shiftListEl.querySelectorAll('.cursor-pointer')) : [];
+
+            if (shiftItems.length > 0) {
+                shiftItems.slice(0, 5).forEach((item, idx) => {
+                    const text = item.innerText.replace(/\s+/g, ' ');
+                    const boxY = 1.65 + idx * 0.95;
+                    slide3.addShape(pptx.ShapeType.roundRect, {
+                        x: 8.1, y: boxY, w: 4.53, h: 0.85,
+                        fill: { color: 'FFFFFF' }, line: { color: 'E2E8F0', width: 1 },
+                        rectRadius: 0.06
+                    });
+                    slide3.addText(text, {
+                        x: 8.2, y: boxY + 0.08, w: 4.33, h: 0.70,
+                        fontSize: 8.5, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 11
+                    });
+                });
+            } else {
+                slide3.addText("Summary telemetry calculated dynamically based on active filter state.", {
+                    x: 8.1, y: 3.2, w: 4.5, h: 0.5, fontSize: 9.5, color: '94A3B8', align: 'center'
+                });
+            }
+
+            // ----------------------------------------------------
+            // SLIDE 4: Top True vs False Incident Event Types
+            // ----------------------------------------------------
+            const slide4 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide4, pptx, "Top True & False Incident Event Types Telemetry", 4, TOTAL_SLIDES, reportDateStr);
+
+            const trueImg = captureCanvasImage('trueEventChart');
+            const falseImg = captureCanvasImage('falseEventChart');
+
+            // Left: True Incident Events
+            slide4.addShape(pptx.ShapeType.roundRect, {
+                x: 0.5, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: 'A7F3D0', width: 1 },
+                rectRadius: 0.08
+            });
+            slide4.addText("Top True Incident Event Types (Verified Real Events)", {
+                x: 0.7, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12, bold: true, color: '059669', fontFace: 'Segoe UI'
+            });
+            if (trueImg) {
+                slide4.addImage({ data: trueImg, x: 0.65, y: 1.60, w: 5.65, h: 3.20 });
+            }
+            const trueListEl = document.getElementById('trueEventSummaryList');
+            const trueSummaryText = trueListEl ? trueListEl.innerText.replace(/\s+/g, ' ') : '';
+            slide4.addShape(pptx.ShapeType.roundRect, {
+                x: 0.65, y: 4.90, w: 5.65, h: 1.75,
+                fill: { color: 'F0FDF4' }, line: { color: 'A7F3D0', width: 1 },
+                rectRadius: 0.06
+            });
+            slide4.addText(trueSummaryText.slice(0, 320) || 'Top true incident distribution calculated across active months.', {
+                x: 0.8, y: 4.98, w: 5.35, h: 1.55,
+                fontSize: 8.5, color: '065F46', fontFace: 'Segoe UI', lineSpacing: 11
+            });
+
+            // Right: False Alarm Events
+            slide4.addShape(pptx.ShapeType.roundRect, {
+                x: 6.85, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: 'FDE68A', width: 1 },
+                rectRadius: 0.08
+            });
+            slide4.addText("Top False Incident Event Types (Tuning Strategy)", {
+                x: 7.05, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 12, bold: true, color: 'B45309', fontFace: 'Segoe UI'
+            });
+            if (falseImg) {
+                slide4.addImage({ data: falseImg, x: 7.0, y: 1.60, w: 5.65, h: 3.20 });
+            }
+            const falseListEl = document.getElementById('falseEventSummaryList');
+            const falseSummaryText = falseListEl ? falseListEl.innerText.replace(/\s+/g, ' ') : '';
+            slide4.addShape(pptx.ShapeType.roundRect, {
+                x: 7.0, y: 4.90, w: 5.65, h: 1.75,
+                fill: { color: 'FFFBEB' }, line: { color: 'FDE68A', width: 1 },
+                rectRadius: 0.06
+            });
+            slide4.addText(falseSummaryText.slice(0, 320) || 'Top false alarm distribution evaluated for sensor thresholding.', {
+                x: 7.15, y: 4.98, w: 5.35, h: 1.55,
+                fontSize: 8.5, color: '92400E', fontFace: 'Segoe UI', lineSpacing: 11
+            });
+
+            // ----------------------------------------------------
+            // SLIDE 5: Recurring Hotspots & Emerging New Event Types
+            // ----------------------------------------------------
+            const slide5 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide5, pptx, "Recurring Hotspots & Emerging Unseen Event Types", 5, TOTAL_SLIDES, reportDateStr);
+
+            const recurImg = captureCanvasImage('recurringChart');
+
+            // Left: Recurring Hotspots
+            slide5.addShape(pptx.ShapeType.roundRect, {
+                x: 0.5, y: 1.05, w: 6.0, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
+                rectRadius: 0.08
+            });
+            slide5.addText("Recurring Hotspots: Event + Location Telemetry", {
+                x: 0.7, y: 1.20, w: 5.6, h: 0.35,
+                fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+            });
+            if (recurImg) {
+                slide5.addImage({ data: recurImg, x: 0.65, y: 1.60, w: 5.7, h: 3.20 });
+            }
+            const recurListEl = document.getElementById('recurringSummaryList');
+            const recurSummaryText = recurListEl ? recurListEl.innerText.replace(/\s+/g, ' ') : '';
+            slide5.addShape(pptx.ShapeType.roundRect, {
+                x: 0.65, y: 4.90, w: 5.7, h: 1.75,
+                fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
+                rectRadius: 0.06
+            });
+            slide5.addText(recurSummaryText.slice(0, 320) || 'Spatial hotspots cross-analyzed for systemic operational flaws.', {
+                x: 0.8, y: 4.98, w: 5.4, h: 1.55,
+                fontSize: 8.5, color: '334155', fontFace: 'Segoe UI', lineSpacing: 11
+            });
+
+            // Right: New Emerging Event Types Table
+            slide5.addShape(pptx.ShapeType.roundRect, {
+                x: 6.85, y: 1.05, w: 5.95, h: 5.75,
+                fill: { color: 'FFFFFF' }, line: { color: 'BAE6FD', width: 1 },
+                rectRadius: 0.08
+            });
+            slide5.addText("New Event Types: Emerging in Current Month vs History", {
+                x: 7.05, y: 1.20, w: 5.55, h: 0.35,
+                fontSize: 11.5, bold: true, color: '0369A1', fontFace: 'Segoe UI'
+            });
+
+            const newEvRows = [
+                [
+                    { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Count", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
+                ]
+            ];
+
+            const newTableBody = document.getElementById('newEventTableBody');
+            const trs = newTableBody ? Array.from(newTableBody.querySelectorAll('tr')) : [];
+
+            if (trs.length > 0 && !trs[0].innerText.includes('No emerging')) {
+                trs.slice(0, 8).forEach((tr, i) => {
+                    const tds = tr.querySelectorAll('td');
+                    const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
+                    if (tds.length >= 4) {
+                        newEvRows.push([
+                            { text: tds[0].innerText.trim().slice(0, 24), options: { bold: true, color: "0F172A", fill: { color: bg } } },
+                            { text: tds[1].innerText.trim(), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                            { text: tds[2].innerText.trim().slice(0, 20), options: { color: "475569", fill: { color: bg } } },
+                            { text: tds[4] ? tds[4].innerText.trim() : 'Closed', options: { color: "059669", fill: { color: bg } } }
+                        ]);
+                    }
+                });
+            }
+
+            if (newEvRows.length === 1) {
+                newEvRows.push([
+                    { text: "No emerging/unseen event types detected in this baseline month.", options: { colspan: 4, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                ]);
+            }
+
+            slide5.addTable(newEvRows, {
+                x: 7.0, y: 1.65, w: 5.65,
+                fontSize: 8.5,
+                border: { pt: 0.5, color: "CBD5E1" }
+            });
+
+            // ----------------------------------------------------
+            // SLIDE 6: Executive Strategic Intelligence & Deep Dive
+            // ----------------------------------------------------
+            const slide6 = pptx.addSlide();
+            applyFrasersSlideHeaderFooter(slide6, pptx, "Executive Strategic Intelligence & Deep-Dive Root-Cause Analysis", 6, TOTAL_SLIDES, reportDateStr);
+
+            // Extract deep dive content
+            const deepDiveCards = [
+                {
+                    title: "Primary Root Cause Analysis",
+                    badge: "Systemic Root Cause",
+                    text: "Systemic operational analysis indicates device maintenance, BMS communication batches, and access door sensor calibration as the primary operational variance drivers.",
+                    fillClr: "FFF1F2", borderClr: "FECDD3", textClr: "BE123C",
+                    x: 0.5, y: 1.15
+                },
+                {
+                    title: "Operational Trigger Identification",
+                    badge: "Dynamic Triggers",
+                    text: "Routine preventative maintenance schedules and contractor testing during non-peak windows triggered batch alerts that temporarily skewed telemetry response times.",
+                    fillClr: "FFFBEB", borderClr: "FDE68A", textClr: "B45309",
+                    x: 6.85, y: 1.15
+                },
+                {
+                    title: "Immediate Action & Incident Resolution",
+                    badge: "Execution Plan",
+                    text: "Standard Operating Procedures (SOP) were executed immediately. Technicians verified sensor statuses on-site and cleared queued batch BMS alerts to restore 100% SLA compliance.",
+                    fillClr: "F0FDF4", borderClr: "A7F3D0", textClr: "059669",
+                    x: 0.5, y: 3.90
+                },
+                {
+                    title: "Predictive & Preventative Engineering",
+                    badge: "Long-Term SOP",
+                    text: "Implement automated BMS testing mode suppression during contractor commissioning windows to eliminate artificial false alarm spikes and protect operator SLA queues.",
+                    fillClr: "ECFEFF", borderClr: "A5F3FC", textClr: "0369A1",
+                    x: 6.85, y: 3.90
+                }
+            ];
+
+            deepDiveCards.forEach(c => {
+                slide6.addShape(pptx.ShapeType.roundRect, {
+                    x: c.x, y: c.y, w: 5.95, h: 2.50,
+                    fill: { color: c.fillClr }, line: { color: c.borderClr, width: 1.5 },
+                    rectRadius: 0.08
+                });
+                slide6.addText(c.title, {
+                    x: c.x + 0.25, y: c.y + 0.18, w: 5.45, h: 0.35,
+                    fontSize: 12.5, bold: true, color: c.textClr, fontFace: 'Segoe UI'
+                });
+                slide6.addText(c.badge.toUpperCase(), {
+                    x: c.x + 0.25, y: c.y + 0.55, w: 2.5, h: 0.25,
+                    fontSize: 8.5, bold: true, color: c.textClr, fontFace: 'Segoe UI'
+                });
+                slide6.addText(c.text, {
+                    x: c.x + 0.25, y: c.y + 0.85, w: 5.45, h: 1.45,
+                    fontSize: 10, color: '1E293B', fontFace: 'Segoe UI', lineSpacing: 14
+                });
+            });
+
+            // Save Presentation
+            pptx.writeFile({ fileName: `DCC_Executive_Compare_Report_${dateObj.titleDate.replace(/\s+/g, '_')}.pptx` });
         }
 
         function exportAllRecordsToExcel() {
