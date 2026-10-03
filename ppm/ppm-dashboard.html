@@ -23,8 +23,6 @@
   </script>
   <!-- PapaParse for Real CSV Parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <!-- SheetJS: read .xlsx / .xls exports directly -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <!-- Chart.js DataLabels Plugin -->
@@ -103,7 +101,7 @@
 
       <label class="cursor-pointer inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-cyan-950/80 transition-all hover:shadow-cyan-500/25">
         <i class="fa-solid fa-folder-open mr-2"></i> Browse Computer (Multi-Select)
-        <input type="file" id="initialCsvInput" accept=".csv,.xlsx,.xls" multiple class="hidden" onchange="handleFileInputChange(event)">
+        <input type="file" id="initialCsvInput" accept=".csv" multiple class="hidden" onchange="handleFileInputChange(event)">
       </label>
 
       <div id="uploadLoader" class="hidden mt-6 flex items-center space-x-2 text-cyan-400 text-xs font-semibold">
@@ -145,14 +143,14 @@
           <label class="cursor-pointer inline-flex items-center px-3 py-1.5 rounded-lg border border-teal-700/60 bg-teal-950/40 hover:bg-teal-900/60 text-xs font-semibold text-teal-300 transition shadow-sm" title="Add more CSV files without clearing current data">
             <i class="fa-solid fa-plus-circle mr-1.5 text-teal-400"></i>
             <span id="txtAppendBtn">Add Files</span>
-            <input type="file" id="appendCsvFileInput" accept=".csv,.xlsx,.xls" multiple class="hidden" onchange="handleAppendInputChange(event)">
+            <input type="file" id="appendCsvFileInput" accept=".csv" multiple class="hidden" onchange="handleAppendInputChange(event)">
           </label>
 
           <!-- File Re-Uploader (Replace All) -->
           <label class="cursor-pointer inline-flex items-center px-3 py-1.5 rounded-lg border border-cyan-700/60 bg-cyan-950/40 hover:bg-cyan-900/60 text-xs font-semibold text-cyan-300 transition shadow-sm">
             <i class="fa-solid fa-cloud-arrow-up mr-1.5 text-cyan-400"></i>
             <span id="txtUploadBtn">Reload All</span>
-            <input type="file" id="reCsvFileInput" accept=".csv,.xlsx,.xls" multiple class="hidden" onchange="handleFileInputChange(event)">
+            <input type="file" id="reCsvFileInput" accept=".csv" multiple class="hidden" onchange="handleFileInputChange(event)">
           </label>
 
           <!-- Fullscreen / Present Mode Button -->
@@ -242,7 +240,7 @@
     <main id="exportableArea" class="max-w-[1750px] mx-auto px-4 sm:px-6 py-5 flex-1 w-full space-y-5">
 
       <!-- KPI Metric Cards -->
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <section class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         
         <!-- KPI 1: Total Tasks -->
         <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
@@ -291,6 +289,23 @@
           <div class="mt-3 flex items-center text-xs text-slate-400">
             <span id="kpiSlaMetCount" class="text-sky-400 font-semibold mr-1.5">0</span>
             <span id="lblKpiSlaSub">Tasks Met SLA Target</span>
+          </div>
+        </div>
+
+        <!-- KPI 3b: Response SLA -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <div>
+              <p id="lblKpiRespSla" class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Response SLA</p>
+              <h3 class="text-2xl font-bold text-indigo-400 mt-1 font-mono" id="kpiRespSlaRate">N/A</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-indigo-950/60 border border-indigo-800 flex items-center justify-center text-indigo-400">
+              <i class="fa-solid fa-stopwatch text-lg"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center text-xs text-slate-400">
+            <span id="kpiRespSlaCount" class="text-indigo-400 font-semibold mr-1.5">0</span>
+            <span id="lblKpiRespSlaSub">Tasks Met Response Target</span>
           </div>
         </div>
 
@@ -710,14 +725,6 @@
 
     // Helper: Parse single CSV via Promise
     function parseCsvFile(file) {
-      if (/\.xlsx?$/i.test(file.name) && typeof XLSX !== 'undefined') {
-        return file.arrayBuffer().then(buf => {
-          const wb = XLSX.read(buf, { type: 'array', cellDates: false });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const data = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
-          return { file, data };
-        });
-      }
       return new Promise((resolve, reject) => {
         Papa.parse(file, {
           header: true,
@@ -733,9 +740,9 @@
     const PPM_FILES = new Map();
 
     async function processMultipleFiles(fileList, isAppend = false) {
-      const validFiles = fileList.filter(f => /\.(csv|xlsx|xls)$/i.test(f.name));
+      const validFiles = fileList.filter(f => f.name.toLowerCase().endsWith('.csv'));
       if (validFiles.length === 0) {
-        alert(currentLang === 'th' ? "กรุณาเลือกไฟล์ .csv หรือ .xlsx" : "Please select .csv or .xlsx files");
+        alert(currentLang === 'th' ? "กรุณาเลือกไฟล์ .csv" : "Please select .csv files");
         return;
       }
       const loader = document.getElementById("uploadLoader");
@@ -816,18 +823,17 @@
     }
     function ppmDetectCols(headers) {
       return {
-        stage: ppmFindCol(headers, ['stage','status','taskstatus','wostatus','workorderstatus','ppmstatus','state']),
         provider: ppmFindCol(headers, ['serviceprovider','serviceproviders','provider','vendor','contractor','serviceprovidername','team']),
         category: ppmFindCol(headers, ['servicecategory','servicecategories','category','systemcategory']),
         respFlag: ppmFindCol(headers, ['metslaresponsetime','meetslaresponsetime','metslaresponse','meetslaresponse','responsesla','slaresponse','responseslastatus','responseslamet','slaresponsemet','acksla','slaack','responsecompliance','acknowledgesla'],
           n => n.includes('sla') && (n.includes('resp') || n.includes('ack')) && !n.includes('due') && !n.includes('date') && !n.includes('time')),
-        ack: ppmFindCol(headers, ['actualstartdate','actualstart','actualstartdatetime','acknowledgeddate','acknowledgedon','acknowledgeddatetime','ackdate','acktime','responsedate','respondedon','responsedatetime','starteddate','startedon','actualstart','actualstartdate']),
+        ack: ppmFindCol(headers, ['acknowledgeddate','acknowledgedon','acknowledgeddatetime','ackdate','acktime','responsedate','respondedon','responsedatetime','starteddate','startedon','actualstart','actualstartdate']),
         respDue: ppmFindCol(headers, ['responsedue','responseduedate','responsetarget','responsetargetdate','ackdue','acknowledgedue','targetresponse']),
-        slaFlag: ppmFindCol(headers, ['metslacompletetime','meetslacompletetime','metslacomplete','meetslacomplete','metslacompletiontime','meetslacompletiontime','metslacompletion','meetslacompletion','metslaresolutiontime','metslaresolution','completionsla','slacompletion','sla','slamet','slastatus','slaresult','completionslastatus','completionslamet','slacompliance','withinsla','kpisla','ppmsla'],
+        slaFlag: ppmFindCol(headers, ['metslacompletiontime','meetslacompletiontime','metslacompletion','meetslacompletion','metslaresolutiontime','metslaresolution','completionsla','slacompletion','sla','slamet','slastatus','slaresult','completionslastatus','completionslamet','slacompliance','withinsla','kpisla','ppmsla'],
           n => n.includes('sla') && !n.includes('due') && !n.includes('target') && !n.includes('date') && !n.includes('time')),
         done: ppmFindCol(headers, ['completeddate','completeddatetime','completedon','completiondate','completiondatetime','actualfinish','actualfinishdate','actualend','actualenddate','finishdate','finisheddate','closeddate','closedon','closeddatetime','clientverifiedon','verifieddate','verifiedon','resolveddate']),
         due: ppmFindCol(headers, ['duedate','duedatetime','targetdate','targetcompletion','targetcompletiondate','targetfinish','targetfinishdate','scheduledend','scheduledenddate','scheduleenddate','planend','planenddate','plannedend','plannedenddate','plannedfinish','deadline','sladuedate','sladue','completiondue']),
-        date: ppmFindCol(headers, ['createdon','createdondatetime','createddate','createddatetime','targetstartdate','targetstartdatetime','plannedstartdate','scheduledstartdate','scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
+        date: ppmFindCol(headers, ['targetstartdate','targetstartdatetime','plannedstartdate','scheduledstartdate','scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
           n => n.includes('date') && !n.includes('update') && !n.includes('complet') && !n.includes('finish') && !n.includes('close')),
         id: ppmFindCol(headers, ['ppmid','ppmno','ppmnumber','ppmcode','workorderid','workorderno','workordernumber','woid','wono','wonumber','taskid','taskno','tasknumber','scheduleid','scheduleno','id'],
           n => n.includes('ppm') && (n.endsWith('id') || n.endsWith('no') || n.includes('number')))
@@ -866,29 +872,8 @@
       return '#NUM!';
     }
 
-    // Date + time (dd/mm/yyyy hh:mm [AM|PM]) for SLA comparisons
-    function ppmParseDateTime(v) {
-      const s = String(v ?? '').trim(); if (!s) return null;
-      const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?)?/);
-      if (m) {
-        let y = +m[3]; if (y < 100) y += 2000; if (y > 2400) y -= 543;
-        let a = +m[1], b = +m[2], d = a, mo = b; if (b > 12 && a <= 12) { d = b; mo = a; }
-        let hh = +(m[4] || 0); const mi = +(m[5] || 0), ss = +(m[6] || 0);
-        if (m[7]) { const pm = /p/i.test(m[7]); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
-        const r = new Date(y, mo - 1, d, hh, mi, ss); return isNaN(r) ? null : r;
-      }
-      const r = new Date(s); return isNaN(r) ? null : r;
-    }
-    // Response SLA (agreed rule): met when the task STARTED within its PPM window,
-    // i.e. Actual Start <= Target Completion Date. Not started and window already closed = missed.
-    // The exported "Met SLA Response Time?" flag is used only when those dates are missing.
+    // Response SLA per task: response flag column, otherwise acknowledged date vs response due date
     function ppmComputeRespSla(r, C) {
-      if (C.ack && C.due) {
-        const start = ppmParseDateTime(r[C.ack]), due = ppmParseDateTime(r[C.due]);
-        if (start && due) return start <= due ? '1' : '0';
-        if (!start && due && due < new Date()) return '0';
-        if (!start && due) return '#NUM!';
-      }
       if (C.respFlag) { const f = ppmParseSlaFlag(r[C.respFlag]); if (f !== null) return f; }
       if (C.respDue) {
         const due = ppmParseDate(r[C.respDue]), ack = C.ack ? ppmParseDate(r[C.ack]) : null;
@@ -942,10 +927,6 @@
       console.info('[PPM] detected columns:', PCOLS);
 
       rows.forEach(r => {
-        // skip blank / footer rows (no id, no status, no provider)
-        const idv = PCOLS.id ? String(r[PCOLS.id] || '').trim() : '';
-        const stv = PCOLS.stage ? String(r[PCOLS.stage] || '').trim() : String(r['Stage'] || '').trim();
-        if (!idv && !stv && !(PCOLS.provider && String(r[PCOLS.provider] || '').trim())) return;
         const pDate = PCOLS.date ? ppmParseDate(r[PCOLS.date]) : null;
         const T = ppmTimeFields(pDate);
         const m = (r['Month'] || '').trim() || (pDate ? PPM_MON3[pDate.getMonth()] : 'Jan');
@@ -953,7 +934,7 @@
         const cat = String((PCOLS.category && r[PCOLS.category]) || r['Service Categories'] || 'General').trim() || 'General';
         const rsla = ppmComputeRespSla(r, PCOLS);
         const freq = (r['Frequency Type'] || 'Monthly').trim();
-        const stage = (String((PCOLS.stage && r[PCOLS.stage]) || r['Stage'] || 'COMPLETED').trim() || 'COMPLETED').toUpperCase();
+        const stage = (r['Stage'] || 'COMPLETED').trim().toUpperCase();
         const sla = ppmComputeSla(r, PCOLS, stage);
         const dur = parseFloat(r['Completion Taken Time (Min)']) || 0;
 
@@ -2113,7 +2094,7 @@
   </script>
   <script>
     // ======================================================================
-    // PPM: provider-aware charts, deep-dive analysis (Response SLA removed from display)
+    // PPM: provider-aware charts, Response SLA KPI, deep-dive analysis
     // ======================================================================
     const PPM_DONE = ['CLIENTVERIFIED', 'COMPLETED', 'CLOSED'];
     const PPM_PROVIDER_COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#94a3b8'];
@@ -2133,7 +2114,7 @@
       return a;
     }
 
-    // Charts: workload stacked by Service Provider (top 6 + Others); Completion SLA trend line
+    // Charts: workload stacked by Service Provider (top 6 + Others); SLA trend with Completion + Response lines
     const _ppmRenderCharts = renderCharts;
     window.renderCharts = function () {
       _ppmRenderCharts.apply(this, arguments);
@@ -2148,24 +2129,29 @@
         if (monthlyChart) { monthlyChart.data.labels = months; monthlyChart.data.datasets = ds; monthlyChart.options.plugins.legend.position = 'bottom'; monthlyChart.update(); }
         if (slaTrendChart) {
           const comp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.sla === null ? null : +a.sla.toFixed(1); });
+          const resp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.rsla === null ? null : +a.rsla.toFixed(1); });
           slaTrendChart.data.labels = months;
           slaTrendChart.data.datasets = [
             { label: currentLang === 'th' ? 'SLA ปิดงาน (%)' : 'Completion SLA (%)', data: comp, borderColor: '#10b981', backgroundColor: '#10b981', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#34d399', anchor: 'end', align: 'top', offset: 6, font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
+              datalabels: { color: '#34d399', anchor: 'end', align: 'top', offset: 6, font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } },
+            { label: currentLang === 'th' ? 'SLA รับเรื่อง (%)' : 'Response SLA (%)', data: resp, borderColor: '#818cf8', backgroundColor: '#818cf8', borderDash: [6, 4], fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
+              datalabels: { color: '#a5b4fc', anchor: 'start', align: 'bottom', offset: 6, font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
           ];
-          slaTrendChart.options.plugins.legend = { display: false, position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 11 } } };
+          slaTrendChart.options.plugins.legend = { display: true, position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 11 } } };
           slaTrendChart.options.layout = { padding: { top: 26, bottom: 4, right: 12 } };
           slaTrendChart.update();
         }
       } catch (e) { console.warn('[PPM] chart post-process', e); }
     };
 
-    // KPIs: Completion SLA naming, backlog badges by top providers
+    // KPIs: Response SLA card, Completion SLA naming, backlog badges by top providers
     const _ppmUpdateDashboard = updateDashboard;
     window.updateDashboard = function () {
       _ppmUpdateDashboard.apply(this, arguments);
       try {
         const a = ppmAgg(AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false)));
+        document.getElementById('kpiRespSlaRate').textContent = a.rsla === null ? 'N/A' : a.rsla.toFixed(2) + '%';
+        document.getElementById('kpiRespSlaCount').textContent = a.rsla === null ? '—' : a.rmet.toLocaleString();
         const byProv = new Map(); filteredPendingList.forEach(t => byProv.set(t.team, (byProv.get(t.team) || 0) + 1));
         const top = [...byProv.entries()].sort((x, y) => y[1] - x[1]);
         const b1 = document.getElementById('badgePendingHard'), b2 = document.getElementById('badgePendingSoft');
@@ -2215,13 +2201,15 @@
           worstCat ? `หมวดที่ปิดงานได้ต่ำสุด: ${b(esc(worstCat.k))} ที่ ${b(f(worstCat.a.comp))}` : null,
           act(worstCat ? `วางแผนงาน ${b(esc(worstCat.k))} ใหม่ร่วมกับผู้ให้บริการและจองทรัพยากรช่วงสัปดาห์งานหนาแน่น ตั้งเป้าปิดงาน ≥ 95%` : 'คงแผนงานปัจจุบัน และทบทวนรายเดือน')]));
       const c2 = L(
-        `Completion SLA ${b(f(a.sla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
+        `Completion SLA ${b(f(a.sla))} · Response SLA ${b(f(a.rsla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
           needSla ? `Gap to 95%: ${b(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'Completion SLA meets the 95% target.' : 'No SLA data in the file.'),
           worstProv ? `Lowest provider SLA: ${b(esc(worstProv.k))} ${b(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? `; best ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}.` : null,
+          a.rsla === null ? 'Response SLA needs a response flag or response-due + acknowledged dates in the file.' : null,
           act(worstProv ? `hold a monthly SLA review with ${b(esc(worstProv.k))}; agree a recovery plan and apply KPI deductions if below target for 2 months.` : 'monitor weekly.')]),
-        `SLA ปิดงาน ${b(f(a.sla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
+        `SLA ปิดงาน ${b(f(a.sla))} · SLA รับเรื่อง ${b(f(a.rsla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
           needSla ? `ส่วนต่างถึงเป้า 95%: ต้องปิดงานตรงเวลาเพิ่ม ${b(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'SLA ปิดงานถึงเป้า 95%' : 'ไม่มีข้อมูล SLA ในไฟล์'),
           worstProv ? `ผู้ให้บริการที่ SLA ต่ำสุด: ${b(esc(worstProv.k))} ${b(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? ` ดีที่สุด ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}` : null,
+          a.rsla === null ? 'SLA รับเรื่องต้องมีคอลัมน์ผล SLA รับเรื่อง หรือวันครบกำหนดรับเรื่องและวันที่รับเรื่อง' : null,
           act(worstProv ? `ประชุมทบทวน SLA รายเดือนกับ ${b(esc(worstProv.k))} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หากต่ำกว่าเป้า 2 เดือนติด` : 'ติดตามรายสัปดาห์')]));
       const c3 = L(
         `${b(pend.length.toLocaleString())} unfinished tasks — ${stages || '-'}.` + ul([
@@ -2244,7 +2232,7 @@
       document.getElementById('analyzeTextarea').value = [...tmp.querySelectorAll('.rounded-xl')].map(d => d.innerText.trim()).join('\n\n');
     }
 
-    // Labels: Service Provider / Service Category / Completion SLA
+    // Labels: Service Provider / Service Category / Completion SLA / Response SLA
     function ppmFieldLabels() {
       const th = currentLang === 'th';
       const set = (id, en, t) => {
@@ -2258,11 +2246,12 @@
       set('lblFilterTeam', 'Service Provider', 'ผู้ให้บริการ'); set('lblFilterCategory', 'Service Category', 'หมวดบริการ');
       set('lblFilterFrequency', 'Frequency', 'ความถี่'); set('lblFilterStatus', 'Status', 'สถานะ'); set('lblFilterMonth', 'Month', 'เดือน');
       set('lblKpiSla', 'Completion SLA', 'SLA ปิดงาน'); set('lblKpiSlaSub', 'Tasks Met Completion Target', 'งานที่ปิดตาม SLA');
+      set('lblKpiRespSla', 'Response SLA', 'SLA รับเรื่อง'); set('lblKpiRespSlaSub', 'Tasks Met Response Target', 'งานที่รับเรื่องตาม SLA');
       set('ppmLblFilters', 'Filters', 'ตัวกรอง'); set('lblResetFilter', 'Reset', 'รีเซ็ต');
       set('lblChartCategoryTitle', 'Service Category Share (%)', 'สัดส่วนหมวดบริการ (%)'); set('lblChartCategorySub', 'Click slice to filter by service category', 'คลิกที่ชิ้นกราฟเพื่อกรองตามหมวดบริการ');
       set('thTeam', 'Service Provider', 'ผู้ให้บริการ'); set('thCat', 'Service Category', 'หมวดบริการ');
       set('lblChartTrendSub', 'Stacked by service provider · click a bar to filter by month', 'แยกตามผู้ให้บริการ · คลิกแท่งเพื่อกรองตามเดือน');
-      set('lblChartSlaTrendTitle', 'Monthly Completion SLA Trend (%)', 'แนวโน้ม SLA ปิดงานรายเดือน (%)');
+      set('lblChartSlaTrendTitle', 'Monthly SLA Trend: Completion vs Response (%)', 'แนวโน้ม SLA รายเดือน: ปิดงาน และ รับเรื่อง (%)');
       const cat = document.getElementById('filterCategory'); if (cat && cat.options[0]) cat.options[0].textContent = th ? 'ทุกหมวดบริการ' : 'All Categories';
       const tm = document.getElementById('filterTeam'); if (tm && tm.options[0]) tm.options[0].textContent = th ? 'ทุกผู้ให้บริการ' : 'All Providers';
     }

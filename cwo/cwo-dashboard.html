@@ -208,7 +208,6 @@
               <div id="catCheckboxList" class="space-y-1"></div>
             </div>
           </div>
-        <div class="flex flex-col min-w-[150px] max-w-[220px] flex-1"><label id="lblFProb" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Problem Type</label><div id="filterProbType" class="w-full"></div></div>
         <div class="flex flex-col min-w-[85px] max-w-[120px] flex-1"><label id="lblFPrio" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Priority</label><select id="filterPriority" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Priorities</option></select></div>
           <div class="relative flex flex-col min-w-[120px] max-w-[170px] flex-1"><label id="lblFStage" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Status</label>
             <button type="button" onclick="toggleMultiDropdown('stageDropdown')" class="w-full bg-slate-950 border border-slate-700 hover:border-slate-500 rounded-lg px-2 py-1 text-xs text-left text-slate-200 flex justify-between items-center">
@@ -231,14 +230,15 @@
   <div id="cwoCmpStrip" class="dcc-filter-strip hidden sticky z-40 px-3 sm:px-6 lg:px-8 pt-3 pb-2.5 border-b border-slate-800 bg-[#0b1120]/95 backdrop-blur">
       <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
         <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cmpLblCompare">Compare</span></span></div>
-        <div class="flex flex-col min-w-[72px] max-w-[90px] flex-1"><label id="cmpLblYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><div id="cmpYear" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="cmpLblMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><div id="cmpMonth" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[110px] max-w-[175px] flex-1"><label id="cmpLblWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week</label><div id="cmpWeek" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[95px] max-w-[125px] flex-1"><label id="cmpLblDay" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Date</label><div id="cmpDay" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[110px] max-w-[150px] flex-1"><label id="cmpLblCat" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Category</label><div id="cmpCategory" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[85px] max-w-[110px] flex-1"><label id="cmpLblPrio" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Priority</label><div id="cmpPriority" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[110px] max-w-[160px] flex-1"><label id="cmpLblComp" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Component</label><div id="cmpComponent" class="w-full"></div></div>
-        <div class="flex flex-col min-w-[160px] max-w-[240px] flex-1"><label id="cmpLblType" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Event Type</label><div id="cmpType" class="w-full"></div></div>
+        <div class="flex flex-col min-w-[115px] max-w-[170px] flex-1"><label id="cmpLblFile" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Files</label><select id="cmpFile" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Files (Merged)</option></select></div>
+        <div class="flex flex-col min-w-[72px] max-w-[90px] flex-1"><label id="cmpLblYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><select id="cmpYear" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="cmpLblMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><select id="cmpMonth" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[110px] max-w-[175px] flex-1"><label id="cmpLblWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week</label><select id="cmpWeek" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[95px] max-w-[125px] flex-1"><label id="cmpLblDay" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Date</label><select id="cmpDay" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[110px] max-w-[150px] flex-1"><label id="cmpLblCat" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Category</label><select id="cmpCategory" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[85px] max-w-[110px] flex-1"><label id="cmpLblPrio" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Priority</label><select id="cmpPriority" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[110px] max-w-[160px] flex-1"><label id="cmpLblComp" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Component</label><select id="cmpComponent" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
+        <div class="flex flex-col min-w-[140px] max-w-[200px] flex-1"><label id="cmpLblType" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Event Type</label><select id="cmpType" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All</option></select></div>
         <div class="flex flex-col shrink-0 ml-auto"><span class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate invisible">.</span>
           <button type="button" onclick="resetCwoCompare()" class="dcc-reset-btn flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition" title="Reset all filters"><i class="fa-solid fa-rotate-left text-[11px]"></i><span class="dcc-reset-lbl">Reset</span></button></div>
       </div>
@@ -719,99 +719,6 @@
     </div>
   </div>
 
-  <script>
-    // ======================================================================
-    // Generic multi-select filter (search + Select All / Clear, optional groups)
-    // State: empty Set = All (no filter). Used by CWO Comparison strip and the
-    // CWO Dashboard "Problem Type" filter.
-    // ======================================================================
-    const DCC_MS = {};
-    const msEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const msT = (en, th) => (typeof currentLang !== 'undefined' && currentLang === 'th' ? th : en);
-    function msInit(id, onChange, opts = {}) {
-      if (!DCC_MS[id]) DCC_MS[id] = { sel: new Set(), items: [], open: false, q: '', key: '', onChange, search: !!opts.search, allLbl: 'All', unit: opts.unit || '' };
-      return DCC_MS[id];
-    }
-    // items: [{v, l, g?}] ; returns predicate(value) -> bool
-    function msSetItems(id, items, allLbl) {
-      const st = DCC_MS[id]; if (!st) return () => true;
-      st.items = items; st.allLbl = allLbl || msT('All', 'ทั้งหมด');
-      const vals = new Set(items.map(i => i.v));
-      [...st.sel].forEach(v => { if (!vals.has(v)) st.sel.delete(v); });
-      const key = items.map(i => i.v + '\u0001' + i.l + '\u0001' + (i.g || '')).join('|') + st.allLbl;
-      const host = document.getElementById(id);
-      if (host && (st.key !== key || !host.querySelector('.ms-btn'))) { st.key = key; msBuild(id); }
-      else msSync(id);
-      const sel = st.sel;
-      return v => sel.size === 0 || sel.has(v);
-    }
-    function msActive(id) { const st = DCC_MS[id]; return !!(st && st.sel.size); }
-    function msValues(id) { const st = DCC_MS[id]; return st ? [...st.sel] : []; }
-    function msClear(id, silent) { const st = DCC_MS[id]; if (!st) return; st.sel.clear(); st.q = ''; const inp = document.querySelector(`#${id} .ms-q`); if (inp) inp.value = ''; msFilterList(id); msSync(id); if (!silent) st.onChange && st.onChange(); }
-    function msLabel(st) {
-      if (!st.sel.size) return st.allLbl;
-      if (st.sel.size === 1) { const v = [...st.sel][0]; return (st.items.find(i => i.v === v) || { l: v }).l; }
-      return `${st.sel.size} ${msT('selected', 'รายการ')}`;
-    }
-    function msBuild(id) {
-      const st = DCC_MS[id], host = document.getElementById(id); if (!host) return;
-      host.classList.add('relative', 'ms-host');
-      let lastG = null;
-      const list = st.items.map(i => {
-        let h = '';
-        if (i.g && i.g !== lastG) { lastG = i.g; h += `<div class="ms-group flex items-center justify-between mt-1.5 first:mt-0 px-1 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-500/10 rounded cursor-pointer hover:bg-indigo-500/20" data-g="${msEsc(i.g)}" title="${msT('Select all in this category', 'เลือกทั้งหมดในหมวดนี้')}"><span class="truncate">${msEsc(i.g)}</span><i class="fa-solid fa-check-double text-[9px] opacity-70"></i></div>`; }
-        h += `<label class="ms-opt flex items-start gap-2 text-[11px] text-slate-300 hover:text-white cursor-pointer py-0.5" data-g="${msEsc(i.g || '')}" data-s="${msEsc((i.l + ' ' + (i.g || '')).toLowerCase())}">
-          <input type="checkbox" value="${msEsc(i.v)}" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-0 shrink-0"><span class="break-words leading-snug">${msEsc(i.l)}</span></label>`;
-        return h;
-      }).join('') || `<div class="text-[11px] text-slate-500 py-1">${msT('No options', 'ไม่มีตัวเลือก')}</div>`;
-      host.innerHTML = `
-        <button type="button" class="ms-btn w-full bg-slate-950 border border-slate-700 hover:border-slate-500 rounded-lg px-2 py-1 text-xs text-left text-slate-200 flex justify-between items-center">
-          <span class="ms-lbl truncate"></span><i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-1"></i></button>
-        <div class="ms-dd ${st.open ? '' : 'hidden'} absolute top-full left-0 mt-1 bg-[#0b1120] border border-slate-700 rounded-lg p-2 z-50 shadow-2xl multiselect-dropdown" style="min-width:100%;width:max-content;max-width:min(340px,90vw)">
-          ${st.search ? `<div class="relative mb-1.5"><i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500"></i><input type="text" class="ms-q w-full bg-slate-950 border border-slate-700 rounded-md pl-6 pr-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="${msT('Type to search (type or category)…', 'พิมพ์ค้นหา (ประเภท/หมวด)…')}" value="${msEsc(st.q)}"></div>` : ''}
-          <div class="flex justify-between pb-1.5 mb-1.5 border-b border-slate-800 text-[10px] gap-3">
-            <button type="button" class="ms-all text-cyan-400 hover:underline">${msT('Select All', 'เลือกทั้งหมด')}${st.search ? msT(' (shown)', ' (ที่แสดง)') : ''}</button>
-            <button type="button" class="ms-clr text-slate-400 hover:underline">${msT('Clear', 'ล้าง')}</button></div>
-          <div class="ms-list space-y-0.5 overflow-y-auto custom-scroll pr-1" style="max-height:280px">${list}</div>
-        </div>`;
-      const fire = () => { msSync(id); st.onChange && st.onChange(); };
-      host.querySelector('.ms-btn').addEventListener('click', e => {
-        e.stopPropagation();
-        Object.keys(DCC_MS).forEach(k => { if (k !== id && DCC_MS[k].open) { DCC_MS[k].open = false; document.querySelector(`#${k} .ms-dd`)?.classList.add('hidden'); } });
-        st.open = !st.open; host.querySelector('.ms-dd').classList.toggle('hidden', !st.open);
-        if (st.open) host.querySelector('.ms-q')?.focus();
-      });
-      host.querySelector('.ms-dd').addEventListener('click', e => e.stopPropagation());
-      host.querySelector('.ms-list').addEventListener('change', e => { const cb = e.target; if (cb.type !== 'checkbox') return; cb.checked ? st.sel.add(cb.value) : st.sel.delete(cb.value); fire(); });
-      host.querySelector('.ms-list').addEventListener('click', e => {
-        const g = e.target.closest('.ms-group'); if (!g) return;
-        const opts = [...host.querySelectorAll(`.ms-opt[data-g="${CSS.escape(g.dataset.g)}"]`)].filter(o => o.style.display !== 'none');
-        const allOn = opts.every(o => st.sel.has(o.querySelector('input').value));
-        opts.forEach(o => { const v = o.querySelector('input').value; allOn ? st.sel.delete(v) : st.sel.add(v); });
-        fire();
-      });
-      host.querySelector('.ms-all').addEventListener('click', () => { host.querySelectorAll('.ms-opt').forEach(o => { if (o.style.display !== 'none') st.sel.add(o.querySelector('input').value); }); fire(); });
-      host.querySelector('.ms-clr').addEventListener('click', () => { st.sel.clear(); fire(); });
-      const q = host.querySelector('.ms-q');
-      if (q) { q.addEventListener('input', () => { st.q = q.value; msFilterList(id); }); q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); host.querySelector('.ms-all').click(); } }); }
-      msFilterList(id); msSync(id);
-    }
-    function msFilterList(id) {
-      const st = DCC_MS[id], host = document.getElementById(id); if (!st || !host) return;
-      const q = (st.q || '').toLowerCase().trim();
-      const shownG = new Set();
-      host.querySelectorAll('.ms-opt').forEach(o => { const ok = !q || o.dataset.s.includes(q); o.style.display = ok ? '' : 'none'; if (ok) shownG.add(o.dataset.g); });
-      host.querySelectorAll('.ms-group').forEach(g => { g.style.display = shownG.has(g.dataset.g) ? '' : 'none'; });
-    }
-    function msSync(id) {
-      const st = DCC_MS[id], host = document.getElementById(id); if (!st || !host) return;
-      host.querySelectorAll('.ms-opt input').forEach(cb => { cb.checked = st.sel.has(cb.value); });
-      const l = host.querySelector('.ms-lbl'); if (l) { l.textContent = msLabel(st); l.title = msLabel(st); }
-      const b = host.querySelector('.ms-btn'); if (b) b.classList.toggle('border-indigo-500', st.sel.size > 0);
-      const strip = host.closest('.dcc-filter-strip'); if (strip) strip.dispatchEvent(new Event('change', { bubbles: false }));
-    }
-    window.addEventListener('click', () => { Object.keys(DCC_MS).forEach(k => { if (DCC_MS[k].open) { DCC_MS[k].open = false; document.querySelector(`#${k} .ms-dd`)?.classList.add('hidden'); } }); });
-  </script>
   <script>
     Chart.register(ChartDataLabels);
 
@@ -1452,8 +1359,7 @@
       const catKey = [...selectedCategories].sort().join(',');
       const stKey = [...selectedStages].sort().join(',');
       const tKey = ['filterYear', 'filterWeek', 'filterDay'].map(id => document.getElementById(id)?.value || 'All').join('/');
-      const prKey = (typeof msValues === 'function' ? msValues('filterProbType') : []).sort().join(',');
-      return `${projectName}_${currentLang}_T:${tKey}_M:${mVal}_P:${pVal}_C:${compVal}_CATS:${catKey}_ST:${stKey}_PT:${prKey}_S:${searchVal}`;
+      return `${projectName}_${currentLang}_T:${tKey}_M:${mVal}_P:${pVal}_C:${compVal}_CATS:${catKey}_ST:${stKey}_S:${searchVal}`;
     }
 
     function applyFilters() {
@@ -1463,12 +1369,6 @@
       const compVal = document.getElementById('filterComponent').value;
       const searchVal = document.getElementById('tableSearch').value.toLowerCase().trim();
       const T = refreshCwoTimeFilters();
-      // Problem Type (multi-select + search), options linked to the selected Categories
-      if (!DCC_MS.filterProbType) msInit('filterProbType', applyFilters, { search: true });
-      const lp = document.getElementById('lblFProb'); if (lp) lp.textContent = currentLang === 'th' ? 'ประเภทปัญหา' : 'Problem Type';
-      const ptg = new Map();
-      records.forEach(r => { if (!selectedCategories.includes(r.c)) return; const t = r.probType || r.c; if (!ptg.has(t)) ptg.set(t, new Map()); ptg.get(t).set(r.c, (ptg.get(t).get(r.c) || 0) + 1); });
-      const probOk = msSetItems('filterProbType', [...ptg.entries()].map(([t, cm]) => ({ v: t, l: t, g: [...cm.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => a.g.localeCompare(b.g) || a.l.localeCompare(b.l)), currentLang === 'th' ? 'ทุกประเภท' : 'All Problem Types');
 
       filteredRecords = records.filter(r => {
         const itemP = (r.p || '').trim();
@@ -1479,7 +1379,7 @@
         const matchP = (pVal === 'All' || itemP.toUpperCase() === pVal.toUpperCase());
         const matchComp = (compVal === 'All' || r.comp === compVal);
         const matchCat = selectedCategories.includes(r.c);
- const matchStage = selectedStages.includes(r.st) && probOk(r.probType || r.c);
+        const matchStage = selectedStages.includes(r.st);
         
         const matchSearch = !searchVal || (
           r.id.toLowerCase().includes(searchVal) ||
@@ -1506,7 +1406,6 @@
       document.getElementById('filterPriority').value = 'All';
       document.getElementById('filterComponent').value = 'All';
       document.getElementById('tableSearch').value = '';
-      if (typeof msClear === 'function' && DCC_MS.filterProbType) msClear('filterProbType', true);
       selectedCategories = [...META.categories];
       selectedStages = [...META.stages];
       buildCategoryCheckboxes();
@@ -2899,8 +2798,8 @@
     const cmpVals = arr => [...new Set(arr.filter(Boolean))].sort().map(v => [v, v]);
 
     function resetCwoCompare() {
-      ['cmpYear', 'cmpMonth', 'cmpWeek', 'cmpDay', 'cmpCategory', 'cmpPriority', 'cmpComponent', 'cmpType']
-        .forEach(id => msClear(id, true));
+      ['cmpFile', 'cmpYear', 'cmpMonth', 'cmpWeek', 'cmpDay', 'cmpCategory', 'cmpPriority', 'cmpComponent', 'cmpType']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = 'All'; });
       renderCwoCompare();
     }
 
@@ -2918,16 +2817,6 @@
       CMP_CHARTS[id] = new Chart(el.getContext('2d'), config);
     }
     const cmpShort = (s, n = 18) => (s && s.length > n ? s.slice(0, n - 1) + '…' : s);
-    // Wrap a label into lines (full text, no truncation) for chart axes
-    function cmpWrap(s, w = 20) {
-      const out = []; let line = '';
-      String(s || '').split(/\s+/).forEach(word => {
-        while (word.length > w) { if (line) { out.push(line); line = ''; } out.push(word.slice(0, w)); word = word.slice(w); }
-        if ((line + ' ' + word).trim().length > w) { if (line) out.push(line); line = word; } else line = (line + ' ' + word).trim();
-      });
-      if (line) out.push(line);
-      return out.length > 1 ? out : (out[0] || '');
-    }
 
     // Grouped bars (one bar per month) for the top-5 items, with data labels — same look as Case Comparison
     function cmpGroupedBar(id, items, periods, pal, keyFn) {
@@ -2935,7 +2824,7 @@
       cmpChart(id, {
         type: 'bar',
         data: {
-          labels: items.map(i => i.lines || cmpWrap(i.label, 20)),
+          labels: items.map(i => cmpShort(i.label, 22)),
           datasets: periods.map((p, idx) => {
             const m = cmpCount(p.rows, keyFn);
             return { label: p.label, data: items.map(i => m.get(i.key) || 0), backgroundColor: pal[idx % pal.length], borderRadius: 4 };
@@ -2950,90 +2839,41 @@
             tooltip: { callbacks: { title: c => items[c[0].dataIndex]?.label || '' } }
           },
           scales: {
-            x: { ticks: { color: '#94a3b8', font: { size: 10 }, autoSkip: false, maxRotation: 0, minRotation: 0 }, grid: { display: false } },
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
             y: { beginAtZero: true, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(51, 65, 85, 0.4)' } }
           }
         }
       });
     }
 
-    function cmpSummaryItem(rank, title, badge, chips, insight) {
+    function cmpSummaryItem(rank, title, badge, chips) {
       return `<div class="p-2 rounded-lg bg-slate-800/50 border border-slate-700/60">
-        <div class="flex items-start justify-between gap-1.5 mb-1">
-          <span class="text-xs font-bold text-white leading-snug break-words min-w-0" title="${cmpEsc(title.replace(/<[^>]+>/g, ''))}">${rank}: ${title}</span><span class="shrink-0">${badge}</span>
+        <div class="flex items-center justify-between gap-1 mb-1">
+          <span class="text-xs font-bold text-white truncate max-w-[230px]" title="${cmpEsc(title.replace(/<[^>]+>/g, ''))}">${rank}: ${title}</span>${badge}
         </div>
-        <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">${chips}</div>${insight || ''}</div>`;
-    }
-    // Deep insight line for a summary item: trend, where, SLA, MTTR, backlog + action
-    function cmpInsight(kind, all, periods, extra = {}) {
-      if (!all.length) return '';
-      const th = currentLang === 'th', bits = [];
-      const counts = periods.map(p => p.rows.filter(r => all.includes(r)).length);
-      if (counts.length >= 2) {
-        const max = Math.max(...counts), pi = counts.indexOf(max);
-        const rising = counts.length >= 3 && counts[counts.length - 1] > counts[counts.length - 2] && counts[counts.length - 2] > counts[counts.length - 3];
-        bits.push(rising ? cmpT(`rising 3 months in a row`, `เพิ่มขึ้นต่อเนื่อง 3 เดือน`) : pi === counts.length - 1 ? cmpT(`latest month is the peak`, `เดือนล่าสุดสูงสุด`) : cmpT(`peak ${periods[pi].label} (${max})`, `พีค ${periods[pi].label} (${max})`));
-      }
-      if (kind !== 'hot') {
-        const lm = cmpCount(all, r => cmpLocFull(r)), top = [...lm.entries()].sort((a, b) => b[1] - a[1])[0];
-        if (top) bits.push(cmpT(`top location ${top[0]} (${(top[1] / all.length * 100).toFixed(0)}%, ${lm.size} locations)`, `พื้นที่หลัก ${top[0]} (${(top[1] / all.length * 100).toFixed(0)}%, ${lm.size} จุด)`));
-      } else {
-        const days = new Set(all.map(r => r.day).filter(Boolean)).size;
-        if (days) bits.push(cmpT(`repeats on ${days} days`, `เกิดซ้ำ ${days} วัน`));
-        const cm = cmpCount(all, r => r.c), topC = [...cm.entries()].sort((a, b) => b[1] - a[1])[0];
-        if (topC) bits.push(cmpT(`category ${topC[0]}`, `หมวด ${topC[0]}`));
-      }
-      const S = cwoSlaStats(all);
-      if (S.respPct !== null && S.respPct !== undefined) bits.push(`${cmpT('Resp', 'รับเรื่อง')} ${fmtPct(S.respPct)}`);
-      if (S.compPct !== null && S.compPct !== undefined) bits.push(`${cmpT('Comp', 'ปิดงาน')} ${fmtPct(S.compPct)}`);
-      if (S.mtAvgMin) bits.push(`MTTR ${(S.mtAvgMin / 60).toFixed(1)}${cmpT('h', ' ชม.')}`);
-      const open = all.filter(cmpIsPending), old = open.filter(r => (r.aging || 0) > 30).length;
-      if (open.length) bits.push(cmpT(`${open.length} open${old ? ` (${old} >30d)` : ''}`, `ค้าง ${open.length}${old ? ` (${old} เกิน 30 วัน)` : ''}`));
-      let a;
-      if (S.compPct !== null && S.compPct !== undefined && S.compPct < 80) a = cmpT('completion SLA weak — assign owner, pre-stage parts, daily follow-up', 'SLA ปิดงานต่ำ — กำหนดผู้รับผิดชอบ เตรียมอะไหล่ ติดตามรายวัน');
-      else if (extra.d > 0) a = cmpT('increasing — root-cause review this week and add PM checks', 'เพิ่มขึ้น — ทบทวนสาเหตุภายในสัปดาห์และเพิ่มการตรวจ PM');
-      else if (kind === 'hot') a = cmpT('recurring at the same spot — add to the PM route and verify fix quality', 'เกิดซ้ำจุดเดิม — เพิ่มเข้ารอบ PM และตรวจคุณภาพการซ่อม');
-      else if (old) a = cmpT('escalate work orders older than 30 days', 'เร่งปิดคำสั่งงานที่ค้างเกิน 30 วัน');
-      else a = cmpT('stable — keep monitoring', 'ทรงตัว — เฝ้าระวังต่อเนื่อง');
-      return `<div class="mt-1 text-[10px] leading-snug text-slate-400"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>${cmpEsc(bits.join(' · '))}<div class="text-slate-500 italic">${cmpT('Action', 'แนวทาง')}: ${cmpEsc(a)}</div></div>`;
-    }
-    // Full location: component › location (component omitted when already part of the location)
-    function cmpLocFull(r) {
-      const loc = String(r.loc || '-').trim(), comp = String(r.comp || '').trim();
-      if (!comp || loc.toLowerCase().includes(comp.toLowerCase()) || comp === loc) return loc;
-      return `${comp} › ${loc}`;
+        <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">${chips}</div></div>`;
     }
     const chip = (txt, cls = 'bg-slate-700/60 text-slate-300') => `<span class="px-1.5 py-0.5 rounded ${cls} font-semibold">${txt}</span>`;
 
     function renderCwoCompare() {
       if (!isDataLoaded || window.CWO_MODE !== 'compare') return;
       // ---- cascading filters
-      if (!DCC_MS.cmpYear) {
-        ['cmpYear', 'cmpMonth', 'cmpWeek', 'cmpDay', 'cmpCategory', 'cmpPriority', 'cmpComponent'].forEach(id => msInit(id, renderCwoCompare));
-        msInit('cmpType', renderCwoCompare, { search: true });
-      }
-      const allL = cmpT('All', 'ทั้งหมด');
-      const byFile = records;   // all uploaded files are always merged (no Files filter)
-      const yOk = msSetItems('cmpYear', cmpVals(byFile.map(r => r.yr)).reverse().map(([v, l]) => ({ v, l })), allL);
-      const byYear = byFile.filter(r => yOk(r.yr));
-      const mOk = msSetItems('cmpMonth', [...new Set(byYear.map(cmpMonthKey).filter(Boolean))].sort().map(k => ({ v: k, l: cmpMonthLabel(k) })), allL);
-      const byMonth = byYear.filter(r => mOk(cmpMonthKey(r)));
+      const fVal = cmpFill('cmpFile', [...CWO_FILES.keys()].map(n => [n, n]), cmpT('All Files (Merged)', 'ทุกไฟล์ (รวม)'));
+      const byFile = records.filter(r => fVal === 'All' || r.file === fVal);
+      const yVal = cmpFill('cmpYear', cmpVals(byFile.map(r => r.yr)).reverse(), cmpT('All', 'ทั้งหมด'));
+      const byYear = byFile.filter(r => yVal === 'All' || r.yr === yVal);
+      const mVal = cmpFill('cmpMonth', [...new Set(byYear.map(cmpMonthKey).filter(Boolean))].sort().map(k => [k, cmpMonthLabel(k)]), cmpT('All', 'ทั้งหมด'));
+      const byMonth = byYear.filter(r => mVal === 'All' || cmpMonthKey(r) === mVal);
       const wkMap = new Map(); byMonth.forEach(r => { if (r.wk) wkMap.set(r.wk, r.wkLabel); });
-      const wOk = msSetItems('cmpWeek', [...wkMap.entries()].sort().map(([v, l]) => ({ v, l })), allL);
-      const byWeek = byMonth.filter(r => wOk(r.wk));
-      const dOk = msSetItems('cmpDay', [...new Set(byWeek.map(r => r.day).filter(Boolean))].sort().map(d => { const [y, m, dd] = d.split('-').map(Number); return { v: d, l: `${String(dd).padStart(2, '0')} ${CMP_MON[m - 1]} ${y}` }; }), allL);
-      const byDay = byWeek.filter(r => dOk(r.day));
-      const cOk = msSetItems('cmpCategory', cmpVals(byDay.map(r => r.c)).map(([v, l]) => ({ v, l })), allL);
-      const byCat = byDay.filter(r => cOk(r.c));
-      const pOk = msSetItems('cmpPriority', cmpVals(byCat.map(r => r.p)).map(([v, l]) => ({ v, l })), allL);
-      const byPrio = byCat.filter(r => pOk(r.p));
-      const kOk = msSetItems('cmpComponent', cmpVals(byPrio.map(r => r.comp)).map(([v, l]) => ({ v, l })), allL);
-      const byComp = byPrio.filter(r => kOk(r.comp));
-      // Event Type: linked to Category (grouped by category, searchable by type or category name)
-      const tg = new Map(); byComp.forEach(r => { const t = cmpType(r); if (!tg.has(t)) tg.set(t, new Map()); tg.get(t).set(r.c, (tg.get(t).get(r.c) || 0) + 1); });
-      const tItems = [...tg.entries()].map(([t, cm]) => ({ v: t, l: t, g: [...cm.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => a.g.localeCompare(b.g) || a.l.localeCompare(b.l));
-      const tOk = msSetItems('cmpType', tItems, allL);
-      const rows = byComp.filter(r => tOk(cmpType(r)));
+      const wVal = cmpFill('cmpWeek', [...wkMap.entries()].sort(), cmpT('All', 'ทั้งหมด'));
+      const byWeek = byMonth.filter(r => wVal === 'All' || r.wk === wVal);
+      const dVal = cmpFill('cmpDay', [...new Set(byWeek.map(r => r.day).filter(Boolean))].sort().map(d => { const [y, m, dd] = d.split('-').map(Number); return [d, `${String(dd).padStart(2, '0')} ${CMP_MON[m - 1]} ${y}`]; }), cmpT('All', 'ทั้งหมด'));
+      const byDay = byWeek.filter(r => dVal === 'All' || r.day === dVal);
+      const cVal = cmpFill('cmpCategory', cmpVals(byDay.map(r => r.c)), cmpT('All', 'ทั้งหมด'));
+      const pVal = cmpFill('cmpPriority', cmpVals(byDay.map(r => r.p)), cmpT('All', 'ทั้งหมด'));
+      const kVal = cmpFill('cmpComponent', cmpVals(byDay.map(r => r.comp)), cmpT('All', 'ทั้งหมด'));
+      const tVal = cmpFill('cmpType', cmpVals(byDay.map(cmpType)), cmpT('All', 'ทั้งหมด'));
+      const rows = byDay.filter(r => (cVal === 'All' || r.c === cVal) && (pVal === 'All' || r.p === pVal) && (kVal === 'All' || r.comp === kVal) && (tVal === 'All' || cmpType(r) === tVal));
 
       // ---- periods = months
       const pmap = new Map();
@@ -3050,7 +2890,7 @@
       (latest ? latest.rows : []).forEach(r => {
         const t = cmpType(r); if (histTypes.has(t)) return;
         if (!newMap.has(t)) newMap.set(t, { t, n: 0, locs: new Map(), prio: new Map(), open: 0, note: r.d || '-' });
-        const it = newMap.get(t); it.n++; const lf = cmpLocFull(r); it.locs.set(lf, (it.locs.get(lf) || 0) + 1); it.prio.set(r.p, (it.prio.get(r.p) || 0) + 1); if (cmpIsPending(r)) it.open++;
+        const it = newMap.get(t); it.n++; it.locs.set(r.loc, (it.locs.get(r.loc) || 0) + 1); it.prio.set(r.p, (it.prio.get(r.p) || 0) + 1); if (cmpIsPending(r)) it.open++;
       });
       const newTypes = periods.length > 1 ? [...newMap.values()].sort((a, b) => b.n - a.n) : [];
 
@@ -3085,7 +2925,7 @@
       document.getElementById('cmpDeltaList').innerHTML = deltaTop.map((x, i) => {
         const all = rows.filter(r => cmpType(r) === x.key);
         return cmpSummaryItem(`#${i + 1}`, cmpEsc(x.label), `<span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${x.d > 0 ? 'text-rose-300 bg-rose-500/15 border-rose-500/25' : 'text-emerald-300 bg-emerald-500/15 border-emerald-500/25'}">${x.d > 0 ? '▲ +' : '▼ '}${x.d}</span>`,
-          chip(`${cmpT('Total', 'รวม')}: ${all.length}`) + lvp(x.cur, x.old) + chip(`${cmpT('Open', 'ค้าง')}: ${all.filter(cmpIsPending).length}`, 'bg-amber-500/20 text-amber-300 border border-amber-500/30'), cmpInsight('shift', all, periods, { d: x.d }));
+          chip(`${cmpT('Total', 'รวม')}: ${all.length}`) + lvp(x.cur, x.old) + chip(`${cmpT('Open', 'ค้าง')}: ${all.filter(cmpIsPending).length}`, 'bg-amber-500/20 text-amber-300 border border-amber-500/30'));
       }).join('') || `<div class="text-xs text-slate-400 text-center py-4">${cmpT('Need at least two months.', 'ต้องมีอย่างน้อย 2 เดือน')}</div>`;
 
       // ---- top 5 problem types
@@ -3095,18 +2935,18 @@
         const all = rows.filter(r => cmpType(r) === x.key);
         const cur = latest ? latest.rows.filter(r => cmpType(r) === x.key).length : 0, old = prev ? prev.rows.filter(r => cmpType(r) === x.key).length : 0;
         return cmpSummaryItem(`#${i + 1}`, cmpEsc(x.label), `<span class="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/25">${x.n}</span>`,
-          lvp(cur, old) + chip(`${cmpT('Open', 'ค้าง')}: ${all.filter(cmpIsPending).length}`, 'bg-amber-500/20 text-amber-300 border border-amber-500/30') + chip(`SLA ${fmtPct(cwoSlaStats(all).compPct)}`, 'bg-sky-500/20 text-sky-300 border border-sky-500/30'), cmpInsight('type', all, periods, { d: cur - old }));
+          lvp(cur, old) + chip(`${cmpT('Open', 'ค้าง')}: ${all.filter(cmpIsPending).length}`, 'bg-amber-500/20 text-amber-300 border border-amber-500/30') + chip(`SLA ${fmtPct(cwoSlaStats(all).compPct)}`, 'bg-sky-500/20 text-sky-300 border border-sky-500/30'));
       }).join('') || `<div class="text-xs text-slate-400 text-center py-4">${cmpT('No data', 'ไม่มีข้อมูล')}</div>`;
 
       // ---- top 5 recurring hotspots: Event Type + Location (event first)
-      const pairKey = r => `${cmpType(r)} @@ ${cmpLocFull(r)}`;
-      const hot5 = [...cmpCount(rows, pairKey).entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, n]) => { const [ev, loc] = k.split(' @@ '); const ln = cmpWrap(loc, 22); return { key: k, label: `${ev} @ ${loc}`, ev, loc, n, lines: [].concat(cmpWrap(ev, 22), ln) }; });
+      const pairKey = r => `${cmpType(r)} @ ${r.loc || '-'}`;
+      const hot5 = [...cmpCount(rows, pairKey).entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, n]) => { const [ev, loc] = k.split(' @ '); return { key: k, label: `${ev} - ${loc}`, ev, loc, n }; });
       cmpGroupedBar('cmpHotspotChart', hot5, periods, CMP_PAL.hot, pairKey);
       document.getElementById('cmpHotspotList').innerHTML = hot5.map((x, i) => {
         const all = rows.filter(r => pairKey(r) === x.key);
         const cur = latest ? latest.rows.filter(r => pairKey(r) === x.key).length : 0, old = prev ? prev.rows.filter(r => pairKey(r) === x.key).length : 0;
         return cmpSummaryItem(`#${i + 1}`, `<span class="text-indigo-300">${cmpEsc(x.ev)}</span> <span class="text-slate-400">@</span> ${cmpEsc(x.loc)}`, `<span class="text-[10px] font-mono font-bold text-indigo-300 bg-indigo-500/15 px-1.5 py-0.5 rounded border border-indigo-500/25">${x.n}</span>`,
-          lvp(cur, old) + chip(`${cmpT('Open', 'ค้าง')}: ${all.filter(cmpIsPending).length}`, 'bg-amber-500/20 text-amber-300 border border-amber-500/30'), cmpInsight('hot', all, periods, { d: cur - old }));
+          lvp(cur, old) + chip(`${cmpT('Open', 'ค้าง')}: ${all.filter(cmpIsPending).length}`, 'bg-amber-500/20 text-amber-300 border border-amber-500/30'));
       }).join('') || `<div class="text-xs text-slate-400 text-center py-4">${cmpT('No data', 'ไม่มีข้อมูล')}</div>`;
 
       // ---- new problem types table (Case look)
@@ -3531,7 +3371,6 @@
     (function () {
       function countActive(strip) {
         let n = 0; strip.querySelectorAll('select').forEach(s => { if (s.value && !/^all$/i.test(s.value)) n++; });
-        strip.querySelectorAll('.ms-host').forEach(h => { if (typeof msActive === 'function' && msActive(h.id)) n++; });
         const b = strip.querySelector('.dcc-mcount'); if (b) { b.textContent = n; b.classList.toggle('hidden', !n); }
       }
       function wire() {
