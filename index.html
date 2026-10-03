@@ -904,7 +904,7 @@
     <div id="stickyControlBar" class="fixed top-0 left-0 right-0 z-[99999] w-full bg-[#0b1120] border-b border-slate-800 shadow-md">
         
         <!-- Top Compact Navigation Bar (Header: strictly ~50px height) -->
-        <header id="mainHeader" class="bg-slate-900 border-b border-slate-800 px-2 sm:px-4 py-2 w-full transition-all">
+        <header id="mainHeader" class="bg-slate-900 border-b border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 w-full transition-all">
             <div class="w-full flex items-center justify-between gap-2 sm:gap-3">
                 
                 <!-- Left: Hamburger Menu (Left Drawer) on far left + Title & Badge -->
@@ -1077,7 +1077,7 @@
         </div>
 
         <!-- Slicers / Filters Top Locked Toolbar (Case Management) -->
-        <div id="sidebarFiltersDashboard" class="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-800 transition-all">
+        <div id="sidebarFiltersDashboard" class="px-3 sm:px-6 pt-3 pb-2.5 sm:pb-3 border-b border-slate-800 transition-all">
             <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-2 sm:gap-2.5">
                 
                 <!-- Filter Title & Quick Reset -->
@@ -1199,7 +1199,7 @@
         </div>
 
         <!-- Slicers / Filters Top Locked Toolbar (Case Comparison - visible in compare view) -->
-        <div id="sidebarFiltersCompare" class="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-800 transition-all hidden">
+        <div id="sidebarFiltersCompare" class="px-3 sm:px-6 pt-3 pb-2.5 sm:pb-3 border-b border-slate-800 transition-all hidden">
             <div class="max-w-[1920px] mx-auto flex flex-wrap items-center gap-2 sm:gap-2.5">
                 
                 <!-- Filter Title & Reset Button -->
@@ -1375,7 +1375,7 @@
     <!-- /Mobile Drawer -->
 
     <!-- Main Content Container (Full Width max-w-[1920px]) -->
-    <main id="mainContainer" class="flex-1 max-w-[1920px] mx-auto w-full px-3 sm:px-6 lg:px-8 py-5 transition-all duration-300">
+    <main id="mainContainer" class="flex-1 max-w-[1920px] mx-auto w-full px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3 pb-8 transition-all duration-300">
         <!-- Safety stubs for JS compatibility -->
         <div id="leftSidebarNav" class="hidden"></div>
         <div id="sidebarBackdrop" class="hidden"></div>
@@ -1383,7 +1383,7 @@
         <div class="w-full space-y-6">
 
             <!-- VIEW 1: EXECUTIVE DASHBOARD -->
-            <div id="viewDashboard" class="space-y-6">
+            <div id="viewDashboard" class="space-y-4">
 
                     <!-- Empty State Placeholder for Case Management (Shown when dataset count is 0) -->
                     <div id="emptyDashboardPlaceholder" class="glass-card p-8 sm:p-10 text-center border-dashed border-2 border-slate-700 max-w-2xl mx-auto my-6">
@@ -1405,26 +1405,10 @@
                     <!-- /#emptyDashboardPlaceholder -->
 
                     <!-- Dashboard Active Content (Hidden when 0 records, shown when files are uploaded) -->
-                    <div id="dashboardActiveSections" class="space-y-6 hidden">
+                    <div id="dashboardActiveSections" class="space-y-4 hidden">
 
                     <!-- Section 1: overall -->
-                    <section id="sec-overall" class="scroll-mt-20 space-y-4">
-                        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                            <div class="flex items-center gap-2">
-                                <div class="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <h2 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                        <span>Overall</span>
-                                        <span id="overallSubHeader" class="text-[10px] text-slate-400 font-normal" data-i18n="overall_subtitle">Executive Overview</span>
-                                    </h2>
-                                    <p class="text-[11px] text-slate-400">Executive KPIs, Telemetry Briefing & Trend Performance</p>
-                                </div>
-                            </div>
-                            <span class="text-[10px] font-mono text-indigo-400 px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">SECTION 01</span>
-                        </div>
-
+                    <section id="sec-overall" class="scroll-mt-20">
                         <!-- KPI Metric Cards -->
                         <div id="kpiContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 kpi-section">
             <div id="cardTotalRecords" class="kpi-card bg-slate-900/80 border border-indigo-500/40 rounded-xl p-3 shadow-lg relative group">
@@ -1943,74 +1927,123 @@
                 <!-- Charts Section: 4 Multi-Bar Comparison Charts (Full Width) -->
                 <div class="space-y-6">
                     <!-- Chart 1: Significant Delta Shifts (Full Width) -->
+                    <!-- Chart 1: Significant Delta Shifts -->
                     <div class="glass-card p-4 sm:p-5">
-                        <div class="w-full">
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h3 id="chart1Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart1T">
-                                        <i class="fa-solid fa-arrow-trend-up text-rose-400"></i> Top 5 Significant Delta Shifts
-                                    </h3>
-                                    <p id="chart1Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart1S">Parallel comparison of rising/dropping events (Click bar to drill down)</p>
-                                </div>
-                                <button onclick="openChartModal('shiftChart', 'Top 5 Significant Delta Shifts')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                    <i class="fa-solid fa-expand text-xs"></i>
-                                </button>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 id="chart1Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart1T">
+                                    <i class="fa-solid fa-arrow-trend-up text-rose-400"></i> Top 5 Significant Delta Shifts
+                                </h3>
+                                <p id="chart1Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart1S">Parallel comparison of rising/dropping events (Click bar to drill down)</p>
                             </div>
-                            <div class="h-80 sm:h-96"><canvas id="shiftChart"></canvas></div>
+                            <button onclick="openChartModal('shiftChart', 'Top 5 Significant Delta Shifts')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                <i class="fa-solid fa-expand text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                            <div class="lg:col-span-8 xl:col-span-8 h-80 sm:h-96">
+                                <canvas id="shiftChart"></canvas>
+                            </div>
+                            <div class="lg:col-span-4 xl:col-span-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+                                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                                    <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-list-check text-rose-400"></i>
+                                        <span id="shiftSummaryTitle">Summary Breakdown</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">Top 5 Shifts</span>
+                                </div>
+                                <div id="shiftSummaryList" class="space-y-1.5 overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex-1"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Chart 2: Top True Incidents Comparison (Full Width) -->
+                    <!-- Chart 2: Top True Incidents Comparison -->
                     <div class="glass-card p-4 sm:p-5">
-                        <div class="w-full">
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h3 id="chart2Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart2T">
-                                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> Top True Incident Event Types Comparison
-                                    </h3>
-                                    <p id="chart2Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart2S">Focus exclusively on verified real events (False Alarms filtered out)</p>
-                                </div>
-                                <button onclick="openChartModal('trueEventChart', 'Top True Incidents Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                    <i class="fa-solid fa-expand text-xs"></i>
-                                </button>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 id="chart2Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart2T">
+                                    <i class="fa-solid fa-shield-halved text-emerald-400"></i> Top True Incident Event Types Comparison
+                                </h3>
+                                <p id="chart2Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart2S">Focus exclusively on verified real events (False Alarms filtered out)</p>
                             </div>
-                            <div class="h-80 sm:h-96"><canvas id="trueEventChart"></canvas></div>
+                            <button onclick="openChartModal('trueEventChart', 'Top True Incidents Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                <i class="fa-solid fa-expand text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                            <div class="lg:col-span-8 xl:col-span-8 h-80 sm:h-96">
+                                <canvas id="trueEventChart"></canvas>
+                            </div>
+                            <div class="lg:col-span-4 xl:col-span-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+                                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                                    <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                                        <span id="trueEventSummaryTitle">Summary Breakdown</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Top 5 True</span>
+                                </div>
+                                <div id="trueEventSummaryList" class="space-y-1.5 overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex-1"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Chart 3: Top False Incident Event Types (Full Width) -->
+                    <!-- Chart 3: Top False Incident Event Types -->
                     <div class="glass-card p-4 sm:p-5">
-                        <div class="w-full">
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h3 id="chartFalseTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chartFalseT">
-                                        <i class="fa-solid fa-bell-slash text-amber-400"></i> Top False Incident Event Types
-                                    </h3>
-                                    <p id="chartFalseSub" class="text-xs text-slate-400 mt-0.5" data-i18n="chartFalseS">Analyze top false alarm events to optimize sensor thresholding</p>
-                                </div>
-                                <button onclick="openChartModal('falseEventChart', 'Top False Alarms Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                    <i class="fa-solid fa-expand text-xs"></i>
-                                </button>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 id="chartFalseTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chartFalseT">
+                                    <i class="fa-solid fa-bell-slash text-amber-400"></i> Top False Incident Event Types
+                                </h3>
+                                <p id="chartFalseSub" class="text-xs text-slate-400 mt-0.5" data-i18n="chartFalseS">Analyze top false alarm events to optimize sensor thresholding</p>
                             </div>
-                            <div class="h-80 sm:h-96"><canvas id="falseEventChart"></canvas></div>
+                            <button onclick="openChartModal('falseEventChart', 'Top False Alarms Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                <i class="fa-solid fa-expand text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                            <div class="lg:col-span-8 xl:col-span-8 h-80 sm:h-96">
+                                <canvas id="falseEventChart"></canvas>
+                            </div>
+                            <div class="lg:col-span-4 xl:col-span-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+                                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                                    <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-bell-slash text-amber-400"></i>
+                                        <span id="falseEventSummaryTitle">Summary Breakdown</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">Top 5 False</span>
+                                </div>
+                                <div id="falseEventSummaryList" class="space-y-1.5 overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex-1"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Chart 4: Recurring Hotspots (Full Width) -->
+                    <!-- Chart 4: Recurring Hotspots -->
                     <div class="glass-card p-4 sm:p-5">
-                        <div class="w-full">
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h3 id="chart3Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart3T">
-                                        <i class="fa-solid fa-repeat text-indigo-400"></i> Recurring Hotspots: Highest Frequency Event + Location
-                                    </h3>
-                                    <p id="chart3Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart3S">Cross-analyzing [Location + Event Type] for systemic operational flaws (Click bar to drill down)</p>
-                                </div>
-                                <button onclick="openChartModal('recurringChart', 'Recurring Hotspots')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                    <i class="fa-solid fa-expand text-xs"></i>
-                                </button>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 id="chart3Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart3T">
+                                    <i class="fa-solid fa-repeat text-indigo-400"></i> Recurring Hotspots: Highest Frequency Event + Location
+                                </h3>
+                                <p id="chart3Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart3S">Cross-analyzing [Location + Event Type] for systemic operational flaws (Click bar to drill down)</p>
                             </div>
-                            <div class="h-80 sm:h-96"><canvas id="recurringChart"></canvas></div>
+                            <button onclick="openChartModal('recurringChart', 'Recurring Hotspots')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                <i class="fa-solid fa-expand text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                            <div class="lg:col-span-8 xl:col-span-8 h-80 sm:h-96">
+                                <canvas id="recurringChart"></canvas>
+                            </div>
+                            <div class="lg:col-span-4 xl:col-span-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+                                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                                    <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-repeat text-indigo-400"></i>
+                                        <span id="recurringSummaryTitle">Summary Breakdown</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Top 5 Hotspots</span>
+                                </div>
+                                <div id="recurringSummaryList" class="space-y-1.5 overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex-1"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2314,7 +2347,7 @@
             const bar = document.getElementById('stickyControlBar');
             const spacer = document.getElementById('stickyControlBarSpacer');
             if (bar && spacer) {
-                spacer.style.height = (bar.offsetHeight + 12) + 'px';
+                spacer.style.height = bar.offsetHeight + 'px';
             }
         }
         window.addEventListener('resize', syncStickyBarHeight);
@@ -5983,6 +6016,12 @@
             if (sFalse) sFalse.innerHTML = `<i class="fa-solid fa-wrench mr-1"></i>${txt.chartFalseSide}`;
             const s3 = document.getElementById('chart3SideTitle');
             if (s3) s3.innerHTML = `<i class="fa-solid fa-bullseye mr-1"></i>${txt.chart3Side}`;
+
+            const sTitle = currentLang === 'th' ? 'สรุปรายละเอียด' : 'Summary Breakdown';
+            ['shiftSummaryTitle', 'trueEventSummaryTitle', 'falseEventSummaryTitle', 'recurringSummaryTitle'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = sTitle;
+            });
         }
 
         function renderCompareDashboard() {
@@ -6258,6 +6297,32 @@
                     }
                 }
             });
+
+            // Render Right Summary Box
+            const shiftBox = document.getElementById('shiftSummaryList');
+            if (shiftBox) {
+                shiftBox.innerHTML = eventDeltas.map((e, idx) => {
+                    const ev = e.event;
+                    const evRecords = filtered.filter(d => d.EventType === ev);
+                    const total = evRecords.length;
+                    const trueCount = evRecords.filter(d => d.IsFalseAlarm === 'No').length;
+                    const falseCount = evRecords.filter(d => d.IsFalseAlarm === 'Yes').length;
+                    const labelRank = currentLang === 'th' ? `อันดับ ${idx + 1}` : `#${idx + 1}`;
+                    return `
+                        <div class="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 transition cursor-pointer" onclick="selectedFilters.eventTypes = new Set(['${escapeQuotes(ev)}']); renderAllDropdownMenus(); renderCompareDashboard();" title="Filter by ${escapeHTML(ev)}">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-xs font-bold text-white truncate max-w-[170px] sm:max-w-[210px]" title="${escapeHTML(ev)}">${labelRank}: ${escapeHTML(ev)}</span>
+                                <span class="text-[10px] font-mono font-bold text-rose-300 bg-rose-500/15 px-1.5 py-0.5 rounded border border-rose-500/25 shrink-0">&Delta; ${e.delta.toLocaleString()}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">
+                                <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 font-semibold">${currentLang === 'th' ? 'รวม' : 'Total'}: ${total.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">True: ${trueCount.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">False: ${falseCount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div class="text-xs text-slate-400 text-center py-4">No data</div>';
+            }
         }
 
         function renderTrueEventMultiBarChart(filtered, comparisonGroups, comparisonType) {
@@ -6347,6 +6412,32 @@
                     }
                 }
             });
+
+            // Render Right Summary Box
+            const trueBox = document.getElementById('trueEventSummaryList');
+            if (trueBox) {
+                trueBox.innerHTML = topTrueEvents.map((e, idx) => {
+                    const ev = e.event;
+                    const evRecords = filtered.filter(d => d.EventType === ev);
+                    const total = evRecords.length;
+                    const trueCount = e.total;
+                    const falseCount = total - trueCount;
+                    const labelRank = currentLang === 'th' ? `อันดับ ${idx + 1}` : `#${idx + 1}`;
+                    return `
+                        <div class="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 transition cursor-pointer" onclick="selectedFilters.eventTypes = new Set(['${escapeQuotes(ev)}']); renderAllDropdownMenus(); renderCompareDashboard();" title="Filter by ${escapeHTML(ev)}">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-xs font-bold text-white truncate max-w-[170px] sm:max-w-[210px]" title="${escapeHTML(ev)}">${labelRank}: ${escapeHTML(ev)}</span>
+                                <span class="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/25 shrink-0">${total > 0 ? ((trueCount / total) * 100).toFixed(0) : 0}% True</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">
+                                <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 font-semibold">${currentLang === 'th' ? 'รวม' : 'Total'}: ${total.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">True: ${trueCount.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">False: ${falseCount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div class="text-xs text-slate-400 text-center py-4">No data</div>';
+            }
         }
 
         function renderFalseEventMultiBarChart(filtered, comparisonGroups, comparisonType) {
@@ -6436,6 +6527,32 @@
                     }
                 }
             });
+
+            // Render Right Summary Box
+            const falseBox = document.getElementById('falseEventSummaryList');
+            if (falseBox) {
+                falseBox.innerHTML = topFalseEvents.map((e, idx) => {
+                    const ev = e.event;
+                    const evRecords = filtered.filter(d => d.EventType === ev);
+                    const total = evRecords.length;
+                    const falseCount = e.total;
+                    const trueCount = total - falseCount;
+                    const labelRank = currentLang === 'th' ? `อันดับ ${idx + 1}` : `#${idx + 1}`;
+                    return `
+                        <div class="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 transition cursor-pointer" onclick="selectedFilters.eventTypes = new Set(['${escapeQuotes(ev)}']); renderAllDropdownMenus(); renderCompareDashboard();" title="Filter by ${escapeHTML(ev)}">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-xs font-bold text-white truncate max-w-[170px] sm:max-w-[210px]" title="${escapeHTML(ev)}">${labelRank}: ${escapeHTML(ev)}</span>
+                                <span class="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/25 shrink-0">${total > 0 ? ((falseCount / total) * 100).toFixed(0) : 0}% False</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">
+                                <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 font-semibold">${currentLang === 'th' ? 'รวม' : 'Total'}: ${total.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">True: ${trueCount.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">False: ${falseCount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div class="text-xs text-slate-400 text-center py-4">No data</div>';
+            }
         }
 
         function renderRecurringMultiBarChart(filtered, comparisonGroups, comparisonType) {
@@ -6538,6 +6655,34 @@
                     }
                 }
             });
+
+            // Render Right Summary Box
+            const recurBox = document.getElementById('recurringSummaryList');
+            if (recurBox) {
+                recurBox.innerHTML = topPairs.map((p, idx) => {
+                    const pairStr = p.pair;
+                    const pairRecords = filtered.filter(d => `${d.Location || 'Area'} - ${d.EventType}` === pairStr);
+                    const total = pairRecords.length;
+                    const trueCount = pairRecords.filter(d => d.IsFalseAlarm === 'No').length;
+                    const falseCount = pairRecords.filter(d => d.IsFalseAlarm === 'Yes').length;
+                    const labelRank = currentLang === 'th' ? `อันดับ ${idx + 1}` : `#${idx + 1}`;
+                    const parts = pairStr.split(' - ');
+                    const locName = parts[0] || 'Area';
+                    const evName = parts[1] || pairStr;
+                    return `
+                        <div class="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 transition cursor-pointer" onclick="selectedFilters.eventTypes = new Set(['${escapeQuotes(evName)}']); renderAllDropdownMenus(); renderCompareDashboard();" title="Filter by ${escapeHTML(evName)}">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-xs font-bold text-white truncate max-w-[170px] sm:max-w-[210px]" title="${escapeHTML(pairStr)}">${labelRank}: <span class="text-indigo-300 font-bold">${escapeHTML(locName)}</span> - ${escapeHTML(evName)}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">
+                                <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 font-semibold">${currentLang === 'th' ? 'รวม' : 'Total'}: ${total.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">True: ${trueCount.toLocaleString()}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">False: ${falseCount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div class="text-xs text-slate-400 text-center py-4">No data</div>';
+            }
         }
 
         function renderNewEventTable(latestMonth) {
