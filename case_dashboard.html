@@ -26,13 +26,19 @@
     <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 
     <style>
-        html, body {
-            max-width: 100vw;
-            overflow-x: hidden;
-        }
-        #stickyControlBar, #mainHeader {
-            max-width: 100vw;
+        html {
+            max-width: 100%;
             overflow-x: clip;
+        }
+        body {
+            max-width: 100%;
+            overflow-x: clip;
+        }
+        #stickyControlBar {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 1000 !important;
+            width: 100% !important;
         }
     
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
@@ -62,7 +68,7 @@
         #stickyControlBar {
             position: sticky !important;
             top: 0 !important;
-            z-index: 50 !important;
+            z-index: 1000 !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
             transition: all 0.25s ease;
         }
@@ -75,7 +81,7 @@
         body.presentation-mode #stickyControlBar {
             position: sticky !important;
             top: 0 !important;
-            z-index: 50 !important;
+            z-index: 1000 !important;
             display: block !important;
         }
         body.presentation-mode header {
@@ -875,7 +881,7 @@
     <!-- ======================================================== -->
     <!-- COMBINED LOCKED WRAPPER: HEADER + SLICERS STICKY TOGETHER -->
     <!-- ======================================================== -->
-    <div id="stickyControlBar" class="sticky top-0 z-50 w-full bg-[#0b1120]/95 backdrop-blur-md border-b border-slate-800 shadow-md">
+    <div id="stickyControlBar" class="sticky top-0 z-[1000] w-full bg-[#0b1120]/95 backdrop-blur-md border-b border-slate-800 shadow-md">
         
         <!-- Top Compact Navigation Bar (Header: strictly ~50px height) -->
         <header id="mainHeader" class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-2 sm:px-4 py-2 w-full transition-all">
@@ -1290,11 +1296,9 @@
             </div>
         </div>
 
-        <!-- Active Filter Summary Chips (Ultra-slim, visible only when active filters > 0) -->
-        <div id="activeFilterChipsBar" class="hidden px-4 sm:px-6 py-1.5 bg-slate-900/90 border-b border-slate-800 text-xs flex flex-wrap items-center gap-1.5 transition-all">
-            <span class="text-[11px] font-semibold text-slate-400 mr-1" data-i18n="active_filters_lbl">Active:</span>
-            <div id="activeFilterChipsList" class="flex flex-wrap items-center gap-1.5"></div>
-            <button onclick="resetActiveViewFilters()" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold underline ml-auto pl-2" data-i18n="clear_all">Clear All</button>
+        <!-- Active Filter Summary Chips (Permanently hidden per request) -->
+        <div id="activeFilterChipsBar" class="hidden" style="display: none !important;">
+            <div id="activeFilterChipsList" class="hidden"></div>
         </div>
     </div>
 
@@ -1553,7 +1557,7 @@
                     <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
                         <h3 class="font-bold text-indigo-300 flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
                             <i data-lucide="zap" class="w-4 h-4 text-indigo-400"></i>
-                            <span data-i18n="sec1_title">Top 3 Incidents & Root-Cause Resolution</span>
+                            <span data-i18n="sec1_title">Top 3 Incident Types & In-Depth Root-Cause Resolution</span>
                         </h3>
                         <span class="text-[10px] text-indigo-400 font-mono px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded" data-i18n="badge_priority_ranking">PRIORITY RANKING</span>
                     </div>
@@ -1567,7 +1571,7 @@
                     <div class="flex items-center justify-between border-b border-rose-500/20 pb-2">
                         <h3 class="font-bold text-rose-300 flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider">
                             <i data-lucide="map-pin" class="w-4 h-4 text-rose-400"></i>
-                            <span data-i18n="sec2_title">Recurring Hotspots & Location Root-Cause Resolution</span>
+                            <span data-i18n="sec2_title">Top 3 Recurring Hotspots & In-Depth Root-Cause Resolution</span>
                         </h3>
                         <span class="text-[10px] text-rose-400 font-mono px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded" data-i18n="badge_critical_hotspots">CRITICAL HOTSPOTS</span>
                     </div>
@@ -1924,168 +1928,117 @@
                     <div id="deepDiveDynamicGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
 
-                <!-- Charts Section: 4 Multi-Bar Comparison Charts with Side Editable Panels -->
+                <!-- Charts Section: 4 Multi-Bar Comparison Charts (Full Width) -->
                 <div class="space-y-6">
-                    <!-- Chart 1: Significant Delta Shifts -->
+                    <!-- Chart 1: Significant Delta Shifts (Full Width) -->
                     <div class="glass-card p-4 sm:p-5">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                            <div class="lg:col-span-7 xl:col-span-8">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h3 id="chart1Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart1T">
-                                            <i class="fa-solid fa-arrow-trend-up text-rose-400"></i> Top 5 Significant Delta Shifts
-                                        </h3>
-                                        <p id="chart1Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart1S">Parallel comparison of rising/dropping events (Click bar to drill down)</p>
-                                    </div>
-                                    <button onclick="openChartModal('shiftChart', 'Top 5 Significant Delta Shifts')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                        <i class="fa-solid fa-expand text-xs"></i>
-                                    </button>
-                                </div>
-                                <div class="h-80"><canvas id="shiftChart"></canvas></div>
-                            </div>
-                            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
-                                <div>
-                                    <div class="flex items-center justify-between text-xs font-bold text-rose-400 mb-2.5 pb-1 border-b border-slate-800">
-                                        <span id="chart1SideTitle" class="flex items-center gap-1.5" data-i18n="chart1Side"><i class="fa-solid fa-chart-line"></i> Deep-Dive: Top 5 Volatile Events</span>
-                                        <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-normal">Editable</span>
-                                    </div>
-                                    <div id="chart1AnalysisBox" contenteditable="true" class="editable-panel p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chart 2: Top True Incidents Comparison -->
-                    <div class="glass-card p-4 sm:p-5">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                            <div class="lg:col-span-7 xl:col-span-8">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h3 id="chart2Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart2T">
-                                            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Top True Incident Event Types Comparison
-                                        </h3>
-                                        <p id="chart2Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart2S">Focus exclusively on verified real events (False Alarms filtered out)</p>
-                                    </div>
-                                    <button onclick="openChartModal('trueEventChart', 'Top True Incidents Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                        <i class="fa-solid fa-expand text-xs"></i>
-                                    </button>
-                                </div>
-                                <div class="h-80"><canvas id="trueEventChart"></canvas></div>
-                            </div>
-                            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
-                                <div>
-                                    <div class="flex items-center justify-between text-xs font-bold text-emerald-400 mb-2.5 pb-1 border-b border-slate-800">
-                                        <span id="chart2SideTitle" class="flex items-center gap-1.5" data-i18n="chart2Side"><i class="fa-solid fa-shield-check"></i> Deep-Dive: Top 5 True Incidents</span>
-                                        <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-normal">Editable</span>
-                                    </div>
-                                    <div id="chart2AnalysisBox" contenteditable="true" class="editable-panel p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chart 3: Top False Incident Event Types -->
-                    <div class="glass-card p-4 sm:p-5">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                            <div class="lg:col-span-7 xl:col-span-8">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h3 id="chartFalseTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chartFalseT">
-                                            <i class="fa-solid fa-bell-slash text-amber-400"></i> Top False Incident Event Types
-                                        </h3>
-                                        <p id="chartFalseSub" class="text-xs text-slate-400 mt-0.5" data-i18n="chartFalseS">Analyze top false alarm events to optimize sensor thresholding</p>
-                                    </div>
-                                    <button onclick="openChartModal('falseEventChart', 'Top False Alarms Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                        <i class="fa-solid fa-expand text-xs"></i>
-                                    </button>
-                                </div>
-                                <div class="h-80"><canvas id="falseEventChart"></canvas></div>
-                            </div>
-                            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
-                                <div>
-                                    <div class="flex items-center justify-between text-xs font-bold text-amber-400 mb-2.5 pb-1 border-b border-slate-800">
-                                        <span id="chartFalseSideTitle" class="flex items-center gap-1.5" data-i18n="chartFalseSide"><i class="fa-solid fa-wrench"></i> Deep-Dive: Tuning Strategy to Reduce False Alarms</span>
-                                        <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-normal">Editable</span>
-                                    </div>
-                                    <div id="chartFalseAnalysisBox" contenteditable="true" class="editable-panel p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chart 4: Recurring Hotspots -->
-                    <div class="glass-card p-4 sm:p-5">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                            <div class="lg:col-span-7 xl:col-span-8">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h3 id="chart3Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart3T">
-                                            <i class="fa-solid fa-repeat text-indigo-400"></i> Recurring Hotspots: Highest Frequency Event + Location
-                                        </h3>
-                                        <p id="chart3Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart3S">Cross-analyzing [Location + Event Type] for systemic operational flaws (Click bar to drill down)</p>
-                                    </div>
-                                    <button onclick="openChartModal('recurringChart', 'Recurring Hotspots')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
-                                        <i class="fa-solid fa-expand text-xs"></i>
-                                    </button>
-                                </div>
-                                <div class="h-80"><canvas id="recurringChart"></canvas></div>
-                            </div>
-                            <div class="lg:col-span-5 xl:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6 pt-4 lg:pt-0">
-                                <div>
-                                    <div class="flex items-center justify-between text-xs font-bold text-indigo-400 mb-2.5 pb-1 border-b border-slate-800">
-                                        <span id="chart3SideTitle" class="flex items-center gap-1.5" data-i18n="chart3Side"><i class="fa-solid fa-bullseye"></i> Deep-Dive: Recurring Hotspots Elimination</span>
-                                        <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-normal">Editable</span>
-                                    </div>
-                                    <div id="chart3AnalysisBox" contenteditable="true" class="editable-panel p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs leading-relaxed text-slate-100 space-y-3 max-h-80 overflow-y-auto">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Section: New Event Types & Backlog Causes -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="glass-card p-4 sm:p-5 lg:col-span-8">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 id="tableTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="tableT">
-                                    <i class="fa-solid fa-radar text-cyan-400"></i> New Event Types: Emerging in Current Month vs History
-                                </h3>
-                                <p id="tableSub" class="text-xs text-slate-400 mt-0.5" data-i18n="tableS">Current baseline compared against prior history with status and resolution</p>
-                            </div>
-                            <span id="curMonthBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Current Base</span>
-                        </div>
-
-                        <div class="overflow-x-auto max-h-[380px] custom-scrollbar">
-                            <table class="w-full text-left text-xs text-slate-300">
-                                <thead class="bg-slate-900/90 uppercase text-slate-400 sticky top-0 border-b border-slate-800">
-                                    <tr>
-                                        <th class="py-2.5 px-3 w-[28%]" id="thNewEvent" data-i18n="thEvent">Event Type (Emerging)</th>
-                                        <th class="py-2.5 px-2 w-[8%] text-center" id="thNewCount" data-i18n="thCount">Count</th>
-                                        <th class="py-2.5 px-2.5 w-[20%]" id="thNewLoc" data-i18n="thLoc">Primary Location</th>
-                                        <th class="py-2.5 px-2 w-[10%] text-center" id="thNewFalse" data-i18n="thFalse">False Alarm</th>
-                                        <th class="py-2.5 px-2.5 w-[10%] text-center" id="thNewStatus" data-i18n="thStatus">Status</th>
-                                        <th class="py-2.5 px-3 w-[24%]" id="thNewRes" data-i18n="thRes">Resolution / Findings</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="newEventTableBody" class="divide-y divide-slate-800/60"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="glass-card p-4 sm:p-5 lg:col-span-4 flex flex-col justify-between">
-                        <div>
+                        <div class="w-full">
                             <div class="flex items-center justify-between mb-3">
-                                <h3 id="topLocationsHeader" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="topLocationsH">
-                                    <i class="fa-solid fa-location-dot text-indigo-400"></i> Top 5 Incident Locations
-                                </h3>
-                                <span id="topLocationsTotalLabel" class="text-xs font-semibold text-indigo-400"></span>
+                                <div>
+                                    <h3 id="chart1Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart1T">
+                                        <i class="fa-solid fa-arrow-trend-up text-rose-400"></i> Top 5 Significant Delta Shifts
+                                    </h3>
+                                    <p id="chart1Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart1S">Parallel comparison of rising/dropping events (Click bar to drill down)</p>
+                                </div>
+                                <button onclick="openChartModal('shiftChart', 'Top 5 Significant Delta Shifts')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                    <i class="fa-solid fa-expand text-xs"></i>
+                                </button>
                             </div>
-                            <p id="topLocationsSub" class="text-xs text-slate-400 mb-3" data-i18n="topLocationsS">Concentration hotspots and spatial telemetry analysis</p>
-                            <div id="topLocationsListContainer" class="space-y-2.5 max-h-[360px] overflow-y-auto custom-scrollbar"></div>
+                            <div class="h-80"><canvas id="shiftChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Top True Incidents Comparison (Full Width) -->
+                    <div class="glass-card p-4 sm:p-5">
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h3 id="chart2Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart2T">
+                                        <i class="fa-solid fa-shield-halved text-emerald-400"></i> Top True Incident Event Types Comparison
+                                    </h3>
+                                    <p id="chart2Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart2S">Focus exclusively on verified real events (False Alarms filtered out)</p>
+                                </div>
+                                <button onclick="openChartModal('trueEventChart', 'Top True Incidents Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                    <i class="fa-solid fa-expand text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="h-80"><canvas id="trueEventChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Chart 3: Top False Incident Event Types (Full Width) -->
+                    <div class="glass-card p-4 sm:p-5">
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h3 id="chartFalseTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chartFalseT">
+                                        <i class="fa-solid fa-bell-slash text-amber-400"></i> Top False Incident Event Types
+                                    </h3>
+                                    <p id="chartFalseSub" class="text-xs text-slate-400 mt-0.5" data-i18n="chartFalseS">Analyze top false alarm events to optimize sensor thresholding</p>
+                                </div>
+                                <button onclick="openChartModal('falseEventChart', 'Top False Alarms Comparison')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                    <i class="fa-solid fa-expand text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="h-80"><canvas id="falseEventChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Chart 4: Recurring Hotspots (Full Width) -->
+                    <div class="glass-card p-4 sm:p-5">
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h3 id="chart3Title" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="chart3T">
+                                        <i class="fa-solid fa-repeat text-indigo-400"></i> Recurring Hotspots: Highest Frequency Event + Location
+                                    </h3>
+                                    <p id="chart3Sub" class="text-xs text-slate-400 mt-0.5" data-i18n="chart3S">Cross-analyzing [Location + Event Type] for systemic operational flaws (Click bar to drill down)</p>
+                                </div>
+                                <button onclick="openChartModal('recurringChart', 'Recurring Hotspots')" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition" title="Expand Fullscreen">
+                                    <i class="fa-solid fa-expand text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="h-80"><canvas id="recurringChart"></canvas></div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Bottom Section: New Event Types (Full Width) -->
+                <div class="glass-card p-4 sm:p-5 w-full">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 id="tableTitle" class="text-sm font-bold text-white flex items-center gap-2" data-i18n="tableT">
+                                <i class="fa-solid fa-radar text-cyan-400"></i> New Event Types: Emerging in Current Month vs History
+                            </h3>
+                            <p id="tableSub" class="text-xs text-slate-400 mt-0.5" data-i18n="tableS">Current baseline compared against prior history with status and resolution</p>
+                        </div>
+                        <span id="curMonthBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Current Base</span>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[380px] custom-scrollbar">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/90 uppercase text-slate-400 sticky top-0 border-b border-slate-800">
+                                <tr>
+                                    <th class="py-2.5 px-3 w-[28%]" id="thNewEvent" data-i18n="thEvent">Event Type (Emerging)</th>
+                                    <th class="py-2.5 px-2 w-[8%] text-center" id="thNewCount" data-i18n="thCount">Count</th>
+                                    <th class="py-2.5 px-2.5 w-[20%]" id="thNewLoc" data-i18n="thLoc">Primary Location</th>
+                                    <th class="py-2.5 px-2 w-[10%] text-center" id="thNewFalse" data-i18n="thFalse">False Alarm</th>
+                                    <th class="py-2.5 px-2.5 w-[10%] text-center" id="thNewStatus" data-i18n="thStatus">Status</th>
+                                    <th class="py-2.5 px-3 w-[24%]" id="thNewRes" data-i18n="thRes">Resolution / Findings</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newEventTableBody" class="divide-y divide-slate-800/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Hidden Safety Stubs for JS Compatibility -->
+                <div class="hidden" id="chart1AnalysisBox"></div>
+                <div class="hidden" id="chart2AnalysisBox"></div>
+                <div class="hidden" id="chartFalseAnalysisBox"></div>
+                <div class="hidden" id="chart3AnalysisBox"></div>
+                <div class="hidden" id="topLocationsListContainer"></div>
+                <span class="hidden" id="topLocationsTotalLabel"></span>
 
         </div>
         <!-- /VIEW 2: CROSS-PERIOD & CASE COMPARE -->
@@ -2204,8 +2157,8 @@
                 kpi_fa_overhead: "False Alarm Overhead",
                 kpi_sla_efficiency: "SLA Compliance Gap",
                 kpi_pending_workload: "Unfinished Workload",
-                sec1_title: "Top 3 Incidents & Root-Cause Resolution",
-                sec2_title: "Recurring Hotspots & Location Root-Cause Resolution",
+                sec1_title: "Top 3 Incident Types & In-Depth Root-Cause Resolution",
+                sec2_title: "Top 3 Recurring Hotspots & In-Depth Root-Cause Resolution",
                 badge_priority_ranking: "PRIORITY RANKING",
                 badge_critical_hotspots: "CRITICAL HOTSPOTS",
                 chart_trend_title: "Monthly Incident Trend & False Alarms",
@@ -7388,23 +7341,11 @@
                 }
             }
 
-            // Render chips
+            // Render chips (chipsBar permanently hidden per user request)
             if (chipsList && chipsBar) {
-                if (chips.length > 0) {
-                    chipsBar.classList.remove('hidden');
-                    chipsList.innerHTML = chips.map((c, idx) => `
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium shadow-sm">
-                            <span class="text-slate-400">${c.label}:</span>
-                            <span class="font-bold truncate max-w-[120px]">${c.val}</span>
-                            <button type="button" onclick="clearSpecificFilter(${idx})" class="hover:text-rose-400 ml-0.5 font-bold transition">&times;</button>
-                        </span>
-                    `).join('');
-                    window._activeDashboardChips = chips;
-                } else {
-                    chipsBar.classList.add('hidden');
-                    chipsList.innerHTML = '';
-                    window._activeDashboardChips = [];
-                }
+                chipsBar.classList.add('hidden');
+                chipsBar.style.display = 'none';
+                window._activeDashboardChips = chips;
             }
         }
 
