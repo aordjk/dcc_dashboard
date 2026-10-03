@@ -7,3 +7,8 @@ node-bin/
 # OS & Environment
 .DS_Store
 Thumbs.db
+
+# User data files (no embedded datasets in repo)
+*.csv
+data/
+cwo/

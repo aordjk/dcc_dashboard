@@ -900,7 +900,7 @@
                     <!-- Project Title and Badge -->
                     <div class="flex items-center gap-2 min-w-0">
                         <h1 id="projectTitleHeader" class="text-xs sm:text-sm font-bold text-white tracking-tight truncate max-w-[130px] sm:max-w-[200px] md:max-w-xs">
-                            One Bangkok Operations Command Center
+                            DCC Operations Command Center
                         </h1>
                         <span id="dataStatusBadge" class="hidden md:inline-flex px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap shrink-0">
                             READY FOR CSV
@@ -1424,6 +1424,10 @@
                             </label>
                         </div>
                     </div>
+                    <!-- /#emptyDashboardPlaceholder -->
+
+                    <!-- Dashboard Active Content (Hidden when 0 records, shown when files are uploaded) -->
+                    <div id="dashboardActiveSections" class="space-y-6 hidden">
 
                     <!-- Section 1: overall -->
                     <section id="sec-overall" class="scroll-mt-20 space-y-4">
@@ -1830,9 +1834,11 @@
                     <button id="pendingNextBtn" onclick="changePendingPage(1)" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40" data-i18n="btn_next">Next</button>
                 </div>
             </div>
-        </section>
-        </div>
-        <!-- /VIEW 1: EXECUTIVE DASHBOARD -->
+            </section>
+                    </div>
+                    <!-- /#dashboardActiveSections -->
+                </div>
+                <!-- /#viewDashboard -->
 
         <!-- VIEW 2: CROSS-PERIOD & CASE COMPARE -->
         <div id="viewCompare" class="space-y-6 hidden">
@@ -2135,7 +2141,7 @@
         let RAW_DATA = [];
         let FILTERED_DATA = [];
         let TOTAL_DATASET_COUNT = 0;
-        let CURRENT_PROJECT_NAME = "One Bangkok";
+        let CURRENT_PROJECT_NAME = "DCC";
         let CURRENT_VIEW = "dashboard";
         let CURRENT_LANG = "EN";
         let CURRENT_THEME = "dark";
@@ -2769,7 +2775,7 @@
         }
 
         function updateProjectBranding(cleanTitle) {
-            const cleanName = (cleanTitle || "The PARQ").replace(/\s*\([^)]*\)/g, '').trim();
+            const cleanName = (cleanTitle || "DCC").replace(/\s*\([^)]*\)/g, '').trim();
             CURRENT_PROJECT_NAME = cleanName;
             
             const titleHeader = document.getElementById('projectTitleHeader');
@@ -2777,13 +2783,15 @@
             const footerBrand = document.getElementById('footerBrand');
 
             if (CURRENT_LANG === 'TH') {
-                titleHeader.textContent = `ศูนย์บัญชาการปฏิบัติการ ${cleanName}`;
-                pageTitle.textContent = `ศูนย์บัญชาการปฏิบัติการ ${cleanName} - แดชบอร์ดบริหาร 2026`;
-                footerBrand.textContent = `ศูนย์บัญชาการปฏิบัติการ ${cleanName}`;
+                const display = cleanName === 'DCC' ? 'ศูนย์บัญชาการปฏิบัติการ DCC' : `ศูนย์บัญชาการปฏิบัติการ ${cleanName}`;
+                if (titleHeader) titleHeader.textContent = display;
+                if (pageTitle) pageTitle.textContent = `${display} - แดชบอร์ดบริหาร 2026`;
+                if (footerBrand) footerBrand.textContent = display;
             } else {
-                titleHeader.textContent = `${cleanName} Operations Command Center`;
-                pageTitle.textContent = `${cleanName} Operations Command Center - Executive Dashboard 2026`;
-                footerBrand.textContent = `${cleanName} Operations Command Center`;
+                const display = cleanName === 'DCC' ? 'DCC Operations Command Center' : `${cleanName} Operations Command Center`;
+                if (titleHeader) titleHeader.textContent = display;
+                if (pageTitle) pageTitle.textContent = `${display} - Executive Dashboard 2026`;
+                if (footerBrand) footerBrand.textContent = display;
             }
         }
 
@@ -2969,93 +2977,7 @@
             rebuildFullDataset();
         }
 
-        function triggerMozartSync(showToast = false) {
-            const spinner = document.getElementById('mozartSyncSpinner');
-            const navSpinner = document.getElementById('navSyncSpinner');
-            if (spinner) spinner.classList.add('animate-spin');
-            if (navSpinner) navSpinner.classList.add('animate-spin');
 
-            const badge = document.getElementById('dataStatusBadge');
-            if (badge) {
-                badge.textContent = (CURRENT_LANG === 'TH') ? "กำลังซิงค์..." : "SYNCING...";
-                badge.className = "px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap shrink-0 inline-flex items-center";
-            }
-
-            // Check if backend API sync is available (local server) or fallback to loading OBK CSV
-            fetch('/api/sync-mozart')
-                .then(r => {
-                    if (!r.ok) throw new Error('API offline');
-                    return r.json();
-                })
-                .then(() => {
-                    loadOBKDataset(showToast);
-                })
-                .catch(() => {
-                    // Static host / GitHub Pages fallback
-                    loadOBKDataset(showToast);
-                })
-                .finally(() => {
-                    if (spinner) spinner.classList.remove('animate-spin');
-                    if (navSpinner) navSpinner.classList.remove('animate-spin');
-                    const now = new Date();
-                    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-                    const lastSyncEl = document.getElementById('mozartLastSyncText');
-                    if (lastSyncEl) lastSyncEl.textContent = `Today, ${timeStr}`;
-                });
-        }
-
-        function loadOBKDataset(showToast = false) {
-            const badge = document.getElementById('dataStatusBadge');
-            if (badge) {
-                badge.textContent = (CURRENT_LANG === 'TH') ? "กำลังโหลด One Bangkok..." : "LOADING ONE BANGKOK...";
-                badge.className = "px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap shrink-0 inline-flex items-center";
-            }
-            fetch('OBK_Case_2026.csv')
-                .then(res => {
-                    if (!res.ok) throw new Error("File not found");
-                    return res.text();
-                })
-                .then(csv => {
-                    const parsedResults = Papa.parse(csv, { 
-                        header: true, 
-                        skipEmptyLines: 'greedy', 
-                        transformHeader: h => (h || '').trim().replace(/^\ufeff/, '') 
-                    });
-                    updateProjectBranding("One Bangkok");
-                    if (CURRENT_VIEW === 'dashboard') {
-                        const parsed = convertRawRowsToModel(parsedResults.data, 'OBK_Case_2026.csv');
-                        UPLOADED_FILES_MAP.clear();
-                        UPLOADED_FILES_MAP.set("OBK_Case_2026.csv", parsed);
-                        resetActiveFiltersToAll();
-                        renderUploadedFilesChips();
-                        rebuildUnifiedDataset();
-                        if (showToast) {
-                            showToastNotification(CURRENT_LANG === 'TH' ? `โหลดข้อมูล One Bangkok สำเร็จ (${parsed.length.toLocaleString()} รายการ)` : `Loaded One Bangkok (${parsed.length.toLocaleString()} records)`);
-                        }
-                    } else {
-                        const compareRows = convertRawRowsToCompareModel(parsedResults.data, 'OBK_Case_2026.csv');
-                        loadedFilesMap = {};
-                        loadedFilesMap['file-obk'] = {
-                            name: "OBK_Case_2026.csv",
-                            records: compareRows
-                        };
-                        renderUploadedFilesChips();
-                        rebuildFullDataset();
-                        renderCompareDashboard();
-                        if (showToast) {
-                            showToastNotification(CURRENT_LANG === 'TH' ? `โหลดข้อมูลเปรียบเทียบ One Bangkok สำเร็จ (${compareRows.length.toLocaleString()} รายการ)` : `Loaded Compare One Bangkok (${compareRows.length.toLocaleString()} records)`);
-                        }
-                    }
-                    updateDataStatusBadge();
-                })
-                .catch(err => {
-                    console.error('Error loading OBK dataset:', err);
-                    if (badge) {
-                        badge.textContent = (CURRENT_LANG === 'TH') ? "ไม่พบไฟล์ One Bangkok" : "OBK NOT FOUND";
-                        badge.className = "px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap shrink-0 inline-flex items-center";
-                    }
-                });
-        }
 
         // Handle multiple file upload from input[type=file]
         function handleMultipleCSVUpload(e) {
@@ -3408,94 +3330,7 @@
             }
         }
 
-        // Load Built-in Demo Dataset (650 records for The PARQ 2026)
-        function loadDefaultDemoData() {
-            updateProjectBranding("The PARQ");
-            const demoRows = generateDemoRecords();
-            const demoCompareRows = convertDashboardRowsToCompareRows(demoRows, "TPQ_Live_Telemetry_2026.csv");
 
-            UPLOADED_FILES_MAP.set("TPQ_Live_Telemetry_2026.csv", demoRows);
-            loadedFilesMap['file-demo'] = {
-                name: "TPQ_Live_Telemetry_2026.csv",
-                records: demoCompareRows
-            };
-            renderUploadedFilesChips();
-            rebuildUnifiedDataset();
-            rebuildFullDataset();
-            if (CURRENT_VIEW === 'compare') {
-                renderCompareDashboard();
-            }
-        }
-
-        function generateDemoRecords() {
-            const categories = {
-                'Fire Alarm System': ['FAS Device Disabled - Maintenance', 'Smoke Detector Activation - Optical', 'Manual Call Point Triggered', 'FAS Loop Supervisory Fault'],
-                'BMS & HVAC': ['Air Handling Unit (AHU) High Temp', 'Chilled Water Differential Pressure Alert', 'Exhaust Fan Variable Speed Drive Alarm', 'VAV Box Temperature Deviation'],
-                'Security & Access': ['CCTV Virtual Line-crossing', 'Door Forced Open Alarm', 'Access Control Reader Tamper', 'Unauthorized Perimeter Loitering'],
-                'Electrical & Power': ['UPS Battery Temperature Alert', 'Main Switchboard Voltage Fluctuation', 'Lighting Automation Relay Trip', 'Power Quality Harmonic Warning'],
-                'Water & Plumbing': ['Water Leakage Sensor Triggered', 'Sump Pump High Water Level', 'Domestic Water Booster Pump Trip', 'Grease Trap High Level Warning'],
-                'IoT Environmental': ['Indoor Air Quality CO2 Surge', 'Restroom Odor Level Exceeded', 'Server Room Humidity Anomaly', 'Car Park Carbon Monoxide Spike']
-            };
-            const zones = ['The PARQ - East Wing', 'The PARQ - West Wing', 'Retail Podium', 'Basement Parking', 'Central Plant Room'];
-            const locations = ['Fl 4 Office Hub', 'Fl 2 Food Court', 'B1 Parking Bay 14', 'Rooftop Chiller Plant', 'Fl 8 Restroom Zone', 'Main Lobby', 'Fl 10 Tech Center', 'Loading Dock Zone B'];
-            const teams = ['JLL', 'Senses', 'IOT', 'ConnectX', 'Veolia', 'Forward'];
-            const priorities = ['CAT 1', 'CAT 2', 'CAT 3'];
-
-            const list = [];
-            const catKeys = Object.keys(categories);
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-
-            for (let i = 1; i <= 650; i++) {
-                const caseNo = `TPQ-2026-${String(i).padStart(5, '0')}`;
-                const mIdx = Math.floor((Math.sin(i) + 1) * 4.9);
-                const mStr = months[mIdx] || 'May';
-                const day = (i % 28) + 1;
-                const dateStr = `2026/${String(mIdx + 1).padStart(2, '0')}/${String(day).padStart(2, '0')} 10:20:00`;
-
-                const cat = catKeys[i % catKeys.length];
-                const evList = categories[cat];
-                const evType = evList[(i * 3) % evList.length];
-                const zone = zones[i % zones.length];
-                const loc = locations[(i * 7) % locations.length];
-                const team = teams[i % teams.length];
-                const prio = priorities[i % priorities.length];
-
-                const isPending = (i % 7 === 0);
-                const status = isPending ? ((i % 3 === 0) ? 'Open' : (i % 3 === 1 ? 'In progress' : 'Acknowledged')) : 'Closed';
-                const aging = isPending ? ((i % 70) + 5) : 0;
-                const isFA = (evType.includes('Disabled') || evType.includes('Line-crossing') || evType.includes('Odor')) 
-                    ? ((i % 3 !== 0)) : (i % 8 === 0);
-                const compSLA = !isPending && (i % 6 !== 0);
-                const respSLA = (i % 7 !== 0);
-                const mttrMins = !isPending ? ((i % 240) + 15) : 0;
-
-                const dWeekInfo = extractWeekInfoFromDate(dateStr);
-                list.push({
-                    caseNo,
-                    date: dateStr,
-                    resolvedDate: !isPending ? dateStr : '-',
-                    aging,
-                    year: '2026',
-                    month: mStr,
-                    week: dWeekInfo.key,
-                    weekLabel: dWeekInfo.label,
-                    cat,
-                    prio,
-                    comp: zone,
-                    eventType: evType,
-                    isFA,
-                    team,
-                    status,
-                    woStatus: isPending ? 'Assigned' : 'Completed',
-                    compSLA,
-                    respSLA,
-                    mttrMins,
-                    hasMTTR: !isPending,
-                    loc
-                });
-            }
-            return list;
-        }
 
         // Rebuild aggregated RAW_DATA from all uploaded files
         function rebuildUnifiedDataset() {
@@ -3513,20 +3348,20 @@
             if (TOTAL_DATASET_COUNT === 0) {
                 document.getElementById('uploadPrompt')?.classList.remove('hidden');
                 document.getElementById('emptyDashboardPlaceholder')?.classList.remove('hidden');
+                document.getElementById('dashboardActiveSections')?.classList.add('hidden');
+                document.getElementById('sidebarFiltersDashboard')?.classList.add('opacity-60', 'pointer-events-none');
                 if (badge) {
                     badge.textContent = (CURRENT_LANG === 'TH') ? "พร้อมรับไฟล์ CSV" : "READY FOR CSV";
                     badge.className = "px-1.5 py-0.5 text-[8.5px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap shrink-0 inline-flex items-center";
                 }
                 FILTERED_DATA = [];
-                updateKPICards();
-                renderAllCharts();
-                renderPendingTable();
-                updateDynamicExecutiveAnalytics();
                 return;
             }
 
             document.getElementById('uploadPrompt')?.classList.add('hidden');
             document.getElementById('emptyDashboardPlaceholder')?.classList.add('hidden');
+            document.getElementById('dashboardActiveSections')?.classList.remove('hidden');
+            document.getElementById('sidebarFiltersDashboard')?.classList.remove('opacity-60', 'pointer-events-none');
             if (badge) {
                 badge.textContent = (CURRENT_LANG === 'TH')
                     ? `${TOTAL_DATASET_COUNT.toLocaleString()} รายการ (${UPLOADED_FILES_MAP.size} ไฟล์)`
@@ -7364,9 +7199,16 @@
                 if (RAW_DATA.length > 0) {
                     document.getElementById('uploadPrompt')?.classList.add('hidden');
                     document.getElementById('emptyDashboardPlaceholder')?.classList.add('hidden');
+                    document.getElementById('dashboardActiveSections')?.classList.remove('hidden');
+                    document.getElementById('sidebarFiltersDashboard')?.classList.remove('opacity-60', 'pointer-events-none');
                     renderAllCharts();
                     renderPendingTable();
                     updateDynamicExecutiveAnalytics();
+                } else {
+                    document.getElementById('uploadPrompt')?.classList.remove('hidden');
+                    document.getElementById('emptyDashboardPlaceholder')?.classList.remove('hidden');
+                    document.getElementById('dashboardActiveSections')?.classList.add('hidden');
+                    document.getElementById('sidebarFiltersDashboard')?.classList.add('opacity-60', 'pointer-events-none');
                 }
             }
 
