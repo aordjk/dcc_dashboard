@@ -947,6 +947,19 @@
         body.light-mode #pendingTableBody .text-slate-300 {
             color: #1e293b !important;
         }
+        body.light-mode #newEventTableBody .text-cyan-400 {
+            color: #0284c7 !important;
+        }
+        body.light-mode #newEventTableBody .bg-amber-500\/20 {
+            background-color: #fffbeb !important;
+            border-color: #fde68a !important;
+            color: #92400e !important;
+        }
+        body.light-mode #newEventTableBody .bg-emerald-500\/20 {
+            background-color: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+            color: #065f46 !important;
+        }
         /* High Contrast Day Mode Overrides for Deep-Dive Analysis and Critical Watchlist */
         body.light-mode #highlightCasesContainer > div,
         body.light-mode #deepDiveDynamicGrid > div,
@@ -2441,10 +2454,10 @@
                         <table class="w-full text-left text-xs text-slate-300">
                             <thead class="bg-slate-900/90 uppercase text-slate-400 sticky top-0 border-b border-slate-800">
                                 <tr>
-                                    <th class="py-2.5 px-3 w-[28%]" id="thNewEvent" data-i18n="thEvent">Event Type (Emerging)</th>
+                                    <th class="py-2.5 px-3 w-[26%]" id="thNewEvent" data-i18n="thEvent">Event Type (Emerging)</th>
                                     <th class="py-2.5 px-2 w-[8%] text-center" id="thNewCount" data-i18n="thCount">Count</th>
-                                    <th class="py-2.5 px-2.5 w-[20%]" id="thNewLoc" data-i18n="thLoc">Primary Location</th>
-                                    <th class="py-2.5 px-2 w-[10%] text-center" id="thNewFalse" data-i18n="thFalse">False Alarm</th>
+                                    <th class="py-2.5 px-2.5 w-[18%]" id="thNewLoc" data-i18n="thLoc">Primary Location</th>
+                                    <th class="py-2.5 px-2 w-[14%] text-center" id="thNewFalse" data-i18n="thFalse">False Alarm (Yes / No)</th>
                                     <th class="py-2.5 px-2.5 w-[10%] text-center" id="thNewStatus" data-i18n="thStatus">Status</th>
                                     <th class="py-2.5 px-3 w-[24%]" id="thNewRes" data-i18n="thRes">Resolution / Findings</th>
                                 </tr>
@@ -5826,7 +5839,7 @@
                 thEvent: "Event Type (Emerging)",
                 thCount: "Count",
                 thLoc: "Primary Location",
-                thFalse: "False Alarm",
+                thFalse: "False Alarm (Yes / No)",
                 thStatus: "Status",
                 thRes: "Resolution / Findings",
                 topLocationsH: "Top 5 Incident Locations",
@@ -5905,7 +5918,7 @@
                 thEvent: "Event Type (แปลกใหม่)",
                 thCount: "จำนวน",
                 thLoc: "Primary Location",
-                thFalse: "False Alarm",
+                thFalse: "False Alarm (Yes / No)",
                 thStatus: "สถานะ",
                 thRes: "วิธีการแก้ไข (Resolution / Findings)",
                 topLocationsH: "จุดเกิดเหตุสูงสุด 5 อันดับแรก (Top 5 Locations)",
@@ -7584,7 +7597,8 @@
                             eventType: d.EventType,
                             count: 0,
                             locations: {},
-                            isFalseAlarm: d.IsFalseAlarm,
+                            yesCount: 0,
+                            noCount: 0,
                             status: d.Status,
                             resolution: d.Findings || d.OperatorComments || d.Description || '-'
                         });
@@ -7592,6 +7606,15 @@
                     const item = newEventsMap.get(d.EventType);
                     item.count++;
                     item.locations[d.Location] = (item.locations[d.Location] || 0) + 1;
+                    const fa = (d.IsFalseAlarm || '').toString().trim().toLowerCase();
+                    if (fa === 'yes' || fa === 'y' || fa === 'true' || fa === '1') {
+                        item.yesCount++;
+                    } else {
+                        item.noCount++;
+                    }
+                    if (d.Status && d.Status.toString().toLowerCase() !== 'closed') {
+                        item.status = d.Status;
+                    }
                 }
             });
 
@@ -7611,25 +7634,25 @@
 
             tableBody.innerHTML = newEventsList.map(item => {
                 const topLoc = Object.entries(item.locations).sort((a,b) => b[1] - a[1])[0]?.[0] || 'PARQ Area';
-                const isFA = (item.isFalseAlarm || '').toString().toLowerCase() === 'yes';
                 const isClosed = (item.status || '').toString().toLowerCase() === 'closed';
 
                 return `
                     <tr class="hover:bg-slate-800/40 transition">
-                        <td class="py-2.5 px-3 font-semibold text-white break-words">${item.eventType}</td>
+                        <td class="py-2.5 px-3 font-semibold text-white break-words">${escapeHTML(item.eventType)}</td>
                         <td class="py-2.5 px-2 text-center font-bold text-cyan-400">${item.count}</td>
-                        <td class="py-2.5 px-2.5 text-slate-300 truncate max-w-[150px]" title="${topLoc}">${topLoc}</td>
-                        <td class="py-2.5 px-2 text-center">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isFA ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
-                                ${isFA ? 'YES' : 'NO'}
-                            </span>
+                        <td class="py-2.5 px-2.5 text-slate-300 truncate max-w-[150px]" title="${escapeHTML(topLoc)}">${escapeHTML(topLoc)}</td>
+                        <td class="py-2.5 px-2 text-center whitespace-nowrap">
+                            <div class="inline-flex items-center justify-center gap-1 font-mono text-[10px]">
+                                <span class="px-1.5 py-0.5 rounded font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30" title="False Alarm: Yes (${item.yesCount})">Yes: ${item.yesCount}</span>
+                                <span class="px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" title="False Alarm: No / True Incident (${item.noCount})">No: ${item.noCount}</span>
+                            </div>
                         </td>
                         <td class="py-2.5 px-2.5 text-center">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isClosed ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
-                                ${item.status}
+                                ${escapeHTML(item.status)}
                             </span>
                         </td>
-                        <td class="py-2.5 px-3 text-slate-300 truncate max-w-[200px]" title="${item.resolution}">${item.resolution}</td>
+                        <td class="py-2.5 px-3 text-slate-300 truncate max-w-[200px]" title="${escapeHTML(item.resolution)}">${escapeHTML(item.resolution)}</td>
                     </tr>
                 `;
             }).join('');
@@ -8468,6 +8491,7 @@
                 [
                     { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
                     { text: "Count", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
+                    { text: "False Alarm", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
                     { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
                     { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
                 ]
@@ -8476,14 +8500,17 @@
             const newTableBody = document.getElementById('newEventTableBody');
             const trs = newTableBody ? Array.from(newTableBody.querySelectorAll('tr')) : [];
 
-            if (trs.length > 0 && !trs[0].innerText.includes('No emerging')) {
+            if (trs.length > 0 && !trs[0].innerText.includes('No emerging') && !trs[0].innerText.includes('ไม่พบเคสแปลกใหม่') && !trs[0].innerText.includes('ไม่มีเคสแปลกใหม่')) {
                 trs.slice(0, 8).forEach((tr, i) => {
                     const tds = tr.querySelectorAll('td');
                     const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
-                    if (tds.length >= 4) {
+                    if (tds.length >= 5) {
+                        const rawFA = tds[3] ? tds[3].innerText.replace(/\s+/g, ' ').trim() : '-';
+                        const faFormatted = rawFA.replace(/(\bNo:)/g, '| $1');
                         newEvRows.push([
                             { text: tds[0].innerText.trim().slice(0, 24), options: { bold: true, color: "0F172A", fill: { color: bg } } },
                             { text: tds[1].innerText.trim(), options: { bold: true, color: "3730A3", fill: { color: bg } } },
+                            { text: faFormatted, options: { bold: true, color: "B45309", fill: { color: bg } } },
                             { text: tds[2].innerText.trim().slice(0, 20), options: { color: "475569", fill: { color: bg } } },
                             { text: tds[4] ? tds[4].innerText.trim() : 'Closed', options: { color: "059669", fill: { color: bg } } }
                         ]);
@@ -8493,13 +8520,14 @@
 
             if (newEvRows.length === 1) {
                 newEvRows.push([
-                    { text: "No emerging/unseen event types detected in this baseline month.", options: { colspan: 4, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
+                    { text: "No emerging/unseen event types detected in this baseline month.", options: { colspan: 5, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
                 ]);
             }
 
             slide5.addTable(newEvRows, {
                 x: 6.90, y: 1.60, w: 5.65,
-                fontSize: 8.5,
+                colW: [1.75, 0.55, 1.35, 1.25, 0.75],
+                fontSize: 8,
                 border: { pt: 0.5, color: "CBD5E1" }
             });
 
