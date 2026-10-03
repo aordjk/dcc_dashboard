@@ -1180,6 +1180,7 @@
                         <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                             <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-indigo-400"></i>
                             <span data-i18n="filters">Telemetry Filters</span>
+                            <span id="activeFilterBadge" class="hidden px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[9px] font-mono font-bold leading-none border border-indigo-500/30">0</span>
                         </span>
                         <button type="button" onclick="resetAllFilters(); updateActiveFilterSummary();" class="text-[10px] text-rose-400 hover:text-rose-300 underline font-semibold flex items-center gap-1" data-i18n="reset">
                             <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
@@ -1514,7 +1515,8 @@
                     <div class="text-[10px] font-semibold text-slate-400 mt-0.5" data-i18n="open_inprog">Open & In-Prog</div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
         <!-- Executive Analytics & In-Depth Data Intelligence -->
         <section id="execBriefingSection" class="bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4 relative">
@@ -2481,22 +2483,34 @@
 
         function updateActiveFilterBadgeCount() {
             let activeCount = 0;
-            if (document.getElementById('filterMonth').value !== 'ALL') activeCount++;
-            if (document.getElementById('filterCategory').value !== 'ALL') activeCount++;
-            if (document.getElementById('filterPriority').value !== 'ALL') activeCount++;
-            if (document.getElementById('filterZone').value !== 'ALL') activeCount++;
-            if (document.getElementById('filterFA').value !== 'ALL') activeCount++;
-            if (SELECTED_STATUSES.size > 0 && SELECTED_STATUSES.size < ALL_STATUSES.length) activeCount++;
-            if (SELECTED_EVENT_TYPES.size > 0 && SELECTED_EVENT_TYPES.size < ALL_EVENT_TYPES.length) activeCount++;
-            if (CROSS_FILTER_TEAM) activeCount++;
-            if (CROSS_FILTER_EVENT) activeCount++;
+            const fM = document.getElementById('filterMonth');
+            const fC = document.getElementById('filterCategory');
+            const fP = document.getElementById('filterPriority');
+            const fZ = document.getElementById('filterZone');
+            const fF = document.getElementById('filterFA');
+            const fY = document.getElementById('filterYear');
+            const fW = document.getElementById('filterWeek');
+
+            if (fY && fY.value !== 'ALL') activeCount++;
+            if (fW && fW.value !== 'ALL') activeCount++;
+            if (fM && fM.value !== 'ALL') activeCount++;
+            if (fC && fC.value !== 'ALL') activeCount++;
+            if (fP && fP.value !== 'ALL') activeCount++;
+            if (fZ && fZ.value !== 'ALL') activeCount++;
+            if (fF && fF.value !== 'ALL') activeCount++;
+            if (typeof SELECTED_STATUSES !== 'undefined' && typeof ALL_STATUSES !== 'undefined' && SELECTED_STATUSES && ALL_STATUSES && SELECTED_STATUSES.size > 0 && SELECTED_STATUSES.size < ALL_STATUSES.length) activeCount++;
+            if (typeof SELECTED_EVENT_TYPES !== 'undefined' && typeof ALL_EVENT_TYPES !== 'undefined' && SELECTED_EVENT_TYPES && ALL_EVENT_TYPES && SELECTED_EVENT_TYPES.size > 0 && SELECTED_EVENT_TYPES.size < ALL_EVENT_TYPES.length) activeCount++;
+            if (typeof CROSS_FILTER_TEAM !== 'undefined' && CROSS_FILTER_TEAM) activeCount++;
+            if (typeof CROSS_FILTER_EVENT !== 'undefined' && CROSS_FILTER_EVENT) activeCount++;
 
             const badge = document.getElementById('activeFilterBadge');
-            if (activeCount > 0) {
-                badge.textContent = activeCount;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
+            if (badge) {
+                if (activeCount > 0) {
+                    badge.textContent = activeCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
             }
         }
 
@@ -2559,6 +2573,7 @@
             updateStatusDropdownLabel();
             updateEventTypeDropdownLabel();
             updateDynamicExecutiveAnalytics();
+            if (RAW_DATA && RAW_DATA.length > 0) updateKPICards();
             renderPendingTable();
             if (trendChart) renderMonthlyTrends();
 
@@ -3660,11 +3675,11 @@
                 }
             }
 
-            updateActiveFilterBadgeCount();
-            updateKPICards();
-            renderAllCharts();
-            renderPendingTable();
-            updateDynamicExecutiveAnalytics();
+            try { updateActiveFilterBadgeCount(); } catch (e) { console.error("Error in updateActiveFilterBadgeCount:", e); }
+            try { updateKPICards(); } catch (e) { console.error("Error in updateKPICards:", e); }
+            try { renderAllCharts(); } catch (e) { console.error("Error in renderAllCharts:", e); }
+            try { renderPendingTable(); } catch (e) { console.error("Error in renderPendingTable:", e); }
+            try { updateDynamicExecutiveAnalytics(); } catch (e) { console.error("Error in updateDynamicExecutiveAnalytics:", e); }
         }
 
         function resetAllFilters() {
@@ -3715,11 +3730,11 @@
         }
 
         function updateKPICards() {
-            const currentFilteredCount = FILTERED_DATA.length;
+            const currentFilteredCount = (FILTERED_DATA || []).length;
 
             let compCount = 0, respCount = 0, faCount = 0, mttrTotalMins = 0, mttrValidCount = 0;
 
-            FILTERED_DATA.forEach(r => {
+            (FILTERED_DATA || []).forEach(r => {
                 if (r.compSLA) compCount++;
                 if (r.respSLA) respCount++;
                 if (r.isFA) faCount++;
@@ -3739,20 +3754,32 @@
 
             const isTH = (CURRENT_LANG === 'TH');
 
-            document.getElementById('kpiTotal').textContent = currentFilteredCount.toLocaleString();
-            document.getElementById('kpiTotalPct').textContent = `${TOTAL_DATASET_COUNT > 0 ? ((currentFilteredCount / TOTAL_DATASET_COUNT) * 100).toFixed(1) : 0}% ${isTH ? 'ของชุดข้อมูล' : 'of dataset'}`;
-            document.getElementById('kpiFARate').textContent = `${faRate}%`;
-            document.getElementById('kpiFACount').textContent = `${faCount.toLocaleString()} ${isTH ? 'การแจ้งเตือน' : 'alerts'}`;
-            document.getElementById('kpiCompSLA').textContent = `${compRate}%`;
-            document.getElementById('kpiCompCount').textContent = `${compCount.toLocaleString()} ${isTH ? 'เคสตรงเกณฑ์' : 'cases met'}`;
-            document.getElementById('kpiRespSLA').textContent = `${respRate}%`;
-            document.getElementById('kpiRespCount').textContent = `${respCount.toLocaleString()} ${isTH ? 'เคสตรงเกณฑ์' : 'cases met'}`;
-            document.getElementById('kpiMTTR').textContent = `${avgMttrHrs} ${isTH ? 'ชม.' : 'hrs'}`;
-            document.getElementById('kpiMTTRMins').textContent = `${avgMttrMinsDisplay} ${isTH ? 'นาทีเฉลี่ย' : 'mins avg'}`;
+            const setElText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            };
 
-            const pendingTotal = getFilteredPendingList().length;
-            document.getElementById('kpiPending').textContent = pendingTotal.toLocaleString();
-            document.getElementById('unfinishedBadge').textContent = `${pendingTotal.toLocaleString()} ${isTH ? 'เคส' : 'Cases'}`;
+            setElText('kpiTotal', currentFilteredCount.toLocaleString());
+            setElText('kpiTotalPct', `${TOTAL_DATASET_COUNT > 0 ? ((currentFilteredCount / TOTAL_DATASET_COUNT) * 100).toFixed(1) : 0}% ${isTH ? 'ของชุดข้อมูล' : 'of dataset'}`);
+            setElText('kpiFARate', `${faRate}%`);
+            setElText('kpiFACount', `${faCount.toLocaleString()} ${isTH ? 'การแจ้งเตือน' : 'alerts'}`);
+            setElText('kpiCompSLA', `${compRate}%`);
+            setElText('kpiCompCount', `${compCount.toLocaleString()} ${isTH ? 'เคสตรงเกณฑ์' : 'cases met'}`);
+            setElText('kpiRespSLA', `${respRate}%`);
+            setElText('kpiRespCount', `${respCount.toLocaleString()} ${isTH ? 'เคสตรงเกณฑ์' : 'cases met'}`);
+            setElText('kpiMTTR', `${avgMttrHrs} ${isTH ? 'ชม.' : 'hrs'}`);
+            setElText('kpiMTTRMins', `${avgMttrMinsDisplay} ${isTH ? 'นาทีเฉลี่ย' : 'mins avg'}`);
+
+            let pendingTotal = 0;
+            try {
+                if (typeof getFilteredPendingList === 'function') {
+                    pendingTotal = getFilteredPendingList().length;
+                }
+            } catch (err) {
+                console.error("Error calculating pending tasks:", err);
+            }
+            setElText('kpiPending', pendingTotal.toLocaleString());
+            setElText('unfinishedBadge', `${pendingTotal.toLocaleString()} ${isTH ? 'เคส' : 'Cases'}`);
         }
 
         // Domain-specific Knowledge Engine
@@ -7201,9 +7228,7 @@
                     document.getElementById('emptyDashboardPlaceholder')?.classList.add('hidden');
                     document.getElementById('dashboardActiveSections')?.classList.remove('hidden');
                     document.getElementById('sidebarFiltersDashboard')?.classList.remove('opacity-60', 'pointer-events-none');
-                    renderAllCharts();
-                    renderPendingTable();
-                    updateDynamicExecutiveAnalytics();
+                    runFilterPipeline();
                 } else {
                     document.getElementById('uploadPrompt')?.classList.remove('hidden');
                     document.getElementById('emptyDashboardPlaceholder')?.classList.remove('hidden');
