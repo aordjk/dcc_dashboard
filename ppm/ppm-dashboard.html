@@ -437,6 +437,7 @@
           <div class="relative flex-1 flex items-center justify-center cursor-pointer" style="min-height: 260px;">
             <canvas id="categoryChart"></canvas>
           </div>
+          <div id="ppmCatLegend" class="grid grid-cols-3 gap-1 mt-2 text-center text-xs border-t border-slate-800/80 pt-2"></div>
         </div>
 
         <!-- Graph 4: Maintenance Frequency -->
@@ -538,6 +539,105 @@
   </div>
 
   <!-- Core JavaScript -->
+  <script>
+    // ======================================================================
+    // Generic multi-select filter (search + Select All / Clear, optional groups)
+    // State: empty Set = All (no filter). Used by CWO Comparison strip and the
+    // CWO Dashboard "Problem Type" filter.
+    // ======================================================================
+    const DCC_MS = {};
+    const msEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const msT = (en, th) => (typeof currentLang !== 'undefined' && currentLang === 'th' ? th : en);
+    function msInit(id, onChange, opts = {}) {
+      if (!DCC_MS[id]) DCC_MS[id] = { sel: new Set(), all: true, items: [], open: false, q: '', key: '', onChange, search: !!opts.search, allLbl: 'All', unit: opts.unit || '' };
+      return DCC_MS[id];
+    }
+    // items: [{v, l, g?}] ; returns predicate(value) -> bool
+    function msSetItems(id, items, allLbl) {
+      const st = DCC_MS[id]; if (!st) return () => true;
+      st.items = items; st.allLbl = allLbl || msT('All', 'ทั้งหมด');
+      const vals = new Set(items.map(i => i.v));
+      const had = st.sel.size;
+      [...st.sel].forEach(v => { if (!vals.has(v)) st.sel.delete(v); });
+      if (!st.all && had && !st.sel.size) st.all = true;   // upstream filter removed every pick -> back to All
+      const key = items.map(i => i.v + '\u0001' + i.l + '\u0001' + (i.g || '')).join('|') + st.allLbl;
+      const host = document.getElementById(id);
+      if (host && (st.key !== key || !host.querySelector('.ms-btn'))) { st.key = key; msBuild(id); }
+      else msSync(id);
+      if (!st.all && st.sel.size && st.sel.size === vals.size) st.all = true;
+      const all = st.all, sel = st.sel;
+      return v => all || sel.has(v);
+    }
+    function msActive(id) { const st = DCC_MS[id]; return !!(st && !st.all); }
+    function msValues(id) { const st = DCC_MS[id]; return st && !st.all ? [...st.sel] : []; }
+    function msClear(id, silent) { const st = DCC_MS[id]; if (!st) return; st.sel.clear(); st.all = true; st.q = ''; const inp = document.querySelector(`#${id} .ms-q`); if (inp) inp.value = ''; msFilterList(id); msSync(id); if (!silent) st.onChange && st.onChange(); }
+    function msLabel(st) {
+      if (st.all) return st.allLbl;
+      if (!st.sel.size) return msT('None', 'ไม่ได้เลือก');
+      if (st.sel.size === 1) { const v = [...st.sel][0]; return (st.items.find(i => i.v === v) || { l: v }).l; }
+      return `${st.sel.size} ${msT('selected', 'รายการ')}`;
+    }
+    function msBuild(id) {
+      const st = DCC_MS[id], host = document.getElementById(id); if (!host) return;
+      host.classList.add('relative', 'ms-host');
+      let lastG = null;
+      const list = st.items.map(i => {
+        let h = '';
+        if (i.g && i.g !== lastG) { lastG = i.g; h += `<div class="ms-group flex items-center justify-between mt-1.5 first:mt-0 px-1 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-500/10 rounded cursor-pointer hover:bg-indigo-500/20" data-g="${msEsc(i.g)}" title="${msT('Select all in this category', 'เลือกทั้งหมดในหมวดนี้')}"><span class="truncate">${msEsc(i.g)}</span><i class="fa-solid fa-check-double text-[9px] opacity-70"></i></div>`; }
+        h += `<label class="ms-opt flex items-start gap-2 text-[11px] text-slate-300 hover:text-white cursor-pointer py-0.5" data-g="${msEsc(i.g || '')}" data-s="${msEsc((i.l + ' ' + (i.g || '')).toLowerCase())}">
+          <input type="checkbox" value="${msEsc(i.v)}" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-0 shrink-0"><span class="break-words leading-snug">${msEsc(i.l)}</span></label>`;
+        return h;
+      }).join('') || `<div class="text-[11px] text-slate-500 py-1">${msT('No options', 'ไม่มีตัวเลือก')}</div>`;
+      host.innerHTML = `
+        <button type="button" class="ms-btn w-full bg-slate-950 border border-slate-700 hover:border-slate-500 rounded-lg px-2 py-1 text-xs text-left text-slate-200 flex justify-between items-center">
+          <span class="ms-lbl truncate"></span><i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-1"></i></button>
+        <div class="ms-dd ${st.open ? '' : 'hidden'} absolute top-full left-0 mt-1 bg-[#0b1120] border border-slate-700 rounded-lg p-2 shadow-2xl" style="z-index:80;min-width:100%;width:max-content;max-width:min(340px,90vw);max-height:none;overflow:visible">
+          ${st.search ? `<div class="relative mb-1.5"><i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500"></i><input type="text" class="ms-q w-full bg-slate-950 border border-slate-700 rounded-md pl-6 pr-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="${msT('Type to search (type or category)…', 'พิมพ์ค้นหา (ประเภท/หมวด)…')}" value="${msEsc(st.q)}"></div>` : ''}
+          <div class="flex justify-between pb-1.5 mb-1.5 border-b border-slate-800 text-[10px] gap-3">
+            <button type="button" class="ms-all text-cyan-400 hover:underline">${msT('Select All', 'เลือกทั้งหมด')}${st.search ? msT(' (shown)', ' (ที่แสดง)') : ''}</button>
+            <button type="button" class="ms-clr text-slate-400 hover:underline">${msT('Clear', 'ล้าง')}</button></div>
+          <div class="ms-list space-y-0.5 overflow-y-auto custom-scroll pr-1" style="max-height:min(300px,55vh)">${list}</div>
+        </div>`;
+      const fire = () => { msSync(id); st.onChange && st.onChange(); };
+      host.querySelector('.ms-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        Object.keys(DCC_MS).forEach(k => { if (k !== id && DCC_MS[k].open) { DCC_MS[k].open = false; document.querySelector(`#${k} .ms-dd`)?.classList.add('hidden'); } });
+        st.open = !st.open; host.querySelector('.ms-dd').classList.toggle('hidden', !st.open);
+        if (st.open) host.querySelector('.ms-q')?.focus();
+      });
+      host.querySelector('.ms-dd').addEventListener('click', e => e.stopPropagation());
+      host.querySelector('.ms-list').addEventListener('change', e => { const cb = e.target; if (cb.type !== 'checkbox') return; if (st.all) { st.all = false; st.sel = new Set(st.items.map(i => i.v)); } cb.checked ? st.sel.add(cb.value) : st.sel.delete(cb.value); if (st.sel.size === st.items.length) { st.all = true; st.sel.clear(); } fire(); });
+      host.querySelector('.ms-list').addEventListener('click', e => {
+        const g = e.target.closest('.ms-group'); if (!g) return;
+        const opts = [...host.querySelectorAll(`.ms-opt[data-g="${CSS.escape(g.dataset.g)}"]`)].filter(o => o.style.display !== 'none');
+        if (st.all) { st.all = false; st.sel = new Set(st.items.map(i => i.v)); }
+        const allOn = opts.every(o => st.sel.has(o.querySelector('input').value));
+        opts.forEach(o => { const v = o.querySelector('input').value; allOn ? st.sel.delete(v) : st.sel.add(v); });
+        if (st.sel.size === st.items.length) { st.all = true; st.sel.clear(); }
+        fire();
+      });
+      host.querySelector('.ms-all').addEventListener('click', () => { if (!st.q) { st.all = true; st.sel.clear(); } else { st.all = false; st.sel = new Set(); host.querySelectorAll('.ms-opt').forEach(o => { if (o.style.display !== 'none') st.sel.add(o.querySelector('input').value); }); if (st.sel.size === st.items.length) { st.all = true; st.sel.clear(); } } fire(); });
+      host.querySelector('.ms-clr').addEventListener('click', () => { st.all = false; st.sel.clear(); fire(); });
+      const q = host.querySelector('.ms-q');
+      if (q) { q.addEventListener('input', () => { st.q = q.value; msFilterList(id); }); q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); host.querySelector('.ms-all').click(); } }); }
+      msFilterList(id); msSync(id);
+    }
+    function msFilterList(id) {
+      const st = DCC_MS[id], host = document.getElementById(id); if (!st || !host) return;
+      const q = (st.q || '').toLowerCase().trim();
+      const shownG = new Set();
+      host.querySelectorAll('.ms-opt').forEach(o => { const ok = !q || o.dataset.s.includes(q); o.style.display = ok ? '' : 'none'; if (ok) shownG.add(o.dataset.g); });
+      host.querySelectorAll('.ms-group').forEach(g => { g.style.display = shownG.has(g.dataset.g) ? '' : 'none'; });
+    }
+    function msSync(id) {
+      const st = DCC_MS[id], host = document.getElementById(id); if (!st || !host) return;
+      host.querySelectorAll('.ms-opt input').forEach(cb => { cb.checked = st.all || st.sel.has(cb.value); });
+      const l = host.querySelector('.ms-lbl'); if (l) { l.textContent = msLabel(st); l.title = msLabel(st); }
+      const b = host.querySelector('.ms-btn'); if (b) b.classList.toggle('border-indigo-500', !st.all);
+      const strip = host.closest('.dcc-filter-strip'); if (strip) strip.dispatchEvent(new Event('change', { bubbles: false }));
+    }
+    window.addEventListener('click', () => { Object.keys(DCC_MS).forEach(k => { if (DCC_MS[k].open) { DCC_MS[k].open = false; document.querySelector(`#${k} .ms-dd`)?.classList.add('hidden'); } }); });
+  </script>
   <script>
     Chart.register(ChartDataLabels);
 
@@ -898,9 +998,9 @@
       return `${p2(sun.getDate())} ${PPM_MON3[sun.getMonth()]} - ${p2(sat.getDate())} ${PPM_MON3[sat.getMonth()]} ${sat.getFullYear()}`;
     }
     function ppmTimeOk(yr, wk, day) {
-      if (selectedYear !== 'All' && yr !== selectedYear) return false;
-      if (selectedWeek !== 'All' && wk !== selectedWeek) return false;
-      if (selectedDay !== 'All' && day !== selectedDay) return false;
+      if (!ppmIn('Year', yr)) return false;
+      if (!ppmIn('Week', wk)) return false;
+      if (!ppmIn('Day', day)) return false;
       return true;
     }
     // Cascading options built from the loaded data; invalid selections fall back to All
@@ -1264,7 +1364,7 @@
     function getFilterStorageKey() {
       const teamsArr = Array.from(selectedTeams).sort().join("+") || "None";
       const site = document.getElementById("headerTag").textContent.trim();
-      return `ppm_analysis_${site}_${selectedYear}_${selectedWeek}_${selectedDay}_${selectedMonth}_${teamsArr}_${selectedCategory}_${selectedFrequency}_${selectedStatus}`;
+      return `ppm_analysis_${site}_${['Year','Week','Day','Month'].map(ppmMsKey).join('_')}_${teamsArr}_${['Category','Frequency','Status'].map(ppmMsKey).join('_')}`;
     }
 
     function generateDynamicLiveAnalysis(stats) {
@@ -1370,11 +1470,11 @@
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
 
-        const matchMonth = (selectedMonth === "All" || m === selectedMonth);
+        const matchMonth = ppmIn('Month', m);
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
-        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
-        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
-        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+        const matchCat = ppmIn('Category', cat);
+        const matchFreq = ppmIn('Frequency', freq);
+        const matchStage = ppmIn('Status', stg);
 
         if (matchMonth && matchTeam && matchCat && matchFreq && matchStage) {
           totalTasks += cnt;
@@ -1429,11 +1529,11 @@
       const search = document.getElementById("pendingSearch").value.trim().toLowerCase();
 
       filteredPendingList = UNFINISH_TASKS_DATA.filter(task => {
-        const matchMonth = (selectedMonth === "All" || task.month === selectedMonth);
+        const matchMonth = ppmIn('Month', task.month);
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(task.team));
-        const matchCat = (selectedCategory === "All" || task.category === selectedCategory);
-        const matchFreq = (selectedFrequency === "All" || task.frequency === selectedFrequency);
-        const matchStage = (selectedStatus === "All" || task.stage === selectedStatus);
+        const matchCat = ppmIn('Category', task.category);
+        const matchFreq = ppmIn('Frequency', task.frequency);
+        const matchStage = ppmIn('Status', task.stage);
 
         const groupText = (currentLang === 'en' ? task.group_en : task.group_th).toLowerCase();
         const matchSearch = search === "" ||
@@ -1544,7 +1644,7 @@
     // CHARTS RENDERING
     // -------------------------------------------------------------
     function renderCharts() {
-      const displayMonths = (selectedMonth === "All") ? AVAILABLE_MONTHS : [selectedMonth];
+      const displayMonths = AVAILABLE_MONTHS.filter(m => ppmIn('Month', m));
 
       // --- Chart 1: Monthly Workload Volume ---
       const hardCounts = displayMonths.map(() => 0);
@@ -1554,9 +1654,9 @@
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
-        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
-        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
-        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+        const matchCat = ppmIn('Category', cat);
+        const matchFreq = ppmIn('Frequency', freq);
+        const matchStage = ppmIn('Status', stg);
 
         if (matchTeam && matchCat && matchFreq && matchStage) {
           const mIdx = displayMonths.indexOf(m);
@@ -1596,8 +1696,7 @@
             const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
             if (points.length > 0) {
               const clickedMonth = chart.data.labels[points[0].index];
-              selectedMonth = (selectedMonth === clickedMonth) ? "All" : clickedMonth;
-              document.getElementById("filterMonth").value = selectedMonth;
+              ppmMsToggle('Month', clickedMonth);
               updateDashboard();
             }
           },
@@ -1641,9 +1740,9 @@
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
-        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
-        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
-        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+        const matchCat = ppmIn('Category', cat);
+        const matchFreq = ppmIn('Frequency', freq);
+        const matchStage = ppmIn('Status', stg);
 
         if (matchTeam && matchCat && matchFreq && matchStage) {
           const mIdx = displayMonths.indexOf(m);
@@ -1690,8 +1789,7 @@
             const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
             if (points.length > 0) {
               const clickedMonth = chart.data.labels[points[0].index];
-              selectedMonth = (selectedMonth === clickedMonth) ? "All" : clickedMonth;
-              document.getElementById("filterMonth").value = selectedMonth;
+              ppmMsToggle('Month', clickedMonth);
               updateDashboard();
             }
           },
@@ -1736,18 +1834,19 @@
       AGGREGATED_CUBE.forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
-        const matchMonth = (selectedMonth === "All" || m === selectedMonth);
+        const matchMonth = ppmIn('Month', m);
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
-        const matchFreq = (selectedFrequency === "All" || freq === selectedFrequency);
-        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+        const matchFreq = ppmIn('Frequency', freq);
+        const matchStage = ppmIn('Status', stg);
 
         if (matchMonth && matchTeam && matchFreq && matchStage) {
           catCounts[cat] = (catCounts[cat] || 0) + cnt;
         }
       });
 
-      const catLabels = Object.keys(catCounts);
-      const catData = Object.values(catCounts);
+      const catSorted = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+      const catLabels = catSorted.map(e => e[0]);
+      const catData = catSorted.map(e => e[1]);
       const totalCatSum = catData.reduce((acc, curr) => acc + curr, 0);
 
       const ctxCategory = document.getElementById("categoryChart").getContext("2d");
@@ -1773,16 +1872,12 @@
             const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
             if (points.length > 0) {
               const clickedCat = chart.data.labels[points[0].index];
-              selectedCategory = (selectedCategory === clickedCat) ? "All" : clickedCat;
-              document.getElementById("filterCategory").value = selectedCategory;
+              ppmMsToggle('Category', clickedCat);
               updateDashboard();
             }
           },
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } }
-            },
+            legend: { display: false },
             datalabels: {
               color: '#ffffff',
               font: { weight: 'bold', size: 10 },
@@ -1796,6 +1891,13 @@
         }
       });
 
+      // Case-style legend: top 3 categories with share (full legend is added only in exports)
+      const catLegEl = document.getElementById('ppmCatLegend');
+      if (catLegEl) {
+        const pal = categoryChart.data.datasets[0].backgroundColor;
+        catLegEl.innerHTML = catSorted.slice(0, 3).map(([c, v], i) => `<div class="px-1 py-0.5"><div class="flex items-center justify-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${pal[i % pal.length]}"></span><span class="text-slate-300 font-semibold">${c}</span></div><div class="font-mono font-bold text-white">${totalCatSum ? (v / totalCatSum * 100).toFixed(1) : 0}%</div><div class="text-[10px] text-slate-500">${v.toLocaleString()} ${currentLang === 'th' ? 'งาน' : 'tasks'}</div></div>`).join('') || `<div class="col-span-3 text-slate-500 py-1">${currentLang === 'th' ? 'ไม่มีข้อมูล' : 'No data'}</div>`;
+      }
+
       // --- Chart 4: Maintenance Frequency Distribution ---
       const freqCounts = {};
       AVAILABLE_FREQS.forEach(f => freqCounts[f] = 0);
@@ -1803,10 +1905,10 @@
       AGGREGATED_CUBE.forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
-        const matchMonth = (selectedMonth === "All" || m === selectedMonth);
+        const matchMonth = ppmIn('Month', m);
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
-        const matchCat = (selectedCategory === "All" || cat === selectedCategory);
-        const matchStage = (selectedStatus === "All" || stg === selectedStatus);
+        const matchCat = ppmIn('Category', cat);
+        const matchStage = ppmIn('Status', stg);
 
         if (matchMonth && matchTeam && matchCat && matchStage) {
           if (freqCounts[freq] !== undefined) {
@@ -1815,7 +1917,7 @@
         }
       });
 
-      const freqLabels = (selectedFrequency === "All") ? AVAILABLE_FREQS : [selectedFrequency];
+      const freqLabels = AVAILABLE_FREQS.filter(f => ppmIn('Frequency', f));
       const freqData = freqLabels.map(f => freqCounts[f] || 0);
 
       const ctxFrequency = document.getElementById("frequencyChart").getContext("2d");
@@ -1839,8 +1941,7 @@
             const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
             if (points.length > 0) {
               const clickedF = chart.data.labels[points[0].index];
-              selectedFrequency = (selectedFrequency === clickedF) ? "All" : clickedF;
-              document.getElementById("filterFrequency").value = selectedFrequency;
+              ppmMsToggle('Frequency', clickedF);
               updateDashboard();
             }
           },
@@ -2104,8 +2205,8 @@
     function ppmRowMatch(row, ignoreMonth) {
       if (!ppmTimeOk(row[8], row[9], row[10])) return false;
       const [m, team, cat, freq, stg] = row;
-      return (ignoreMonth || selectedMonth === 'All' || m === selectedMonth) && (selectedTeams.size === 0 || selectedTeams.has(team)) &&
-        (selectedCategory === 'All' || cat === selectedCategory) && (selectedFrequency === 'All' || freq === selectedFrequency) && (selectedStatus === 'All' || stg === selectedStatus);
+      return (ignoreMonth || ppmIn('Month', m)) && (selectedTeams.size === 0 || selectedTeams.has(team)) &&
+        ppmIn('Category', cat) && ppmIn('Frequency', freq) && ppmIn('Status', stg);
     }
     function ppmAgg(rows) {
       const a = { total: 0, done: 0, met: 0, miss: 0, rmet: 0, rmiss: 0 };
@@ -2122,7 +2223,7 @@
     window.renderCharts = function () {
       _ppmRenderCharts.apply(this, arguments);
       try {
-        const months = (selectedMonth === 'All') ? AVAILABLE_MONTHS : [selectedMonth];
+        const months = AVAILABLE_MONTHS.filter(m => ppmIn('Month', m));
         const rows = AGGREGATED_CUBE.filter(r => ppmRowMatch(r, true) && months.includes(r[0]));
         const provTotals = new Map(); rows.forEach(r => provTotals.set(r[1], (provTotals.get(r[1]) || 0) + r[6]));
         const provs = [...provTotals.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
@@ -2258,8 +2359,8 @@
       const cat = document.getElementById('filterCategory'); if (cat && cat.options[0]) cat.options[0].textContent = th ? 'ทุกหมวดบริการ' : 'All Categories';
       const tm = document.getElementById('filterTeam'); if (tm && tm.options[0]) tm.options[0].textContent = th ? 'ทุกผู้ให้บริการ' : 'All Providers';
     }
-    const _ppmPopulate = populateAllDropdowns;
-    window.populateAllDropdowns = function () { const r = _ppmPopulate.apply(this, arguments); ppmFieldLabels(); return r; };
+    const _ppmPopulateMs = populateAllDropdowns;
+    window.populateAllDropdowns = function () { const r = _ppmPopulateMs.apply(this, arguments); ppmFieldLabels(); return r; };
     const _ppmBuildCat = buildCategoryDropdown;
     window.buildCategoryDropdown = function () { const r = _ppmBuildCat.apply(this, arguments); ppmFieldLabels(); return r; };
     const _ppmSetLang2 = setLanguage;
@@ -2439,6 +2540,17 @@
       .dcc-filter-strip.m-open .dcc-mchev { transform: rotate(180deg); }
       .dcc-mchev { display: inline-block !important; transition: transform .2s; }
     }
+  
+    /* multi-select dropdown in Day mode */
+    html.ppm-light .ms-dd { background: #ffffff !important; border-color: #e2e8f0 !important; }
+    html.ppm-light .ms-dd .ms-opt { color: #334155 !important; }
+    html.ppm-light .ms-dd .ms-opt:hover { color: #0f172a !important; }
+    html.ppm-light .ms-dd .ms-q { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html.ppm-light .ms-dd .ms-group { color: #3730a3 !important; background: #eef2ff !important; }
+    html.ppm-light .ms-btn { background: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html.ppm-light #ppmCatLegend .text-white { color: #0f172a !important; }
+    html.ppm-light #ppmCatLegend .text-slate-300 { color: #334155 !important; }
+    html.ppm-light #ppmCatLegend { border-color: #e2e8f0 !important; }
   </style>
   <script>
     (function () {
@@ -2460,6 +2572,74 @@
       }
       window.addEventListener('DOMContentLoaded', wire);
     })();
+  </script>
+
+  <script>
+    // ======================================================================
+    // PPM: every filter is a multi-select (all selected by default), so months,
+    // providers, categories ... can be compared side by side.
+    // The original <select>s stay hidden at "All" for compatibility.
+    // ======================================================================
+    const PPM_MS = { Year: 'filterYear', Month: 'filterMonth', Week: 'filterWeek', Day: 'filterDay', Team: 'filterTeam', Category: 'filterCategory', Frequency: 'filterFrequency', Status: 'filterStatus' };
+    const ppmMsId = k => 'ms_' + PPM_MS[k];
+    function ppmIn(kind, v) { const st = DCC_MS[ppmMsId(kind)]; return !st || st.all || st.sel.has(v); }
+    function ppmMsKey(kind) { const st = DCC_MS[ppmMsId(kind)]; return !st || st.all ? 'All' : [...st.sel].sort().join('+') || 'None'; }
+    function ppmMsToggle(kind, v) {
+      const id = ppmMsId(kind), st = DCC_MS[id]; if (!st) return;
+      if (!st.all && st.sel.size === 1 && st.sel.has(v)) { st.all = true; st.sel.clear(); }
+      else { st.all = false; st.sel = new Set([v]); }
+      msSync(id); if (kind === 'Team') ppmSyncTeams();
+    }
+    function ppmSyncTeams() {
+      const st = DCC_MS[ppmMsId('Team')];
+      selectedTeams = !st || st.all ? new Set() : new Set(st.sel);
+      if (!st || st.all || st.sel.size) { /* keep */ }
+      ppmSetCategoryItems();
+    }
+    function ppmSetCategoryItems() {
+      const teams = selectedTeams.size === 0 ? Object.keys(CATEGORIES_BY_TEAM) : Array.from(selectedTeams);
+      const cats = Array.from(new Set(teams.flatMap(t => CATEGORIES_BY_TEAM[t] || []))).sort();
+      msSetItems(ppmMsId('Category'), cats.map(c => ({ v: c, l: c })), currentLang === 'th' ? 'ทุกหมวดบริการ' : 'All Categories');
+    }
+    function ppmMountMs() {
+      Object.entries(PPM_MS).forEach(([kind, selId]) => {
+        const sel = document.getElementById(selId); if (!sel || document.getElementById(ppmMsId(kind))) return;
+        sel.classList.add('hidden'); sel.value = 'All';
+        const host = document.createElement('div'); host.id = ppmMsId(kind); host.className = 'w-full';
+        sel.insertAdjacentElement('afterend', host);
+        msInit(host.id, () => { if (kind === 'Team') ppmSyncTeams(); updateDashboard(); }, { search: ['Team', 'Category'].includes(kind) });
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ppmMountMs); else ppmMountMs();
+
+    // Options come from the data; time options cascade Year -> Month -> Week -> Day
+    const _ppmPopulateMS2 = populateAllDropdowns;
+    populateAllDropdowns = function () {
+      _ppmPopulateMS2.apply(this, arguments); ppmMountMs();
+      const th = currentLang === 'th';
+      msSetItems(ppmMsId('Month'), AVAILABLE_MONTHS.map(m => ({ v: m, l: m })), I18N[currentLang].allMonths);
+      msSetItems(ppmMsId('Team'), Object.keys(CATEGORIES_BY_TEAM).sort().map(t => ({ v: t, l: t })), th ? 'ทุกผู้ให้บริการ' : 'All Providers');
+      msSetItems(ppmMsId('Frequency'), AVAILABLE_FREQS.map(f => ({ v: f, l: f })), I18N[currentLang].allFrequencies);
+      const stages = [...new Set(AGGREGATED_CUBE.map(r => r[4]).filter(Boolean))].sort();
+      msSetItems(ppmMsId('Status'), stages.map(x => ({ v: x, l: x })), th ? 'ทุกสถานะ' : 'All Statuses');
+      ppmSyncTeams();
+    };
+    buildCategoryDropdown = function () { ppmSetCategoryItems(); };
+    refreshPpmTimeFilters = function () {
+      ppmMountMs();
+      const th = currentLang === 'th', rows = AGGREGATED_CUBE;
+      const DOW = th ? ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const yOk = msSetItems(ppmMsId('Year'), [...new Set(rows.map(r => r[8]).filter(Boolean))].sort().reverse().map(y => ({ v: y, l: y })), th ? 'ทุกปี' : 'All Years');
+      const inY = rows.filter(r => yOk(r[8]) && ppmIn('Month', r[0]));
+      const wOk = msSetItems(ppmMsId('Week'), [...new Set(inY.map(r => r[9]).filter(Boolean))].sort().map(w => ({ v: w, l: ppmWeekLabel(w) })), th ? 'ทุกสัปดาห์' : 'All Weeks');
+      msSetItems(ppmMsId('Day'), [...new Set(inY.filter(r => wOk(r[9])).map(r => r[10]).filter(Boolean))].sort().map(d => { const [y, m, dd] = d.split('-').map(Number); return { v: d, l: `${DOW[new Date(y, m - 1, dd).getDay()]} ${String(dd).padStart(2, '0')} ${PPM_MON3[m - 1]} ${y}` }; }), th ? 'ทุกวัน' : 'All Days');
+    };
+    onFilterChange = function () { ppmSyncTeams(); updateDashboard(); };
+    const _ppmResetMS2 = resetAllFilters;
+    resetAllFilters = function () {
+      Object.keys(PPM_MS).forEach(k => { if (DCC_MS[ppmMsId(k)]) msClear(ppmMsId(k), true); });
+      _ppmResetMS2.apply(this, arguments);
+    };
   </script>
 </body>
 </html>

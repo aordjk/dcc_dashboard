@@ -237,6 +237,7 @@
   <div id="cwoCmpStrip" class="dcc-filter-strip hidden sticky z-40 px-3 sm:px-6 lg:px-8 pt-3 pb-2.5 border-b border-slate-800 bg-[#0b1120]/95 backdrop-blur">
       <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
         <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cmpLblCompare">Compare</span></span></div>
+        <div class="flex flex-col min-w-[100px] max-w-[130px] flex-1"><label id="cmpLblBy" class="block text-[9.5px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5 truncate">Compare By</label><select id="cmpBy" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="auto">Auto</option><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
         <div class="flex flex-col min-w-[72px] max-w-[90px] flex-1"><label id="cmpLblYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><div id="cmpYear" class="w-full"></div></div>
         <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="cmpLblMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><div id="cmpMonth" class="w-full"></div></div>
         <div class="flex flex-col min-w-[110px] max-w-[175px] flex-1"><label id="cmpLblWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week</label><div id="cmpWeek" class="w-full"></div></div>
@@ -735,7 +736,7 @@
     const msEsc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const msT = (en, th) => (typeof currentLang !== 'undefined' && currentLang === 'th' ? th : en);
     function msInit(id, onChange, opts = {}) {
-      if (!DCC_MS[id]) DCC_MS[id] = { sel: new Set(), items: [], open: false, q: '', key: '', onChange, search: !!opts.search, allLbl: 'All', unit: opts.unit || '' };
+      if (!DCC_MS[id]) DCC_MS[id] = { sel: new Set(), all: true, items: [], open: false, q: '', key: '', onChange, search: !!opts.search, allLbl: 'All', unit: opts.unit || '' };
       return DCC_MS[id];
     }
     // items: [{v, l, g?}] ; returns predicate(value) -> bool
@@ -743,19 +744,23 @@
       const st = DCC_MS[id]; if (!st) return () => true;
       st.items = items; st.allLbl = allLbl || msT('All', 'ทั้งหมด');
       const vals = new Set(items.map(i => i.v));
+      const had = st.sel.size;
       [...st.sel].forEach(v => { if (!vals.has(v)) st.sel.delete(v); });
+      if (!st.all && had && !st.sel.size) st.all = true;   // upstream filter removed every pick -> back to All
       const key = items.map(i => i.v + '\u0001' + i.l + '\u0001' + (i.g || '')).join('|') + st.allLbl;
       const host = document.getElementById(id);
       if (host && (st.key !== key || !host.querySelector('.ms-btn'))) { st.key = key; msBuild(id); }
       else msSync(id);
-      const sel = st.sel;
-      return v => sel.size === 0 || sel.has(v);
+      if (!st.all && st.sel.size && st.sel.size === vals.size) st.all = true;
+      const all = st.all, sel = st.sel;
+      return v => all || sel.has(v);
     }
-    function msActive(id) { const st = DCC_MS[id]; return !!(st && st.sel.size); }
-    function msValues(id) { const st = DCC_MS[id]; return st ? [...st.sel] : []; }
-    function msClear(id, silent) { const st = DCC_MS[id]; if (!st) return; st.sel.clear(); st.q = ''; const inp = document.querySelector(`#${id} .ms-q`); if (inp) inp.value = ''; msFilterList(id); msSync(id); if (!silent) st.onChange && st.onChange(); }
+    function msActive(id) { const st = DCC_MS[id]; return !!(st && !st.all); }
+    function msValues(id) { const st = DCC_MS[id]; return st && !st.all ? [...st.sel] : []; }
+    function msClear(id, silent) { const st = DCC_MS[id]; if (!st) return; st.sel.clear(); st.all = true; st.q = ''; const inp = document.querySelector(`#${id} .ms-q`); if (inp) inp.value = ''; msFilterList(id); msSync(id); if (!silent) st.onChange && st.onChange(); }
     function msLabel(st) {
-      if (!st.sel.size) return st.allLbl;
+      if (st.all) return st.allLbl;
+      if (!st.sel.size) return msT('None', 'ไม่ได้เลือก');
       if (st.sel.size === 1) { const v = [...st.sel][0]; return (st.items.find(i => i.v === v) || { l: v }).l; }
       return `${st.sel.size} ${msT('selected', 'รายการ')}`;
     }
@@ -773,12 +778,12 @@
       host.innerHTML = `
         <button type="button" class="ms-btn w-full bg-slate-950 border border-slate-700 hover:border-slate-500 rounded-lg px-2 py-1 text-xs text-left text-slate-200 flex justify-between items-center">
           <span class="ms-lbl truncate"></span><i class="fa-solid fa-chevron-down text-[10px] text-slate-500 ml-1"></i></button>
-        <div class="ms-dd ${st.open ? '' : 'hidden'} absolute top-full left-0 mt-1 bg-[#0b1120] border border-slate-700 rounded-lg p-2 z-50 shadow-2xl multiselect-dropdown" style="min-width:100%;width:max-content;max-width:min(340px,90vw)">
+        <div class="ms-dd ${st.open ? '' : 'hidden'} absolute top-full left-0 mt-1 bg-[#0b1120] border border-slate-700 rounded-lg p-2 shadow-2xl" style="z-index:80;min-width:100%;width:max-content;max-width:min(340px,90vw);max-height:none;overflow:visible">
           ${st.search ? `<div class="relative mb-1.5"><i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500"></i><input type="text" class="ms-q w-full bg-slate-950 border border-slate-700 rounded-md pl-6 pr-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="${msT('Type to search (type or category)…', 'พิมพ์ค้นหา (ประเภท/หมวด)…')}" value="${msEsc(st.q)}"></div>` : ''}
           <div class="flex justify-between pb-1.5 mb-1.5 border-b border-slate-800 text-[10px] gap-3">
             <button type="button" class="ms-all text-cyan-400 hover:underline">${msT('Select All', 'เลือกทั้งหมด')}${st.search ? msT(' (shown)', ' (ที่แสดง)') : ''}</button>
             <button type="button" class="ms-clr text-slate-400 hover:underline">${msT('Clear', 'ล้าง')}</button></div>
-          <div class="ms-list space-y-0.5 overflow-y-auto custom-scroll pr-1" style="max-height:280px">${list}</div>
+          <div class="ms-list space-y-0.5 overflow-y-auto custom-scroll pr-1" style="max-height:min(300px,55vh)">${list}</div>
         </div>`;
       const fire = () => { msSync(id); st.onChange && st.onChange(); };
       host.querySelector('.ms-btn').addEventListener('click', e => {
@@ -788,16 +793,18 @@
         if (st.open) host.querySelector('.ms-q')?.focus();
       });
       host.querySelector('.ms-dd').addEventListener('click', e => e.stopPropagation());
-      host.querySelector('.ms-list').addEventListener('change', e => { const cb = e.target; if (cb.type !== 'checkbox') return; cb.checked ? st.sel.add(cb.value) : st.sel.delete(cb.value); fire(); });
+      host.querySelector('.ms-list').addEventListener('change', e => { const cb = e.target; if (cb.type !== 'checkbox') return; if (st.all) { st.all = false; st.sel = new Set(st.items.map(i => i.v)); } cb.checked ? st.sel.add(cb.value) : st.sel.delete(cb.value); if (st.sel.size === st.items.length) { st.all = true; st.sel.clear(); } fire(); });
       host.querySelector('.ms-list').addEventListener('click', e => {
         const g = e.target.closest('.ms-group'); if (!g) return;
         const opts = [...host.querySelectorAll(`.ms-opt[data-g="${CSS.escape(g.dataset.g)}"]`)].filter(o => o.style.display !== 'none');
+        if (st.all) { st.all = false; st.sel = new Set(st.items.map(i => i.v)); }
         const allOn = opts.every(o => st.sel.has(o.querySelector('input').value));
         opts.forEach(o => { const v = o.querySelector('input').value; allOn ? st.sel.delete(v) : st.sel.add(v); });
+        if (st.sel.size === st.items.length) { st.all = true; st.sel.clear(); }
         fire();
       });
-      host.querySelector('.ms-all').addEventListener('click', () => { host.querySelectorAll('.ms-opt').forEach(o => { if (o.style.display !== 'none') st.sel.add(o.querySelector('input').value); }); fire(); });
-      host.querySelector('.ms-clr').addEventListener('click', () => { st.sel.clear(); fire(); });
+      host.querySelector('.ms-all').addEventListener('click', () => { if (!st.q) { st.all = true; st.sel.clear(); } else { st.all = false; st.sel = new Set(); host.querySelectorAll('.ms-opt').forEach(o => { if (o.style.display !== 'none') st.sel.add(o.querySelector('input').value); }); if (st.sel.size === st.items.length) { st.all = true; st.sel.clear(); } } fire(); });
+      host.querySelector('.ms-clr').addEventListener('click', () => { st.all = false; st.sel.clear(); fire(); });
       const q = host.querySelector('.ms-q');
       if (q) { q.addEventListener('input', () => { st.q = q.value; msFilterList(id); }); q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); host.querySelector('.ms-all').click(); } }); }
       msFilterList(id); msSync(id);
@@ -811,9 +818,9 @@
     }
     function msSync(id) {
       const st = DCC_MS[id], host = document.getElementById(id); if (!st || !host) return;
-      host.querySelectorAll('.ms-opt input').forEach(cb => { cb.checked = st.sel.has(cb.value); });
+      host.querySelectorAll('.ms-opt input').forEach(cb => { cb.checked = st.all || st.sel.has(cb.value); });
       const l = host.querySelector('.ms-lbl'); if (l) { l.textContent = msLabel(st); l.title = msLabel(st); }
-      const b = host.querySelector('.ms-btn'); if (b) b.classList.toggle('border-indigo-500', st.sel.size > 0);
+      const b = host.querySelector('.ms-btn'); if (b) b.classList.toggle('border-indigo-500', !st.all);
       const strip = host.closest('.dcc-filter-strip'); if (strip) strip.dispatchEvent(new Event('change', { bubbles: false }));
     }
     window.addEventListener('click', () => { Object.keys(DCC_MS).forEach(k => { if (DCC_MS[k].open) { DCC_MS[k].open = false; document.querySelector(`#${k} .ms-dd`)?.classList.add('hidden'); } }); });
@@ -2907,6 +2914,7 @@
     function resetCwoCompare() {
       ['cmpYear', 'cmpMonth', 'cmpWeek', 'cmpDay', 'cmpCategory', 'cmpPriority', 'cmpComponent', 'cmpType']
         .forEach(id => msClear(id, true));
+      const by = document.getElementById('cmpBy'); if (by) by.value = 'auto';
       renderCwoCompare();
     }
 
@@ -3044,14 +3052,29 @@
       // ---- periods = months
       const pmap = new Map();
       rows.forEach(r => { const k = cmpMonthKey(r); if (!k) return; if (!pmap.has(k)) pmap.set(k, { key: k, label: cmpMonthLabel(k), rows: [] }); pmap.get(k).rows.push(r); });
-      const periods = [...pmap.values()].sort((a, b) => a.key < b.key ? -1 : 1).slice(-12);
+      // Only one month in scope -> compare week by week instead, so every chart and summary still has data
+      // Compare by: Auto (month -> week -> day, whichever has 2+ periods) | Month | Week | Day
+      const byChoice = document.getElementById('cmpBy')?.value || 'auto';
+      const dayLabel = d => { const [y, m, dd] = d.split('-').map(Number); return `${String(dd).padStart(2, '0')} ${CMP_MON[m - 1]} ${y}`; };
+      const PERIOD_DEF = {
+        month: { key: cmpMonthKey, label: (k) => cmpMonthLabel(k), max: 12 },
+        week: { key: r => r.wk || null, label: (k, r) => r.wkLabel || k, max: 12 },
+        day: { key: r => r.day || null, label: (k) => dayLabel(k), max: 14 }
+      };
+      const distinct = by => new Set(rows.map(PERIOD_DEF[by].key).filter(Boolean)).size;
+      let periodBy = byChoice !== 'auto' ? byChoice : (distinct('month') > 1 ? 'month' : distinct('week') > 1 ? 'week' : 'day');
+      const periodKey = PERIOD_DEF[periodBy].key, periodMax = PERIOD_DEF[periodBy].max;
+      pmap.clear();
+      rows.forEach(r => { const k = periodKey(r); if (!k) return; if (!pmap.has(k)) pmap.set(k, { key: k, label: PERIOD_DEF[periodBy].label(k, r), rows: [] }); pmap.get(k).rows.push(r); });
+      window.CMP_PERIOD_BY = periodBy;
+      const periods = [...pmap.values()].sort((a, b) => a.key < b.key ? -1 : 1).slice(-periodMax);
       periods.forEach(p => { p.S = cwoSlaStats(p.rows); p.pending = p.rows.filter(cmpIsPending).length; });
       const latest = periods[periods.length - 1], prev = periods.length > 1 ? periods[periods.length - 2] : null;
       const S = cwoSlaStats(rows);
       const hrs = v => (v === null || v === undefined ? null : v / 60);
 
       // ---- new problem types: latest month vs all earlier history (full dataset, like Case)
-      const histTypes = new Set(records.filter(r => { const k = cmpMonthKey(r); return k && latest && k < latest.key; }).map(cmpType));
+      const histTypes = new Set(records.filter(r => { const k = periodKey(r); return k && latest && k < latest.key; }).map(cmpType));
       const newMap = new Map();
       (latest ? latest.rows : []).forEach(r => {
         const t = cmpType(r); if (histTypes.has(t)) return;
@@ -3138,7 +3161,7 @@
       document.getElementById('cmpB3').innerHTML = brief[2];
 
       CMP_EXPORT = {
-        by: 'month', labels: periods.map(p => p.label), latest: latest?.label || '', prev: prev?.label || '',
+        by: periodBy, labels: periods.map(p => p.label), latest: latest?.label || '', prev: prev?.label || '',
         kpis: [...document.querySelectorAll('#cmpKpis > div')].map(el => ({ label: el.children[0]?.children[0]?.innerText || '', val: el.children[1]?.innerText || '', sub: el.children[2]?.innerText || '' })),
         brief: [['cmpB1T', 'cmpB1'], ['cmpB2T', 'cmpB2'], ['cmpB3T', 'cmpB3']].map(([a, b]) => ({ title: document.getElementById(a).innerText, text: document.getElementById(b).innerText })),
         delta: deltaTop.map(x => ({ t: x.label, old: x.old, cur: x.cur })),
@@ -3146,6 +3169,20 @@
         newTypes: newTypes.slice(0, 10).map(it => ({ t: it.t, n: it.n, loc: ([...it.locs.entries()].sort((a, b) => b[1] - a[1])[0] || ['-'])[0], open: it.open }))
       };
       cmpLabels();
+      if (periodBy !== 'month') {
+        const U = periodBy === 'week' ? [cmpT('week', 'สัปดาห์'), cmpT('weeks', 'สัปดาห์')] : [cmpT('day', 'วัน'), cmpT('days', 'วัน')];
+        [['cmpS3', `Largest change between the latest two ${U[1]}`, `เปลี่ยนแปลงมากที่สุดระหว่าง 2 ${U[1]}ล่าสุด`],
+         ['cmpS4', `Most frequent problem types, ${U[0]} by ${U[0]}`, `ประเภทปัญหาที่เกิดบ่อยที่สุด ราย${U[0]}`],
+         ['cmpS6', `Top 5 event type and location pairs, ${U[0]} by ${U[0]}`, `5 คู่ประเภทเหตุและพื้นที่ ราย${U[0]}`],
+         ['cmpS7', `Latest ${U[0]} compared against all earlier ${U[1]}, with status`, `เทียบ${U[0]}ล่าสุดกับทุก${U[0]}ก่อนหน้า พร้อมสถานะ`]
+        ].forEach(([id, en, th]) => { const el = document.getElementById(id); if (el) el.textContent = cmpT(en, th); });
+        const sub = document.getElementById('cmpBriefSub');
+        if (sub) sub.textContent = periodBy === 'week'
+          ? cmpT('Latest week vs previous week · deep-dive with recommended actions', 'สัปดาห์ล่าสุดเทียบสัปดาห์ก่อนหน้า · วิเคราะห์เชิงลึกพร้อมแนวทาง')
+          : cmpT(`Latest day vs previous day (last ${periodMax} days) · deep-dive with recommended actions`, `วันล่าสุดเทียบวันก่อนหน้า (${periodMax} วันล่าสุด) · วิเคราะห์เชิงลึกพร้อมแนวทาง`);
+      }
+      const bySel = document.getElementById('cmpBy');
+      if (bySel) { const o = bySel.options[0]; o.textContent = byChoice === 'auto' ? `${cmpT('Auto', 'อัตโนมัติ')} (${({ month: cmpT('Month', 'เดือน'), week: cmpT('Week', 'สัปดาห์'), day: cmpT('Day', 'วัน') })[periodBy]})` : cmpT('Auto', 'อัตโนมัติ'); [['month', 'Month', 'เดือน'], ['week', 'Week', 'สัปดาห์'], ['day', 'Day', 'วัน']].forEach(([v, en, th], i) => { bySel.options[i + 1].textContent = cmpT(en, th); }); }
     }
     window.getCwoCompareExport = () => CMP_EXPORT;
 
@@ -3167,13 +3204,13 @@
       const top3Share = rows.length ? top5.slice(0, 3).reduce((a, x) => a + x.n, 0) / rows.length * 100 : 0;
       const avg = periods.reduce((a, p) => a + p.rows.length, 0) / periods.length;
       const b1 = cmpT(
-        `${b(e(latest.label))} closed at ${b(latest.rows.length.toLocaleString())} work orders vs ${b(prev.rows.length.toLocaleString())} in ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}); ${latest.rows.length > avg ? 'above' : 'below'} the ${periods.length}-month average of ${b(avg.toFixed(0))}.` + ul([
+        `${b(e(latest.label))} closed at ${b(latest.rows.length.toLocaleString())} work orders vs ${b(prev.rows.length.toLocaleString())} in ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}); ${latest.rows.length > avg ? 'above' : 'below'} the ${periods.length}-${window.CMP_PERIOD_BY || 'month'} average of ${b(avg.toFixed(0))}.` + ul([
           risers.length ? `Rising: ${risers.map(x => `${b(e(x.label))} (+${x.d})`).join(', ')}.` : null,
           fallers.length ? `Improving: ${fallers.map(x => `${b(e(x.label))} (${x.d})`).join(', ')}.` : null,
           `Concentration: the top 3 problem types make up ${b(top3Share.toFixed(0) + '%')} of all work orders.`,
           act(risers.length ? `open a root-cause review on ${b(e(risers[0].label))} this week; target a 20% reduction next month.` : `keep the preventive plan; volume is stable or falling.`)
         ]),
-        `${b(e(latest.label))} มีคำสั่งงาน ${b(latest.rows.length.toLocaleString())} รายการ เทียบกับ ${b(prev.rows.length.toLocaleString())} ใน ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}) ${latest.rows.length > avg ? 'สูงกว่า' : 'ต่ำกว่า'}ค่าเฉลี่ย ${periods.length} เดือน (${b(avg.toFixed(0))})` + ul([
+        `${b(e(latest.label))} มีคำสั่งงาน ${b(latest.rows.length.toLocaleString())} รายการ เทียบกับ ${b(prev.rows.length.toLocaleString())} ใน ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}) ${latest.rows.length > avg ? 'สูงกว่า' : 'ต่ำกว่า'}ค่าเฉลี่ย ${periods.length} ${({ week: 'สัปดาห์', day: 'วัน' })[window.CMP_PERIOD_BY] || 'เดือน'} (${b(avg.toFixed(0))})` + ul([
           risers.length ? `เพิ่มขึ้น: ${risers.map(x => `${b(e(x.label))} (+${x.d})`).join(', ')}` : null,
           fallers.length ? `ดีขึ้น: ${fallers.map(x => `${b(e(x.label))} (${x.d})`).join(', ')}` : null,
           `ความกระจุกตัว: 3 ประเภทปัญหาหลักคิดเป็น ${b(top3Share.toFixed(0) + '%')} ของงานทั้งหมด`,
@@ -3214,7 +3251,7 @@
 
     function cmpLabels() {
       const set = (id, en, th) => { const el = document.getElementById(id); if (el) el.textContent = cmpT(en, th); };
-      [['cmpLblFile', 'Files', 'ไฟล์'], ['cmpLblYear', 'Year', 'ปี'], ['cmpLblMonth', 'Month', 'เดือน'], ['cmpLblWeek', 'Week', 'สัปดาห์'], ['cmpLblDay', 'Date', 'วันที่'],
+      [['cmpLblBy', 'Compare By', 'เปรียบเทียบตาม'], ['cmpLblFile', 'Files', 'ไฟล์'], ['cmpLblYear', 'Year', 'ปี'], ['cmpLblMonth', 'Month', 'เดือน'], ['cmpLblWeek', 'Week', 'สัปดาห์'], ['cmpLblDay', 'Date', 'วันที่'],
        ['cmpLblCat', 'Category', 'หมวดหมู่'], ['cmpLblPrio', 'Priority', 'ระดับ'], ['cmpLblComp', 'Component', 'พื้นที่'], ['cmpLblType', 'Event Type', 'ประเภทเหตุ'],
        ['cmpBriefTitle', 'Executive Comparison Intelligence', 'บทวิเคราะห์การเปรียบเทียบสำหรับผู้บริหาร'],
        ['cmpBriefSub', 'Latest month vs previous month · deep-dive with recommended actions', 'เดือนล่าสุดเทียบเดือนก่อนหน้า · วิเคราะห์เชิงลึกพร้อมแนวทางปรับปรุง'],
@@ -3532,6 +3569,17 @@
       .dcc-filter-strip.m-open .dcc-mchev { transform: rotate(180deg); }
       .dcc-mchev { display: inline-block !important; transition: transform .2s; }
     }
+  
+    /* multi-select dropdown in Day mode */
+    html.cwo-light .ms-dd { background: #ffffff !important; border-color: #e2e8f0 !important; }
+    html.cwo-light .ms-dd .ms-opt { color: #334155 !important; }
+    html.cwo-light .ms-dd .ms-opt:hover { color: #0f172a !important; }
+    html.cwo-light .ms-dd .ms-q { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html.cwo-light .ms-dd .ms-group { color: #3730a3 !important; background: #eef2ff !important; }
+    html.cwo-light .ms-btn { background: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html.cwo-light #ppmCatLegend .text-white { color: #0f172a !important; }
+    html.cwo-light #ppmCatLegend .text-slate-300 { color: #334155 !important; }
+    html.cwo-light #ppmCatLegend { border-color: #e2e8f0 !important; }
   </style>
   <script>
     (function () {
