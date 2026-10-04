@@ -2380,7 +2380,7 @@
 
   <!-- Shared look (matches the Case Management tab) -->
   <style>
-    body, .bg-darkbg { background-color: #0b1120 !important; font-family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif", 'Noto Sans Thai', 'Sarabun', sans-serif !important; }
+    body, .bg-darkbg { background-color: #0b1120 !important; font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'Sarabun', sans-serif !important; }
     .bg-cardbg, .bg-cardbg\/95 { background-color: rgba(15, 23, 42, 0.78) !important; }
     .bg-cardbg.rounded-xl { border-radius: 0.875rem !important; }
     .border-bordercol { border-color: rgba(51, 65, 85, 0.6) !important; }
@@ -2562,11 +2562,20 @@
     html.ppm-light #ppmCatLegend .text-slate-300 { color: #334155 !important; }
     html.ppm-light #ppmCatLegend { border-color: #e2e8f0 !important; }
       .dcc-hl b, .dcc-hl strong, .dcc-hl span.font-bold, .dcc-hl b.hl-bad, .dcc-hl b.hl-good, .dcc-hl b.hl-warn, .dcc-hl [class*='text-rose-'], .dcc-hl [class*='text-emerald-'] { color: var(--dcc-hl) !important; }
-    body, button, input, select, textarea { font-family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif", 'Noto Sans Thai', 'Prompt', sans-serif; }
+    body, button, input, select, textarea { font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'Prompt', sans-serif; }
     /* KPI cards: same type scale as CWO (label 11px bold, value 2xl/3xl bold, no monospace) */
-    #exportableArea h3[id^="kpi"] { font-family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif", 'Noto Sans Thai', sans-serif !important; font-size: 1.5rem !important; line-height: 2rem !important; font-weight: 700 !important; letter-spacing: -0.025em; }
+    #exportableArea h3[id^="kpi"] { font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif !important; font-size: 1.5rem !important; line-height: 2rem !important; font-weight: 700 !important; letter-spacing: -0.025em; }
     @media (min-width: 1024px) { #exportableArea h3[id^="kpi"] { font-size: 1.875rem !important; line-height: 2.25rem !important; } }
     #exportableArea p[id^="lblKpi"] { font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.05em; }
+
+    /* ===== Shared type scale (matches the CWO dashboard) ===== */
+    #exportableArea > section:first-of-type > div { border-radius: 1rem !important; padding: 1rem !important; }
+    #exportableArea p[id^="lblKpi"]:not([id$="Sub"]) { text-transform: uppercase; }
+    #exportableArea [id^="lblKpi"][id$="Sub"], #exportableArea [id^="kpi"][id$="Count"], #exportableArea #kpiCompletedCount { font-size: 11px !important; }
+    #lblAnalyzeHeading { font-size: 14px !important; font-weight: 700 !important; letter-spacing: 0.025em !important; }
+    #analyzeViewMode, #analyzeViewMode .text-xs { font-size: 12px !important; line-height: 1.625 !important; }
+    #analyzeViewMode .font-mono, #analyzeViewMode code, #analyzeViewMode pre { font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif !important; }
+    #analyzeViewMode > div > div > div:first-child { letter-spacing: normal !important; }
 </style>
   <script>
     (function () {
