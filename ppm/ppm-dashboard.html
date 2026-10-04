@@ -36,11 +36,11 @@
   <!-- Google Fonts: Inter & Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     body {
-      font-family: 'Inter', 'Sarabun', sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'Sarabun', sans-serif;
     }
     ::-webkit-scrollbar {
       width: 6px;
@@ -1703,7 +1703,7 @@
           plugins: {
             legend: {
               position: 'top',
-              labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' } }
+              labels: { color: '#94a3b8', font: { size: 11, family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif" } }
             },
             tooltip: {
               backgroundColor: '#0f172a',
@@ -1796,7 +1796,7 @@
           plugins: {
             legend: {
               position: 'top',
-              labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' } }
+              labels: { color: '#94a3b8', font: { size: 11, family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif" } }
             },
             tooltip: {
               backgroundColor: '#0f172a',
@@ -2218,6 +2218,15 @@
       return a;
     }
 
+    // SLA labels: put each label on the side away from the other line, but keep it inside 0-100
+    function ppmSlaAlign(c, otherIdx) {
+      const v = c.dataset.data[c.dataIndex], o = (c.chart.data.datasets[otherIdx] || { data: [] }).data[c.dataIndex];
+      if (v === null || v === undefined) return 'top';
+      if (v <= 12) return 'top';
+      if (v >= 92) return 'bottom';
+      if (o === null || o === undefined) return 'top';
+      return o > v ? 'bottom' : 'top';
+    }
     // Charts: workload stacked by Service Provider (top 6 + Others); SLA trend with Completion + Response lines
     const _ppmRenderCharts = renderCharts;
     window.renderCharts = function () {
@@ -2237,9 +2246,9 @@
           slaTrendChart.data.labels = months;
           slaTrendChart.data.datasets = [
             { label: currentLang === 'th' ? 'SLA ปิดงาน (%)' : 'Completion SLA (%)', data: comp, borderColor: '#10b981', backgroundColor: 'transparent', pointBackgroundColor: '#10b981', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#10b981', anchor: 'center', align: c => { const v = c.dataset.data[c.dataIndex], o = (c.chart.data.datasets[1] || { data: [] }).data[c.dataIndex]; return (o !== null && o !== undefined && o > v) ? 'bottom' : 'top'; }, offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } },
+              datalabels: { color: '#10b981', anchor: 'center', align: c => ppmSlaAlign(c, 1), offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } },
             { label: currentLang === 'th' ? 'SLA รับเรื่อง (%)' : 'Response SLA (%)', data: resp, borderColor: '#818cf8', backgroundColor: 'transparent', pointBackgroundColor: '#818cf8', borderDash: [6, 4], fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#818cf8', anchor: 'center', align: c => { const v = c.dataset.data[c.dataIndex], o = c.chart.data.datasets[0].data[c.dataIndex]; return (o !== null && o !== undefined && o > v) ? 'bottom' : 'top'; }, offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
+              datalabels: { color: '#818cf8', anchor: 'center', align: c => ppmSlaAlign(c, 0), offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
           ];
           slaTrendChart.options.plugins.legend = { display: true, position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12, boxHeight: 12, padding: 14, font: { size: 11 } } };
           slaTrendChart.options.layout = { padding: { top: 26, bottom: 4, right: 12 } };
@@ -2271,7 +2280,7 @@
       if (isEditingAnalysis || localStorage.getItem(getFilterStorageKey())) return;
       const th = currentLang === 'th', L = (en, t) => th ? t : en;
       const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-      const b = v => `<b class="text-white">${v}</b>`, bad = v => `<b class="text-rose-400">${v}</b>`, good = v => `<b class="text-emerald-400">${v}</b>`, sl = (v, t) => v === null || v === undefined ? b('N/A') : (v < t ? bad : good)(v.toFixed(1) + '%'), f = v => v === null || v === undefined ? 'N/A' : v.toFixed(1) + '%';
+      const b = v => `<b>${v}</b>`, bad = v => `<b>${v}</b>`, good = v => `<b>${v}</b>`, sl = (v, t) => v === null || v === undefined ? b('N/A') : (v < t ? bad : good)(v.toFixed(1) + '%'), f = v => v === null || v === undefined ? 'N/A' : v.toFixed(1) + '%';
       const act = t => `<span class="text-emerald-400 font-bold">${L('Action', 'แนวทาง')}:</span> ${t}`;
       const ul = items => `<ul class="list-disc pl-4 mt-2 space-y-1.5">${items.filter(Boolean).map(i => `<li>${i}</li>`).join('')}</ul>`;
       const rows = AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false));
@@ -2371,7 +2380,7 @@
 
   <!-- Shared look (matches the Case Management tab) -->
   <style>
-    body, .bg-darkbg { background-color: #0b1120 !important; font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'Sarabun', sans-serif !important; }
+    body, .bg-darkbg { background-color: #0b1120 !important; font-family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif", 'Noto Sans Thai', 'Sarabun', sans-serif !important; }
     .bg-cardbg, .bg-cardbg\/95 { background-color: rgba(15, 23, 42, 0.78) !important; }
     .bg-cardbg.rounded-xl { border-radius: 0.875rem !important; }
     .border-bordercol { border-color: rgba(51, 65, 85, 0.6) !important; }
@@ -2552,7 +2561,13 @@
     html.ppm-light #ppmCatLegend .text-white { color: #0f172a !important; }
     html.ppm-light #ppmCatLegend .text-slate-300 { color: #334155 !important; }
     html.ppm-light #ppmCatLegend { border-color: #e2e8f0 !important; }
-  </style>
+      .dcc-hl b, .dcc-hl strong, .dcc-hl span.font-bold, .dcc-hl b.hl-bad, .dcc-hl b.hl-good, .dcc-hl b.hl-warn, .dcc-hl [class*='text-rose-'], .dcc-hl [class*='text-emerald-'] { color: var(--dcc-hl) !important; }
+    body, button, input, select, textarea { font-family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif", 'Noto Sans Thai', 'Prompt', sans-serif; }
+    /* KPI cards: same type scale as CWO (label 11px bold, value 2xl/3xl bold, no monospace) */
+    #exportableArea h3[id^="kpi"] { font-family: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif", 'Noto Sans Thai', sans-serif !important; font-size: 1.5rem !important; line-height: 2rem !important; font-weight: 700 !important; letter-spacing: -0.025em; }
+    @media (min-width: 1024px) { #exportableArea h3[id^="kpi"] { font-size: 1.875rem !important; line-height: 2.25rem !important; } }
+    #exportableArea p[id^="lblKpi"] { font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.05em; }
+</style>
   <script>
     (function () {
       function countActive(strip) {
@@ -2575,6 +2590,9 @@
     })();
   </script>
 
+  <script>
+    try { if (window.Chart) Chart.defaults.font.family = "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif"; } catch (e) {}
+  </script>
   <script>
     // ======================================================================
     // PPM: every filter is a multi-select (all selected by default), so months,
@@ -2641,6 +2659,23 @@
       Object.keys(PPM_MS).forEach(k => { if (DCC_MS[ppmMsId(k)]) msClear(ppmMsId(k), true); });
       _ppmResetMS2.apply(this, arguments);
     };
+  </script>
+
+  <script>
+    // Executive analysis: every bold word takes the colour of its own card heading
+    (function () {
+      function pairs() {
+        const out = [], q = (s, r = document) => [...r.querySelectorAll(s)];
+        q('#analyzeViewMode > div > div').forEach(card => { if (card.children.length >= 2) out.push([card.children[1], card.children[0]]); });
+        return out;
+      }
+      function tint() {
+        pairs().forEach(([c, h]) => { if (!c || !h) return; const col = getComputedStyle(h).color; if (col) { c.style.setProperty('--dcc-hl', col); c.classList.add('dcc-hl'); } });
+      }
+      let t = null; const run = () => { clearTimeout(t); t = setTimeout(tint, 120); };
+      const start = () => { tint(); new MutationObserver(run).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); new MutationObserver(run).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    })();
   </script>
 </body>
 </html>

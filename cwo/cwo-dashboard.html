@@ -39,7 +39,7 @@
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Plus Jakarta Sans', 'Prompt', sans-serif; background-color: #080d1a; color: #f1f5f9; }
     
     /* Modern Custom Scrollbars */
@@ -64,8 +64,7 @@
     /* Briefing: figures in plain bold; colour only for what needs attention (same rule on every page) */
     #bfContent1 b, #bfContent2 b, #bfContent3 b { color: #f1f5f9; font-weight: 700; }
     html.cwo-light #bfContent1 b, html.cwo-light #bfContent2 b, html.cwo-light #bfContent3 b { color: #0f172a; }
-    b.hl-bad, .hl-bad { color: #fb7185 !important; } b.hl-good, .hl-good { color: #34d399 !important; } b.hl-warn, .hl-warn { color: #fbbf24 !important; }
-    html.cwo-light b.hl-bad, html.cwo-light .hl-bad { color: #e11d48 !important; } html.cwo-light b.hl-good, html.cwo-light .hl-good { color: #059669 !important; } html.cwo-light b.hl-warn, html.cwo-light .hl-warn { color: #d97706 !important; }
+
 
     .multiselect-dropdown { max-height: 240px; }
     
@@ -84,7 +83,8 @@
 #dashboardMain button .truncate, #dashboardMain select, #dashboardMain .dropdown-container .truncate, #dashboardMain .ms-btn .truncate { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
     #compareMain .truncate { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; overflow-wrap: anywhere; }
 #compareMain button .truncate, #compareMain select, #compareMain .dropdown-container .truncate, #compareMain .ms-btn .truncate { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-  </style>
+      .dcc-hl b, .dcc-hl strong, .dcc-hl span.font-bold, .dcc-hl b.hl-bad, .dcc-hl b.hl-good, .dcc-hl b.hl-warn, .dcc-hl [class*='text-rose-'], .dcc-hl [class*='text-emerald-'] { color: var(--dcc-hl) !important; }
+</style>
 </head>
 <body class="min-h-screen text-slate-100 antialiased selection:bg-cyan-500 selection:text-white transition-all duration-200">
 
@@ -3605,6 +3605,23 @@
         });
       }
       window.addEventListener('DOMContentLoaded', wire);
+    })();
+  </script>
+
+  <script>
+    // Executive analysis: every bold word takes the colour of its own card heading
+    (function () {
+      function pairs() {
+        const out = [], q = (s, r = document) => [...r.querySelectorAll(s)];
+        [1, 2, 3].forEach(n => { out.push([document.getElementById('bfContent' + n), document.getElementById('bfTitle' + n)]); out.push([document.getElementById('cmpB' + n), document.getElementById('cmpB' + n + 'T')]); });
+        return out;
+      }
+      function tint() {
+        pairs().forEach(([c, h]) => { if (!c || !h) return; const col = getComputedStyle(h).color; if (col) { c.style.setProperty('--dcc-hl', col); c.classList.add('dcc-hl'); } });
+      }
+      let t = null; const run = () => { clearTimeout(t); t = setTimeout(tint, 120); };
+      const start = () => { tint(); new MutationObserver(run).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); new MutationObserver(run).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     })();
   </script>
 </body>
