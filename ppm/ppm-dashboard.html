@@ -1861,8 +1861,8 @@
               '#38bdf8', '#818cf8', '#34d399', '#f43f5e', '#fbbf24',
               '#a78bfa', '#2dd4bf', '#fb7185', '#94a3b8', '#e879f9', '#4ade80', '#60a5fa'
             ],
-            borderWidth: 2,
-            borderColor: '#131b2b'
+            borderWidth: 0,
+            spacing: 2
           }]
         },
         options: {
@@ -2230,19 +2230,20 @@
         const keep = provs.slice(0, 6), other = provs.length > 6;
         const ds = keep.map((p, i) => ({ label: p, data: months.map(m => rows.filter(r => r[0] === m && r[1] === p).reduce((s, r) => s + r[6], 0)), backgroundColor: PPM_PROVIDER_COLORS[i], borderRadius: 4 }));
         if (other) ds.push({ label: currentLang === 'th' ? 'อื่นๆ' : 'Others', data: months.map(m => rows.filter(r => r[0] === m && !keep.includes(r[1])).reduce((s, r) => s + r[6], 0)), backgroundColor: PPM_PROVIDER_COLORS[6], borderRadius: 4 });
-        if (monthlyChart) { monthlyChart.data.labels = months; monthlyChart.data.datasets = ds; monthlyChart.options.plugins.legend.position = 'bottom'; monthlyChart.update(); }
+        if (monthlyChart) { monthlyChart.data.labels = months; monthlyChart.data.datasets = ds; monthlyChart.options.plugins.legend.position = 'bottom'; monthlyChart.options.plugins.legend.labels = Object.assign({}, monthlyChart.options.plugins.legend.labels, { boxWidth: 12, boxHeight: 12, padding: 12 }); monthlyChart.update(); }
         if (slaTrendChart) {
           const comp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.sla === null ? null : +a.sla.toFixed(1); });
           const resp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.rsla === null ? null : +a.rsla.toFixed(1); });
           slaTrendChart.data.labels = months;
           slaTrendChart.data.datasets = [
-            { label: currentLang === 'th' ? 'SLA ปิดงาน (%)' : 'Completion SLA (%)', data: comp, borderColor: '#10b981', backgroundColor: '#10b981', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#34d399', anchor: 'end', align: 'top', offset: 6, font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } },
-            { label: currentLang === 'th' ? 'SLA รับเรื่อง (%)' : 'Response SLA (%)', data: resp, borderColor: '#818cf8', backgroundColor: '#818cf8', borderDash: [6, 4], fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#a5b4fc', anchor: 'start', align: 'bottom', offset: 6, font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
+            { label: currentLang === 'th' ? 'SLA ปิดงาน (%)' : 'Completion SLA (%)', data: comp, borderColor: '#10b981', backgroundColor: 'transparent', pointBackgroundColor: '#10b981', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
+              datalabels: { color: '#10b981', anchor: 'center', align: c => { const v = c.dataset.data[c.dataIndex], o = (c.chart.data.datasets[1] || { data: [] }).data[c.dataIndex]; return (o !== null && o !== undefined && o > v) ? 'bottom' : 'top'; }, offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } },
+            { label: currentLang === 'th' ? 'SLA รับเรื่อง (%)' : 'Response SLA (%)', data: resp, borderColor: '#818cf8', backgroundColor: 'transparent', pointBackgroundColor: '#818cf8', borderDash: [6, 4], fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
+              datalabels: { color: '#818cf8', anchor: 'center', align: c => { const v = c.dataset.data[c.dataIndex], o = c.chart.data.datasets[0].data[c.dataIndex]; return (o !== null && o !== undefined && o > v) ? 'bottom' : 'top'; }, offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
           ];
-          slaTrendChart.options.plugins.legend = { display: true, position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 11 } } };
+          slaTrendChart.options.plugins.legend = { display: true, position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12, boxHeight: 12, padding: 14, font: { size: 11 } } };
           slaTrendChart.options.layout = { padding: { top: 26, bottom: 4, right: 12 } };
+          if (slaTrendChart.options.scales && slaTrendChart.options.scales.y) { slaTrendChart.options.scales.y.min = 0; slaTrendChart.options.scales.y.max = 110; slaTrendChart.options.scales.y.ticks = Object.assign({}, slaTrendChart.options.scales.y.ticks, { stepSize: 20, callback: v => v <= 100 ? v + '%' : '' }); }
           slaTrendChart.update();
         }
       } catch (e) { console.warn('[PPM] chart post-process', e); }
@@ -2270,7 +2271,7 @@
       if (isEditingAnalysis || localStorage.getItem(getFilterStorageKey())) return;
       const th = currentLang === 'th', L = (en, t) => th ? t : en;
       const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-      const b = v => `<b class="text-white">${v}</b>`, f = v => v === null || v === undefined ? 'N/A' : v.toFixed(1) + '%';
+      const b = v => `<b class="text-white">${v}</b>`, bad = v => `<b class="text-rose-400">${v}</b>`, good = v => `<b class="text-emerald-400">${v}</b>`, sl = (v, t) => v === null || v === undefined ? b('N/A') : (v < t ? bad : good)(v.toFixed(1) + '%'), f = v => v === null || v === undefined ? 'N/A' : v.toFixed(1) + '%';
       const act = t => `<span class="text-emerald-400 font-bold">${L('Action', 'แนวทาง')}:</span> ${t}`;
       const ul = items => `<ul class="list-disc pl-4 mt-2 space-y-1.5">${items.filter(Boolean).map(i => `<li>${i}</li>`).join('')}</ul>`;
       const rows = AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false));
@@ -2294,25 +2295,25 @@
       const needSla = a.sla !== null && a.sla < 95 ? Math.ceil(0.95 * (a.met + a.miss) - a.met) : 0;
       const card = (title, color, body) => `<div class="bg-slate-900/70 border border-${color}-500/20 rounded-xl p-4"><div class="text-xs font-bold text-${color}-400 uppercase mb-2">${title}</div><div class="text-xs text-slate-300 leading-relaxed">${body}</div></div>`;
       const c1 = L(
-        `${b(a.total.toLocaleString())} scheduled tasks · completion ${b(f(a.comp))}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} vs ${esc(prev.m)} ${prev.a.total}` : ''}.` + ul([
+        `${b(a.total.toLocaleString())} scheduled tasks · completion ${sl(a.comp, 95)}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} vs ${esc(prev.m)} ${prev.a.total}` : ''}.` + ul([
           cats[0] ? `Largest category: ${b(esc(cats[0].k))} (${cats[0].a.total}, ${(cats[0].a.total / a.total * 100).toFixed(0)}%).` : null,
           freqs.length ? `Frequency mix: ${freqs.slice(0, 3).map(x => `${esc(x.k)} ${x.a.total}`).join(' · ')}.` : null,
-          worstCat ? `Lowest completion: ${b(esc(worstCat.k))} at ${b(f(worstCat.a.comp))}.` : null,
+          worstCat ? `Lowest completion: ${b(esc(worstCat.k))} at ${bad(f(worstCat.a.comp))}.` : null,
           act(worstCat ? `re-plan ${b(esc(worstCat.k))} schedules with the provider and lock resources for its peak week; target ≥ 95% completion.` : 'keep the current schedule; review monthly.')]),
-        `แผนงาน ${b(a.total.toLocaleString())} รายการ · ปิดงาน ${b(f(a.comp))}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} เทียบ ${esc(prev.m)} ${prev.a.total}` : ''}` + ul([
+        `แผนงาน ${b(a.total.toLocaleString())} รายการ · ปิดงาน ${sl(a.comp, 95)}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} เทียบ ${esc(prev.m)} ${prev.a.total}` : ''}` + ul([
           cats[0] ? `หมวดที่มีงานมากที่สุด: ${b(esc(cats[0].k))} (${cats[0].a.total}, ${(cats[0].a.total / a.total * 100).toFixed(0)}%)` : null,
           freqs.length ? `สัดส่วนความถี่: ${freqs.slice(0, 3).map(x => `${esc(x.k)} ${x.a.total}`).join(' · ')}` : null,
-          worstCat ? `หมวดที่ปิดงานได้ต่ำสุด: ${b(esc(worstCat.k))} ที่ ${b(f(worstCat.a.comp))}` : null,
+          worstCat ? `หมวดที่ปิดงานได้ต่ำสุด: ${b(esc(worstCat.k))} ที่ ${bad(f(worstCat.a.comp))}` : null,
           act(worstCat ? `วางแผนงาน ${b(esc(worstCat.k))} ใหม่ร่วมกับผู้ให้บริการและจองทรัพยากรช่วงสัปดาห์งานหนาแน่น ตั้งเป้าปิดงาน ≥ 95%` : 'คงแผนงานปัจจุบัน และทบทวนรายเดือน')]));
       const c2 = L(
-        `Completion SLA ${b(f(a.sla))} · Response SLA ${b(f(a.rsla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
-          needSla ? `Gap to 95%: ${b(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'Completion SLA meets the 95% target.' : 'No SLA data in the file.'),
-          worstProv ? `Lowest provider SLA: ${b(esc(worstProv.k))} ${b(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? `; best ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}.` : null,
+        `Completion SLA ${sl(a.sla, 95)} · Response SLA ${sl(a.rsla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
+          needSla ? `Gap to 95%: ${bad(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'Completion SLA meets the 95% target.' : 'No SLA data in the file.'),
+          worstProv ? `Lowest provider SLA: ${b(esc(worstProv.k))} ${bad(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? `; best ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}.` : null,
           a.rsla === null ? 'Response SLA needs a response flag or response-due + acknowledged dates in the file.' : null,
           act(worstProv ? `hold a monthly SLA review with ${b(esc(worstProv.k))}; agree a recovery plan and apply KPI deductions if below target for 2 months.` : 'monitor weekly.')]),
-        `SLA ปิดงาน ${b(f(a.sla))} · SLA รับเรื่อง ${b(f(a.rsla))}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
-          needSla ? `ส่วนต่างถึงเป้า 95%: ต้องปิดงานตรงเวลาเพิ่ม ${b(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'SLA ปิดงานถึงเป้า 95%' : 'ไม่มีข้อมูล SLA ในไฟล์'),
-          worstProv ? `ผู้ให้บริการที่ SLA ต่ำสุด: ${b(esc(worstProv.k))} ${b(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? ` ดีที่สุด ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}` : null,
+        `SLA ปิดงาน ${sl(a.sla, 95)} · SLA รับเรื่อง ${sl(a.rsla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
+          needSla ? `ส่วนต่างถึงเป้า 95%: ต้องปิดงานตรงเวลาเพิ่ม ${bad(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'SLA ปิดงานถึงเป้า 95%' : 'ไม่มีข้อมูล SLA ในไฟล์'),
+          worstProv ? `ผู้ให้บริการที่ SLA ต่ำสุด: ${b(esc(worstProv.k))} ${bad(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? ` ดีที่สุด ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}` : null,
           a.rsla === null ? 'SLA รับเรื่องต้องมีคอลัมน์ผล SLA รับเรื่อง หรือวันครบกำหนดรับเรื่องและวันที่รับเรื่อง' : null,
           act(worstProv ? `ประชุมทบทวน SLA รายเดือนกับ ${b(esc(worstProv.k))} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หากต่ำกว่าเป้า 2 เดือนติด` : 'ติดตามรายสัปดาห์')]));
       const c3 = L(

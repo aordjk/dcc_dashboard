@@ -61,9 +61,11 @@
       background-color: rgba(56, 189, 248, 0.12) !important; 
     }
 
-    #bfContent1 b { color: #38bdf8; font-weight: 700; }
-    #bfContent2 b { color: #34d399; font-weight: 700; }
-    #bfContent3 b { color: #fb7185; font-weight: 700; }
+    /* Briefing: figures in plain bold; colour only for what needs attention (same rule on every page) */
+    #bfContent1 b, #bfContent2 b, #bfContent3 b { color: #f1f5f9; font-weight: 700; }
+    html.cwo-light #bfContent1 b, html.cwo-light #bfContent2 b, html.cwo-light #bfContent3 b { color: #0f172a; }
+    b.hl-bad, .hl-bad { color: #fb7185 !important; } b.hl-good, .hl-good { color: #34d399 !important; } b.hl-warn, .hl-warn { color: #fbbf24 !important; }
+    html.cwo-light b.hl-bad, html.cwo-light .hl-bad { color: #e11d48 !important; } html.cwo-light b.hl-good, html.cwo-light .hl-good { color: #059669 !important; } html.cwo-light b.hl-warn, html.cwo-light .hl-warn { color: #d97706 !important; }
 
     .multiselect-dropdown { max-height: 240px; }
     
@@ -1221,9 +1223,10 @@
                 align: 'top',
                 offset: 8,
                 color: '#10b981',
-                backgroundColor: 'rgba(8, 13, 26, 0.8)',
+                backgroundColor: () => document.documentElement.classList.contains('cwo-light') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(8, 13, 26, 0.8)',
                 borderRadius: 3,
                 font: { family: 'Plus Jakarta Sans', weight: 'bold', size: 9 },
+                display: 'auto', clamp: true,
                 formatter: (value) => value > 0 ? value + '%' : ''
               }
             },
@@ -1241,9 +1244,10 @@
                 align: 'bottom',
                 offset: 8,
                 color: '#38bdf8',
-                backgroundColor: 'rgba(8, 13, 26, 0.8)',
+                backgroundColor: () => document.documentElement.classList.contains('cwo-light') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(8, 13, 26, 0.8)',
                 borderRadius: 3,
                 font: { family: 'Plus Jakarta Sans', weight: 'bold', size: 9 },
+                display: 'auto', clamp: true,
                 formatter: (value) => value > 0 ? value + '%' : ''
               }
             }
@@ -3281,6 +3285,9 @@
       if (!n) return;
       const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const b = v => `<b>${v}</b>`;
+      const bad = v => `<b class="hl-bad">${v}</b>`, good = v => `<b class="hl-good">${v}</b>`, warn = v => `<b class="hl-warn">${v}</b>`;
+      const sla = (v, t) => v === null || v === undefined ? b('N/A') : (v < t ? bad : good)(v.toFixed(1) + '%');
+      const trendB = t => (t > 0 ? bad : good)((t >= 0 ? '+' : '') + t.toFixed(0) + '%');
       const ul = items => `<ul class="list-disc pl-4 mt-2 space-y-1.5 text-slate-300">${items.filter(Boolean).map(i => `<li>${i}</li>`).join('')}</ul>`;
       const act = t => `<span class="text-emerald-400 font-bold">${L('Action', 'แนวทาง')}:</span> ${t}`;
       const cnt = (arr, f) => { const m = new Map(); arr.forEach(r => { const k = f(r); if (k) m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()].sort((a, c) => c[1] - a[1]); };
@@ -3302,15 +3309,15 @@
       const cat1Top = cnt(cat1, type)[0];
       const locTop = cnt(list, r => r.loc)[0];
       const c1 = L(
-        `${b(n.toLocaleString())} work orders in scope${prevM ? `; ${b(esc(lastM))} ${b(lastC)} vs ${esc(prevM)} ${prevC} (${b((trend >= 0 ? '+' : '') + trend.toFixed(0) + '%')})` : ''}. Peak month ${b(esc(months[peakIdx] || '-'))} (${Math.max(...mc, 0)}).` + ul([
+        `${b(n.toLocaleString())} work orders in scope${prevM ? `; ${b(esc(lastM))} ${b(lastC)} vs ${esc(prevM)} ${prevC} (${trendB(trend)})` : ''}. Peak month ${b(esc(months[peakIdx] || '-'))} (${Math.max(...mc, 0)}).` + ul([
           `${b('Pareto')}: top 3 problem types = ${b(top3Share.toFixed(0) + '%')} of demand — ${top3.map(([t, c]) => `${esc(t)} (${c})`).join(', ')}.`,
-          cat1.length ? `${b('CAT 1')}: ${b(cat1.length)} WOs (${pct(cat1.length, n).toFixed(1)}%), mostly ${b(esc(cat1Top?.[0] || '-'))}.` : `No CAT 1 work orders in scope.`,
+          cat1.length ? `${b('CAT 1')}: ${cat1.length ? warn(cat1.length) : b(0)} WOs (${pct(cat1.length, n).toFixed(1)}%), mostly ${b(esc(cat1Top?.[0] || '-'))}.` : `No CAT 1 work orders in scope.`,
           locTop ? `Highest-demand location: ${b(esc(locTop[0]))} (${locTop[1]} WOs, ${pct(locTop[1], n).toFixed(1)}%).` : null,
           act(`run a root-cause review on ${b(esc(top3[0]?.[0] || '-'))} and add it to the PPM checklist; a 20% cut removes ~${Math.round((top3[0]?.[1] || 0) * 0.2)} WOs per period.`)
         ]),
-        `ขอบเขตข้อมูล ${b(n.toLocaleString())} คำสั่งงาน${prevM ? ` · ${b(esc(lastM))} ${b(lastC)} เทียบ ${esc(prevM)} ${prevC} (${b((trend >= 0 ? '+' : '') + trend.toFixed(0) + '%')})` : ''} เดือนสูงสุด ${b(esc(months[peakIdx] || '-'))} (${Math.max(...mc, 0)})` + ul([
+        `ขอบเขตข้อมูล ${b(n.toLocaleString())} คำสั่งงาน${prevM ? ` · ${b(esc(lastM))} ${b(lastC)} เทียบ ${esc(prevM)} ${prevC} (${trendB(trend)})` : ''} เดือนสูงสุด ${b(esc(months[peakIdx] || '-'))} (${Math.max(...mc, 0)})` + ul([
           `${b('Pareto')}: 3 ประเภทปัญหาหลักคิดเป็น ${b(top3Share.toFixed(0) + '%')} ของงาน — ${top3.map(([t, c]) => `${esc(t)} (${c})`).join(', ')}`,
-          cat1.length ? `${b('CAT 1')}: ${b(cat1.length)} งาน (${pct(cat1.length, n).toFixed(1)}%) ส่วนใหญ่เป็น ${b(esc(cat1Top?.[0] || '-'))}` : `ไม่มีงาน CAT 1 ในขอบเขตนี้`,
+          cat1.length ? `${b('CAT 1')}: ${cat1.length ? warn(cat1.length) : b(0)} งาน (${pct(cat1.length, n).toFixed(1)}%) ส่วนใหญ่เป็น ${b(esc(cat1Top?.[0] || '-'))}` : `ไม่มีงาน CAT 1 ในขอบเขตนี้`,
           locTop ? `พื้นที่ที่มีงานมากที่สุด: ${b(esc(locTop[0]))} (${locTop[1]} งาน, ${pct(locTop[1], n).toFixed(1)}%)` : null,
           act(`ทำ Root-cause review ของ ${b(esc(top3[0]?.[0] || '-'))} และเพิ่มในแผน PPM หากลดได้ 20% จะลดงานได้ ~${Math.round((top3[0]?.[1] || 0) * 0.2)} งานต่อรอบ`)
         ]));
@@ -3323,17 +3330,17 @@
       const slowT = cnt(list, type).map(([t]) => ({ t, s: cwoSlaStats(list.filter(r => type(r) === t)) })).filter(x => x.s.mtCount >= 5 && x.s.mtAvgMin !== null).sort((a, c) => c.s.mtAvgMin - a.s.mtAvgMin)[0];
       const need = S.compPct !== null && S.compPct < 90 ? Math.ceil(0.9 * S.r2Base - S.r2Pass) : 0;
       const c2 = L(
-        `Completion SLA ${b(f1(S.compPct))} · Response SLA ${b(f1(S.respPct))} · MTTR ${b(S.mtAvgMin === null ? 'N/A' : (S.mtAvgMin / 60).toFixed(1) + ' h')}.` + ul([
-          need ? `Gap to a 90% completion target: ${b(need.toLocaleString())} more WOs must close on time.` : (S.compPct !== null ? `Completion SLA is at or above the 90% target.` : null),
-          worstC ? `Weakest completion: ${b(esc(worstC.c))} ${b(f1(worstC.s.compPct))} (${worstC.k} WOs).` : null,
-          worstR && worstR !== worstC ? `Weakest response: ${b(esc(worstR.c))} ${b(f1(worstR.s.respPct))}.` : null,
+        `Completion SLA ${sla(S.compPct, 90)} · Response SLA ${sla(S.respPct, 95)} · MTTR ${b(S.mtAvgMin === null ? 'N/A' : (S.mtAvgMin / 60).toFixed(1) + ' h')}.` + ul([
+          need ? `Gap to a 90% completion target: ${bad(need.toLocaleString())} more WOs must close on time.` : (S.compPct !== null ? `Completion SLA is at or above the 90% target.` : null),
+          worstC ? `Weakest completion: ${b(esc(worstC.c))} ${bad(f1(worstC.s.compPct))} (${worstC.k} WOs).` : null,
+          worstR && worstR !== worstC ? `Weakest response: ${b(esc(worstR.c))} ${bad(f1(worstR.s.respPct))}.` : null,
           slowT ? `Slowest repair: ${b(esc(slowT.t))} averages ${b((slowT.s.mtAvgMin / 60).toFixed(1) + ' h')}.` : null,
           act(`${worstC ? `daily SLA huddle for ${b(esc(worstC.c))}; ` : ''}${slowT ? `stock spares and a standard fix for ${b(esc(slowT.t))}; ` : ''}target ≥ 90% completion and ≥ 95% response.`)
         ]),
-        `SLA ปิดงาน ${b(f1(S.compPct))} · SLA รับเรื่อง ${b(f1(S.respPct))} · MTTR ${b(S.mtAvgMin === null ? 'N/A' : (S.mtAvgMin / 60).toFixed(1) + ' ชม.')}` + ul([
-          need ? `ส่วนต่างถึงเป้า 90%: ต้องปิดงานตรงเวลาเพิ่มอีก ${b(need.toLocaleString())} งาน` : (S.compPct !== null ? `SLA ปิดงานถึงเป้า 90% แล้ว` : null),
-          worstC ? `หมวดที่ปิดงานช้าที่สุด: ${b(esc(worstC.c))} ${b(f1(worstC.s.compPct))} (${worstC.k} งาน)` : null,
-          worstR && worstR !== worstC ? `หมวดที่รับเรื่องช้าที่สุด: ${b(esc(worstR.c))} ${b(f1(worstR.s.respPct))}` : null,
+        `SLA ปิดงาน ${sla(S.compPct, 90)} · SLA รับเรื่อง ${sla(S.respPct, 95)} · MTTR ${b(S.mtAvgMin === null ? 'N/A' : (S.mtAvgMin / 60).toFixed(1) + ' ชม.')}` + ul([
+          need ? `ส่วนต่างถึงเป้า 90%: ต้องปิดงานตรงเวลาเพิ่มอีก ${bad(need.toLocaleString())} งาน` : (S.compPct !== null ? `SLA ปิดงานถึงเป้า 90% แล้ว` : null),
+          worstC ? `หมวดที่ปิดงานช้าที่สุด: ${b(esc(worstC.c))} ${bad(f1(worstC.s.compPct))} (${worstC.k} งาน)` : null,
+          worstR && worstR !== worstC ? `หมวดที่รับเรื่องช้าที่สุด: ${b(esc(worstR.c))} ${bad(f1(worstR.s.respPct))}` : null,
           slowT ? `ซ่อมนานที่สุด: ${b(esc(slowT.t))} เฉลี่ย ${b((slowT.s.mtAvgMin / 60).toFixed(1) + ' ชม.')}` : null,
           act(`${worstC ? `ประชุม SLA รายวันสำหรับ ${b(esc(worstC.c))} ` : ''}${slowT ? `สำรองอะไหล่และทำวิธีแก้มาตรฐานสำหรับ ${b(esc(slowT.t))} ` : ''}ตั้งเป้า SLA ปิดงาน ≥ 90% และรับเรื่อง ≥ 95%`)
         ]));
@@ -3347,14 +3354,14 @@
       const stages = cnt(P, r => r.st).map(([s2, c]) => `${esc(s2)} ${c}`).join(' · ');
       const c3 = L(
         `${b(P.length.toLocaleString())} open WOs (${pct(P.length, n).toFixed(1)}%) — ${stages || '-'}.` + ul([
-          `Aging: ≤7d ${b(a7)} · 8–30d ${b(a30)} · 31–90d ${b(a90)} · >90d ${b(a90p)}.`,
-          oldest ? `Oldest: ${b(esc(oldest.id))} (${oldest.aging || 0} days, ${esc(type(oldest))} @ ${esc(oldest.loc)}).` : null,
+          `Aging: ≤7d ${b(a7)} · 8–30d ${b(a30)} · 31–90d ${a90 ? warn(a90) : b(a90)} · >90d ${a90p ? bad(a90p) : b(a90p)}.`,
+          oldest ? `Oldest: ${(oldest.aging || 0) > 30 ? bad(esc(oldest.id)) : b(esc(oldest.id))} (${oldest.aging || 0} days, ${esc(type(oldest))} @ ${esc(oldest.loc)}).` : null,
           pCat ? `Backlog concentrated in ${b(esc(pCat[0]))} (${pCat[1]})${pLoc ? ` and at ${b(esc(pLoc[0]))} (${pLoc[1]})` : ''}.` : null,
           act(`${a90 + a90p ? `escalate the ${a90 + a90p} items over 30 days to supervisors with a close-by date; ` : ''}weekly backlog review; target < 5% of WOs older than 30 days.`)
         ]),
         `งานค้าง ${b(P.length.toLocaleString())} งาน (${pct(P.length, n).toFixed(1)}%) — ${stages || '-'}` + ul([
-          `อายุงาน: ≤7 วัน ${b(a7)} · 8–30 วัน ${b(a30)} · 31–90 วัน ${b(a90)} · >90 วัน ${b(a90p)}`,
-          oldest ? `ค้างนานที่สุด: ${b(esc(oldest.id))} (${oldest.aging || 0} วัน, ${esc(type(oldest))} @ ${esc(oldest.loc)})` : null,
+          `อายุงาน: ≤7 วัน ${b(a7)} · 8–30 วัน ${b(a30)} · 31–90 วัน ${a90 ? warn(a90) : b(a90)} · >90 วัน ${a90p ? bad(a90p) : b(a90p)}`,
+          oldest ? `ค้างนานที่สุด: ${(oldest.aging || 0) > 30 ? bad(esc(oldest.id)) : b(esc(oldest.id))} (${oldest.aging || 0} วัน, ${esc(type(oldest))} @ ${esc(oldest.loc)})` : null,
           pCat ? `งานค้างกระจุกที่หมวด ${b(esc(pCat[0]))} (${pCat[1]})${pLoc ? ` และพื้นที่ ${b(esc(pLoc[0]))} (${pLoc[1]})` : ''}` : null,
           act(`${a90 + a90p ? `ส่งต่องานที่ค้างเกิน 30 วัน ${a90 + a90p} งานให้หัวหน้างานพร้อมกำหนดวันปิด ` : ''}ทบทวนงานค้างทุกสัปดาห์ ตั้งเป้างานค้างเกิน 30 วัน < 5%`)
         ]));
@@ -3447,9 +3454,6 @@
     html.cwo-light .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
     html.cwo-light .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-color: #e2e8f0; }
     html.cwo-light .upload-drop-zone { background: rgba(255,255,255,.8); border-color: rgba(2,132,199,.45); }
-    html.cwo-light #bfContent1 b { color: #0284c7; }
-    html.cwo-light #bfContent2 b { color: #059669; }
-    html.cwo-light #bfContent3 b { color: #e11d48; }
     html.cwo-light thead[class*="bg-slate-"] { background-color: #f1f5f9 !important; }
   </style>
   <script>
