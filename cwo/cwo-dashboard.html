@@ -240,6 +240,7 @@
       <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
         <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cmpLblCompare">Compare</span></span></div>
         <div class="flex flex-col min-w-[100px] max-w-[130px] flex-1"><label id="cmpLblBy" class="block text-[9.5px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5 truncate">Compare By</label><select id="cmpBy" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="auto">Auto</option><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
+        <div class="flex flex-col min-w-[230px] max-w-[270px] flex-1"><label id="cmpLblRange" class="block text-[9.5px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5 truncate" title="Days with no work orders inside this range are shown as 0">Date Range (From – To)</label><div class="flex items-center gap-1"><input type="date" id="cmpFrom" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none" style="min-width:0"><span class="text-slate-500 text-xs">–</span><input type="date" id="cmpTo" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none" style="min-width:0"></div></div>
         <div class="flex flex-col min-w-[72px] max-w-[90px] flex-1"><label id="cmpLblYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><div id="cmpYear" class="w-full"></div></div>
         <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="cmpLblMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><div id="cmpMonth" class="w-full"></div></div>
         <div class="flex flex-col min-w-[110px] max-w-[175px] flex-1"><label id="cmpLblWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week</label><div id="cmpWeek" class="w-full"></div></div>
@@ -2919,6 +2920,7 @@
       ['cmpYear', 'cmpMonth', 'cmpWeek', 'cmpDay', 'cmpCategory', 'cmpPriority', 'cmpComponent', 'cmpType']
         .forEach(id => msClear(id, true));
       const by = document.getElementById('cmpBy'); if (by) by.value = 'auto';
+      ['cmpFrom', 'cmpTo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       renderCwoCompare();
     }
 
@@ -2956,7 +2958,7 @@
           labels: items.map(i => i.lines || cmpWrap(i.label, 20)),
           datasets: periods.map((p, idx) => {
             const m = cmpCount(p.rows, keyFn);
-            return { label: p.label, data: items.map(i => m.get(i.key) || 0), backgroundColor: pal[idx % pal.length], borderRadius: 4 };
+            return { label: p.label + (p.empty ? ' (0)' : ''), data: items.map(i => m.get(i.key) || 0), backgroundColor: pal[idx % pal.length], borderRadius: 4, emptyPeriod: !!p.empty };
           })
         },
         options: {
@@ -2964,7 +2966,7 @@
           layout: { padding: { top: 18 } },
           plugins: {
             legend: { position: 'top', labels: { color: '#cbd5e1', boxWidth: many ? 10 : 12, padding: many ? 8 : 10, font: { size: many ? 10 : 11, weight: 'bold' } } },
-            datalabels: { color: '#cbd5e1', anchor: 'end', align: 'top', offset: -2, font: { size: many ? 8 : (periods.length > 4 ? 9 : 10), weight: 'bold' }, formatter: v => v > 0 ? v : '' },
+            datalabels: { color: '#cbd5e1', anchor: 'end', align: 'top', offset: -2, font: { size: many ? 8 : (periods.length > 4 ? 9 : 10), weight: 'bold' }, formatter: (v, c) => v > 0 ? v : (c.dataset.emptyPeriod ? '0' : '') },
             tooltip: { callbacks: { title: c => items[c[0].dataIndex]?.label || '' } }
           },
           scales: {
@@ -3051,7 +3053,8 @@
       const tg = new Map(); byComp.forEach(r => { const t = cmpType(r); if (!tg.has(t)) tg.set(t, new Map()); tg.get(t).set(r.c, (tg.get(t).get(r.c) || 0) + 1); });
       const tItems = [...tg.entries()].map(([t, cm]) => ({ v: t, l: t, g: [...cm.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => a.g.localeCompare(b.g) || a.l.localeCompare(b.l));
       const tOk = msSetItems('cmpType', tItems, allL);
-      const rows = byComp.filter(r => tOk(cmpType(r)));
+      const rFrom = document.getElementById('cmpFrom')?.value || '', rTo = document.getElementById('cmpTo')?.value || '';
+      const rows = byComp.filter(r => tOk(cmpType(r)) && (!rFrom || !r.day || r.day >= rFrom) && (!rTo || !r.day || r.day <= rTo));
 
       // ---- periods = months
       const pmap = new Map();
@@ -3066,10 +3069,26 @@
         day: { key: r => r.day || null, label: (k) => dayLabel(k), max: 14 }
       };
       const distinct = by => new Set(rows.map(PERIOD_DEF[by].key).filter(Boolean)).size;
-      let periodBy = byChoice !== 'auto' ? byChoice : (distinct('month') > 1 ? 'month' : distinct('week') > 1 ? 'week' : 'day');
-      const periodKey = PERIOD_DEF[periodBy].key, periodMax = PERIOD_DEF[periodBy].max;
+      // Range bounds: the From/To inputs when set, otherwise the first/last date in the data
+      const dataDays = rows.map(r => r.day).filter(Boolean).sort();
+      const lo = rFrom || dataDays[0] || '', hi = rTo || dataDays[dataDays.length - 1] || '';
+      const toD = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+      const spanDays = lo && hi ? Math.round((toD(hi) - toD(lo)) / 864e5) + 1 : 0;
+      let periodBy = byChoice !== 'auto' ? byChoice
+        : (rFrom || rTo) ? (spanDays <= 14 ? 'day' : spanDays <= 98 ? 'week' : 'month')
+        : (distinct('month') > 1 ? 'month' : distinct('week') > 1 ? 'week' : 'day');
+      const periodKey = PERIOD_DEF[periodBy].key;
+      const periodMax = (rFrom || rTo) ? Math.max(PERIOD_DEF[periodBy].max, periodBy === 'day' ? 31 : 12) : PERIOD_DEF[periodBy].max;
       pmap.clear();
       rows.forEach(r => { const k = periodKey(r); if (!k) return; if (!pmap.has(k)) pmap.set(k, { key: k, label: PERIOD_DEF[periodBy].label(k, r), rows: [] }); pmap.get(k).rows.push(r); });
+      // Zero-fill: every day / week / month inside the range gets a period, even with no work orders (count 0)
+      if (lo && hi && lo <= hi) {
+        const p2 = n => String(n).padStart(2, '0'), iso = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+        const add = (k, label) => { if (!pmap.has(k)) pmap.set(k, { key: k, label, rows: [], empty: true }); };
+        if (periodBy === 'day') { for (let d = toD(lo); d <= toD(hi); d.setDate(d.getDate() + 1)) add(iso(d), dayLabel(iso(d))); }
+        else if (periodBy === 'week') { const s0 = toD(lo); s0.setDate(s0.getDate() - s0.getDay()); for (let d = s0; d <= toD(hi); d.setDate(d.getDate() + 7)) { const tf = cwoTimeFields(new Date(d)); add(tf.wk, tf.wkLabel); } }
+        else { const a = toD(lo), b2 = toD(hi); for (let d = new Date(a.getFullYear(), a.getMonth(), 1); d <= b2; d.setMonth(d.getMonth() + 1)) { const k = `${d.getFullYear()}-${p2(d.getMonth() + 1)}`; add(k, cmpMonthLabel(k)); } }
+      }
       window.CMP_PERIOD_BY = periodBy;
       const periods = [...pmap.values()].sort((a, b) => a.key < b.key ? -1 : 1).slice(-periodMax);
       periods.forEach(p => { p.S = cwoSlaStats(p.rows); p.pending = p.rows.filter(cmpIsPending).length; });
@@ -3209,12 +3228,16 @@
       const avg = periods.reduce((a, p) => a + p.rows.length, 0) / periods.length;
       const b1 = cmpT(
         `${b(e(latest.label))} closed at ${b(latest.rows.length.toLocaleString())} work orders vs ${b(prev.rows.length.toLocaleString())} in ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}); ${latest.rows.length > avg ? 'above' : 'below'} the ${periods.length}-${window.CMP_PERIOD_BY || 'month'} average of ${b(avg.toFixed(0))}.` + ul([
+          !latest.rows.length ? `${b(e(latest.label))}: no work orders were opened (0) — confirm the export covers this period; if it does, demand dropped to zero.` : null,
+          !prev.rows.length ? `${b(e(prev.label))}: no work orders were opened (0).` : null,
           risers.length ? `Rising: ${risers.map(x => `${b(e(x.label))} (+${x.d})`).join(', ')}.` : null,
           fallers.length ? `Improving: ${fallers.map(x => `${b(e(x.label))} (${x.d})`).join(', ')}.` : null,
           `Concentration: the top 3 problem types make up ${b(top3Share.toFixed(0) + '%')} of all work orders.`,
           act(risers.length ? `open a root-cause review on ${b(e(risers[0].label))} this week; target a 20% reduction next month.` : `keep the preventive plan; volume is stable or falling.`)
         ]),
         `${b(e(latest.label))} มีคำสั่งงาน ${b(latest.rows.length.toLocaleString())} รายการ เทียบกับ ${b(prev.rows.length.toLocaleString())} ใน ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}) ${latest.rows.length > avg ? 'สูงกว่า' : 'ต่ำกว่า'}ค่าเฉลี่ย ${periods.length} ${({ week: 'สัปดาห์', day: 'วัน' })[window.CMP_PERIOD_BY] || 'เดือน'} (${b(avg.toFixed(0))})` + ul([
+          !latest.rows.length ? `${b(e(latest.label))}: ไม่มีการเปิดใบงานเลย (0) — โปรดยืนยันว่าไฟล์ครอบคลุมช่วงนี้ หากใช่ แปลว่าไม่มีงานเข้า` : null,
+          !prev.rows.length ? `${b(e(prev.label))}: ไม่มีการเปิดใบงานเลย (0)` : null,
           risers.length ? `เพิ่มขึ้น: ${risers.map(x => `${b(e(x.label))} (+${x.d})`).join(', ')}` : null,
           fallers.length ? `ดีขึ้น: ${fallers.map(x => `${b(e(x.label))} (${x.d})`).join(', ')}` : null,
           `ความกระจุกตัว: 3 ประเภทปัญหาหลักคิดเป็น ${b(top3Share.toFixed(0) + '%')} ของงานทั้งหมด`,
@@ -3255,7 +3278,7 @@
 
     function cmpLabels() {
       const set = (id, en, th) => { const el = document.getElementById(id); if (el) el.textContent = cmpT(en, th); };
-      [['cmpLblBy', 'Compare By', 'เปรียบเทียบตาม'], ['cmpLblFile', 'Files', 'ไฟล์'], ['cmpLblYear', 'Year', 'ปี'], ['cmpLblMonth', 'Month', 'เดือน'], ['cmpLblWeek', 'Week', 'สัปดาห์'], ['cmpLblDay', 'Date', 'วันที่'],
+      [['cmpLblBy', 'Compare By', 'เปรียบเทียบตาม'], ['cmpLblRange', 'Date Range (From – To)', 'ช่วงวันที่ (จาก – ถึง)'], ['cmpLblFile', 'Files', 'ไฟล์'], ['cmpLblYear', 'Year', 'ปี'], ['cmpLblMonth', 'Month', 'เดือน'], ['cmpLblWeek', 'Week', 'สัปดาห์'], ['cmpLblDay', 'Date', 'วันที่'],
        ['cmpLblCat', 'Category', 'หมวดหมู่'], ['cmpLblPrio', 'Priority', 'ระดับ'], ['cmpLblComp', 'Component', 'พื้นที่'], ['cmpLblType', 'Event Type', 'ประเภทเหตุ'],
        ['cmpBriefTitle', 'Executive Comparison Intelligence', 'บทวิเคราะห์การเปรียบเทียบสำหรับผู้บริหาร'],
        ['cmpBriefSub', 'Latest month vs previous month · deep-dive with recommended actions', 'เดือนล่าสุดเทียบเดือนก่อนหน้า · วิเคราะห์เชิงลึกพร้อมแนวทางปรับปรุง'],
@@ -3584,7 +3607,8 @@
     html.cwo-light #ppmCatLegend .text-white { color: #0f172a !important; }
     html.cwo-light #ppmCatLegend .text-slate-300 { color: #334155 !important; }
     html.cwo-light #ppmCatLegend { border-color: #e2e8f0 !important; }
-  </style>
+      #cmpFrom, #cmpTo { color-scheme: dark; } html.cwo-light #cmpFrom, html.cwo-light #cmpTo { color-scheme: light; background: #fff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+</style>
   <script>
     (function () {
       function countActive(strip) {
