@@ -212,13 +212,14 @@
     <!-- 2. Filter strip (Case style) -->
     <section id="ppmFilterStrip" class="dcc-filter-strip sticky z-20 px-3 sm:px-6 lg:px-8 pt-3 pb-2.5 border-b border-slate-800 bg-[#0b1120]/95 backdrop-blur">
       <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
-        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="ppmLblFilters">Filters</span></span></div>
+        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="ppmLblFilters" class="dcc-mlabel">Filters</span></span></div>
         <div class="flex flex-col min-w-[72px] max-w-[95px] flex-1"><label id="lblFilterYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><select id="filterYear" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Years</option></select></div>
         <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="lblFilterMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><select id="filterMonth" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Months</option></select></div>
         <div class="flex flex-col min-w-[120px] max-w-[175px] flex-1"><label id="lblFilterWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week (Sun - Sat)</label><select id="filterWeek" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Weeks</option></select></div>
         <div class="flex flex-col min-w-[105px] max-w-[140px] flex-1"><label id="lblFilterDay" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Day</label><select id="filterDay" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Days</option></select></div>
         <div class="flex flex-col min-w-[120px] max-w-[190px] flex-1"><label id="lblFilterTeam" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Service Provider</label><select id="filterTeam" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Providers</option></select></div>
         <div class="flex flex-col min-w-[120px] max-w-[190px] flex-1"><label id="lblFilterCategory" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Service Category</label><select id="filterCategory" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Categories</option></select></div>
+        <div class="flex flex-col min-w-[110px] max-w-[170px] flex-1"><label id="lblFilterComponent" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Component</label><select id="filterComponent" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Components</option></select></div>
         <div class="flex flex-col min-w-[100px] max-w-[140px] flex-1"><label id="lblFilterFrequency" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Frequency</label><select id="filterFrequency" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Frequencies</option></select></div>
         <div class="flex flex-col min-w-[110px] max-w-[150px] flex-1"><label id="lblFilterStatus" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Status</label><select id="filterStatus" onchange="onFilterChange()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Statuses</option></select></div>
         <div class="flex flex-col shrink-0 ml-auto"><span class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate invisible">.</span>
@@ -244,7 +245,7 @@
     <main id="exportableArea" class="max-w-[1750px] mx-auto px-4 sm:px-6 py-5 flex-1 w-full space-y-5">
 
       <!-- KPI Metric Cards -->
-      <section class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      <section id="ppmKpiRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         <!-- KPI 1: Total Tasks -->
         <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
@@ -293,23 +294,6 @@
           <div class="mt-3 flex items-center text-xs text-slate-400">
             <span id="kpiSlaMetCount" class="text-sky-400 font-semibold mr-1.5">0</span>
             <span id="lblKpiSlaSub">Tasks Met SLA Target</span>
-          </div>
-        </div>
-
-        <!-- KPI 3b: Response SLA -->
-        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow relative overflow-hidden">
-          <div class="flex justify-between items-start">
-            <div>
-              <p id="lblKpiRespSla" class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Response SLA</p>
-              <h3 class="text-2xl font-bold text-indigo-400 mt-1 font-mono" id="kpiRespSlaRate">N/A</h3>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-indigo-950/60 border border-indigo-800 flex items-center justify-center text-indigo-400">
-              <i class="fa-solid fa-stopwatch text-lg"></i>
-            </div>
-          </div>
-          <div class="mt-3 flex items-center text-xs text-slate-400">
-            <span id="kpiRespSlaCount" class="text-indigo-400 font-semibold mr-1.5">0</span>
-            <span id="lblKpiRespSlaSub">Tasks Met Response Target</span>
           </div>
         </div>
 
@@ -458,6 +442,28 @@
           </div>
           <div class="relative flex-1 cursor-pointer" style="min-height: 260px;">
             <canvas id="frequencyChart"></canvas>
+          </div>
+        </div>
+
+
+        <!-- Graph 5: PPM tasks per Component (Site) -->
+        <div class="bg-cardbg p-4 rounded-xl border border-bordercol shadow flex flex-col lg:col-span-2">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 id="lblChartCompTitle" class="text-sm font-bold text-white flex items-center">
+                <i class="fa-solid fa-building mr-2 text-sky-400"></i> PPM Tasks by Component
+              </h4>
+              <p id="lblChartCompSub" class="text-xs text-slate-400">Completed vs pending per component (Site) · click a bar to filter by component</p>
+            </div>
+            <div class="flex items-center space-x-1.5 no-print">
+              <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">Clickable</span>
+              <button onclick="expandChartModal('componentChart', 'PPM Tasks by Component')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-sky-400 border border-slate-700 transition" title="Expand">
+                <i class="fa-solid fa-maximize text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <div id="componentChartWrap" class="relative flex-1 cursor-pointer" style="min-height: 380px;">
+            <canvas id="componentChart"></canvas>
           </div>
         </div>
 
@@ -880,7 +886,7 @@
       LOADED_FILE_NAMES.clear();
       PPM_FILES.forEach(({ data }, name) => { LOADED_FILE_NAMES.add(name); integrateDataset(data); });
 
-      AGGREGATED_CUBE = Object.values(globalCubeMap).map(o => [o.m, o.team, o.cat, o.freq, o.stage, o.sla, o.count, o.dur, o.yr, o.wk, o.day, o.rsla]);
+      AGGREGATED_CUBE = Object.values(globalCubeMap).map(o => [o.m, o.team, o.cat, o.freq, o.stage, o.sla, o.count, o.dur, o.yr, o.wk, o.day, o.rsla, o.comp]);
       const MONTH_ORDER = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       AVAILABLE_MONTHS = Array.from(globalMonthSet).sort((a, b) => { const ia = MONTH_ORDER.indexOf(a), ib = MONTH_ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
       AVAILABLE_FREQS = Array.from(globalFreqSet);
@@ -939,9 +945,22 @@
         due: ppmFindCol(headers, ['duedate','duedatetime','targetdate','targetcompletion','targetcompletiondate','targetfinish','targetfinishdate','scheduledend','scheduledenddate','scheduleenddate','planend','planenddate','plannedend','plannedenddate','plannedfinish','deadline','sladuedate','sladue','completiondue']),
         date: ppmFindCol(headers, ['scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
           n => n.includes('date') && !n.includes('update') && !n.includes('complet') && !n.includes('finish') && !n.includes('close')),
+        created: ppmFindCol(headers, ['createdon','createddate','createdondatetime','createddatetime','createdat']),
+        site: ppmFindCol(headers, ['site','sitename']),
         id: ppmFindCol(headers, ['ppmid','ppmno','ppmnumber','ppmcode','workorderid','workorderno','workordernumber','woid','wono','wonumber','taskid','taskno','tasknumber','scheduleid','scheduleno','id'],
           n => n.includes('ppm') && (n.endsWith('id') || n.endsWith('no') || n.includes('number')))
       };
+    }
+    // "Created On" is DD/MM/YYYY [HH:mm] (day first). Also accepts YYYY/MM/DD and Buddhist years.
+    function ppmParseCreated(v) {
+      const s = String(v ?? '').trim(); if (!s) return null;
+      const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:[ T,]+(\d{1,2}):(\d{2}))?/);
+      if (m) {
+        let y = +m[3]; if (y < 100) y += 2000; if (y > 2400) y -= 543;
+        const d = +m[1], mo = +m[2];
+        if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) { const r = new Date(y, mo - 1, d); if (!isNaN(r)) return r; }
+      }
+      return ppmParseDate(s);
     }
     function ppmParseDate(v) {
       const s = String(v ?? '').trim();
@@ -1030,9 +1049,12 @@
       console.info('[PPM] detected columns:', PCOLS);
 
       rows.forEach(r => {
-        const pDate = PCOLS.date ? ppmParseDate(r[PCOLS.date]) : null;
+        const cDate = PCOLS.created ? ppmParseCreated(r[PCOLS.created]) : null;
+        const pDate = cDate || (PCOLS.date ? ppmParseDate(r[PCOLS.date]) : null);
         const T = ppmTimeFields(pDate);
-        const m = (r['Month'] || '').trim() || (pDate ? PPM_MON3[pDate.getMonth()] : 'Jan');
+        // month always comes from Created On (DD/MM/YYYY) when that column exists; else the Month column / schedule date
+        const m = cDate ? PPM_MON3[cDate.getMonth()] : ((r['Month'] || '').trim() || (pDate ? PPM_MON3[pDate.getMonth()] : 'Jan'));
+        const comp = String((PCOLS.site && r[PCOLS.site]) || r['Component'] || 'CI').trim() || 'CI';
         const team = String((PCOLS.provider && r[PCOLS.provider]) || r['Team'] || 'Unassigned').trim() || 'Unassigned';
         const cat = String((PCOLS.category && r[PCOLS.category]) || r['Service Categories'] || 'General').trim() || 'General';
         const rsla = ppmComputeRespSla(r, PCOLS);
@@ -1046,9 +1068,9 @@
         if (!globalTeamCatMap[team]) globalTeamCatMap[team] = new Set();
         globalTeamCatMap[team].add(cat);
 
-        const key = `${m}|${team}|${cat}|${freq}|${stage}|${sla}|${rsla}|${T.day}`;
+        const key = `${m}|${team}|${cat}|${freq}|${stage}|${sla}|${rsla}|${T.day}|${comp}`;
         if (!globalCubeMap[key]) {
-          globalCubeMap[key] = { m, team, cat, freq, stage, sla, rsla, count: 0, dur: 0, yr: T.yr, wk: T.wk, day: T.day };
+          globalCubeMap[key] = { m, team, cat, freq, stage, sla, rsla, comp, count: 0, dur: 0, yr: T.yr, wk: T.wk, day: T.day };
         }
         globalCubeMap[key].count += 1;
         globalCubeMap[key].dur += dur;
@@ -1063,7 +1085,7 @@
             team: team,
             category: cat,
             frequency: freq,
-            component: r['Component'] || 'CI',
+            component: comp,
             stage: stage,
             month: m
           });
@@ -1466,7 +1488,7 @@
       let slaMetTasks = 0;
       let slaMissedTasks = 0;
 
-      AGGREGATED_CUBE.forEach(row => {
+      AGGREGATED_CUBE.filter(ppmCompOk).forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
 
@@ -1529,7 +1551,7 @@
       const search = document.getElementById("pendingSearch").value.trim().toLowerCase();
 
       filteredPendingList = UNFINISH_TASKS_DATA.filter(task => {
-        const matchMonth = ppmIn('Month', task.month);
+        const matchMonth = ppmIn('Month', task.month) && ppmIn('Component', task.component);
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(task.team));
         const matchCat = ppmIn('Category', task.category);
         const matchFreq = ppmIn('Frequency', task.frequency);
@@ -1650,7 +1672,7 @@
       const hardCounts = displayMonths.map(() => 0);
       const softCounts = displayMonths.map(() => 0);
 
-      AGGREGATED_CUBE.forEach(row => {
+      AGGREGATED_CUBE.filter(ppmCompOk).forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
@@ -1736,7 +1758,7 @@
       const slaMetByMonth = displayMonths.map(() => 0);
       const slaMissedByMonth = displayMonths.map(() => 0);
 
-      AGGREGATED_CUBE.forEach(row => {
+      AGGREGATED_CUBE.filter(ppmCompOk).forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
         const matchTeam = (selectedTeams.size === 0 || selectedTeams.has(team));
@@ -1831,7 +1853,7 @@
 
       // --- Chart 3: Category Share Doughnut ---
       const catCounts = {};
-      AGGREGATED_CUBE.forEach(row => {
+      AGGREGATED_CUBE.filter(ppmCompOk).forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
         const matchMonth = ppmIn('Month', m);
@@ -1902,7 +1924,7 @@
       const freqCounts = {};
       AVAILABLE_FREQS.forEach(f => freqCounts[f] = 0);
 
-      AGGREGATED_CUBE.forEach(row => {
+      AGGREGATED_CUBE.filter(ppmCompOk).forEach(row => {
         if (!ppmTimeOk(row[8], row[9], row[10])) return;
         const [m, team, cat, freq, stg, sla, cnt] = row;
         const matchMonth = ppmIn('Month', m);
@@ -1982,6 +2004,7 @@
       else if (sourceChartId === 'slaTrendChart') srcChart = slaTrendChart;
       else if (sourceChartId === 'categoryChart') srcChart = categoryChart;
       else if (sourceChartId === 'frequencyChart') srcChart = frequencyChart;
+      else if (sourceChartId === 'componentChart') srcChart = window.ppmComponentChart;
 
       if (!srcChart) return;
 
@@ -2202,11 +2225,12 @@
     // ======================================================================
     const PPM_DONE = ['CLIENTVERIFIED', 'COMPLETED', 'CLOSED'];
     const PPM_PROVIDER_COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#94a3b8'];
+    function ppmCompOk(row) { return ppmIn('Component', row[12]); }
     function ppmRowMatch(row, ignoreMonth) {
       if (!ppmTimeOk(row[8], row[9], row[10])) return false;
       const [m, team, cat, freq, stg] = row;
       return (ignoreMonth || ppmIn('Month', m)) && (selectedTeams.size === 0 || selectedTeams.has(team)) &&
-        ppmIn('Category', cat) && ppmIn('Frequency', freq) && ppmIn('Status', stg);
+        ppmIn('Category', cat) && ppmIn('Frequency', freq) && ppmIn('Status', stg) && ppmIn('Component', row[12]);
     }
     function ppmAgg(rows) {
       const a = { total: 0, done: 0, met: 0, miss: 0, rmet: 0, rmiss: 0 };
@@ -2227,7 +2251,50 @@
       if (o === null || o === undefined) return 'top';
       return o > v ? 'bottom' : 'top';
     }
-    // Charts: workload stacked by Service Provider (top 6 + Others); SLA trend with Completion + Response lines
+
+    // ---- Chart: PPM tasks per Component (Site) -- completed vs pending, honours every filter ----
+    let ppmComponentChart = null; window.ppmComponentChart = null;
+    function ppmRenderComponentChart() {
+      const cv = document.getElementById('componentChart'); if (!cv) return;
+      const th = currentLang === 'th';
+      const t1 = document.getElementById('lblChartCompTitle'); if (t1) t1.innerHTML = '<i class="fa-solid fa-building mr-2 text-sky-400"></i> ' + (th ? 'จำนวน PPM แต่ละ Component' : 'PPM Tasks by Component');
+      const t2 = document.getElementById('lblChartCompSub'); if (t2) t2.textContent = th ? 'ปิดแล้ว เทียบ ค้างอยู่ ตาม Component (Site) · คลิกแท่งเพื่อกรองตาม Component' : 'Completed vs pending per component (Site) · click a bar to filter by component';
+      const m = new Map();
+      AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false)).forEach(r => {
+        const k = r[12] || 'CI'; if (!m.has(k)) m.set(k, { done: 0, pend: 0 });
+        const o = m.get(k); if (PPM_DONE.includes(String(r[4]).toUpperCase())) o.done += r[6]; else o.pend += r[6];
+      });
+      const rows = [...m.entries()].sort((a, b) => (b[1].done + b[1].pend) - (a[1].done + a[1].pend));
+      const labels = rows.map(e => e[0]);
+      const wrap = document.getElementById('componentChartWrap'); if (wrap) wrap.style.height = Math.max(380, labels.length * 38 + 50) + 'px';
+      if (ppmComponentChart) ppmComponentChart.destroy();
+      const tot = i => rows[i][1].done + rows[i][1].pend;
+      const PAL = ['#f43f5e', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#10b981', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef'];
+      ppmComponentChart = new Chart(cv.getContext('2d'), {
+        type: 'bar',
+        data: { labels, datasets: [
+          { label: th ? 'รวม' : 'Total', data: rows.map((e, i) => tot(i)), backgroundColor: rows.map((e, i) => PAL[i % PAL.length]), borderRadius: 6, categoryPercentage: 0.8, barPercentage: 0.82,
+            datalabels: { anchor: 'end', align: 'right', color: () => ppmTheme === 'light' ? '#0f172a' : '#e2e8f0', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v.toLocaleString() : '' } }
+        ] },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+          onClick: (evt, els, chart) => { const p = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false); if (p.length) { ppmMsToggle('Component', chart.data.labels[p[0].index]); updateDashboard(); } },
+          layout: { padding: { right: 70 } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' }, ticks: { color: '#94a3b8', precision: 0 } },
+            y: { grid: { display: false }, ticks: { color: '#cbd5e1', font: { size: 10.5, weight: 'bold' } } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => (th ? 'รวม: ' : 'Total: ') + tot(ctx.dataIndex).toLocaleString(),
+              afterLabel: ctx => [(th ? 'ปิดแล้ว: ' : 'Completed: ') + rows[ctx.dataIndex][1].done.toLocaleString(), (th ? 'ค้างอยู่: ' : 'Pending: ') + rows[ctx.dataIndex][1].pend.toLocaleString()] } }
+          }
+        }
+      });
+      window.ppmComponentChart = ppmComponentChart;
+    }
+
+    // Charts: workload stacked by Service Provider (top 6 + Others); SLA trend (Completion SLA)
     const _ppmRenderCharts = renderCharts;
     window.renderCharts = function () {
       _ppmRenderCharts.apply(this, arguments);
@@ -2239,22 +2306,27 @@
         const keep = provs.slice(0, 6), other = provs.length > 6;
         const ds = keep.map((p, i) => ({ label: p, data: months.map(m => rows.filter(r => r[0] === m && r[1] === p).reduce((s, r) => s + r[6], 0)), backgroundColor: PPM_PROVIDER_COLORS[i], borderRadius: 4 }));
         if (other) ds.push({ label: currentLang === 'th' ? 'อื่นๆ' : 'Others', data: months.map(m => rows.filter(r => r[0] === m && !keep.includes(r[1])).reduce((s, r) => s + r[6], 0)), backgroundColor: PPM_PROVIDER_COLORS[6], borderRadius: 4 });
-        if (monthlyChart) { monthlyChart.data.labels = months; monthlyChart.data.datasets = ds; monthlyChart.options.plugins.legend.position = 'bottom'; monthlyChart.options.plugins.legend.labels = Object.assign({}, monthlyChart.options.plugins.legend.labels, { boxWidth: 12, boxHeight: 12, padding: 12 }); monthlyChart.update(); }
+        {
+          const totals = months.map((m, i) => ds.reduce((t, d) => t + (d.data[i] || 0), 0));
+          const thr = Math.max(...totals, 1) * 0.06;
+          ds.forEach(d => { d.datalabels = { color: '#fff', font: { weight: 'bold', size: 10 }, display: c => (c.dataset.data[c.dataIndex] || 0) >= thr, formatter: v => v.toLocaleString() }; });
+          ds.push({ type: 'line', label: 'Total', data: totals, showLine: false, pointRadius: 0, pointHoverRadius: 0, borderWidth: 0, order: -1,
+            datalabels: { color: () => ppmTheme === 'light' ? '#0f172a' : '#e2e8f0', anchor: 'end', align: 'top', offset: 2, clamp: true, font: { weight: 'bold', size: 11 }, formatter: v => v ? v.toLocaleString() : '', display: c => c.dataset.data[c.dataIndex] > 0 } });
+        }
+        if (monthlyChart) { monthlyChart.data.labels = months; monthlyChart.data.datasets = ds; monthlyChart.options.plugins.legend.position = 'bottom'; monthlyChart.options.plugins.legend.labels = Object.assign({}, monthlyChart.options.plugins.legend.labels, { boxWidth: 12, boxHeight: 12, padding: 12, filter: it => it.text !== 'Total' }); monthlyChart.options.plugins.tooltip = Object.assign({}, monthlyChart.options.plugins.tooltip, { filter: it => it.dataset.label !== 'Total' }); monthlyChart.options.layout = { padding: { top: 18 } }; monthlyChart.update(); }
         if (slaTrendChart) {
           const comp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.sla === null ? null : +a.sla.toFixed(1); });
-          const resp = months.map(m => { const a = ppmAgg(rows.filter(r => r[0] === m)); return a.rsla === null ? null : +a.rsla.toFixed(1); });
           slaTrendChart.data.labels = months;
           slaTrendChart.data.datasets = [
             { label: currentLang === 'th' ? 'SLA ปิดงาน (%)' : 'Completion SLA (%)', data: comp, borderColor: '#10b981', backgroundColor: 'transparent', pointBackgroundColor: '#10b981', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#10b981', anchor: 'center', align: c => ppmSlaAlign(c, 1), offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } },
-            { label: currentLang === 'th' ? 'SLA รับเรื่อง (%)' : 'Response SLA (%)', data: resp, borderColor: '#818cf8', backgroundColor: 'transparent', pointBackgroundColor: '#818cf8', borderDash: [6, 4], fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: 5,
-              datalabels: { color: '#818cf8', anchor: 'center', align: c => ppmSlaAlign(c, 0), offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
+              datalabels: { color: '#10b981', anchor: 'center', align: 'top', offset: 6, clamp: true, display: 'auto', font: { weight: 'bold', size: 10 }, formatter: v => v === null ? '' : v + '%' } }
           ];
           slaTrendChart.options.plugins.legend = { display: true, position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12, boxHeight: 12, padding: 14, font: { size: 11 } } };
           slaTrendChart.options.layout = { padding: { top: 26, bottom: 4, right: 12 } };
           if (slaTrendChart.options.scales && slaTrendChart.options.scales.y) { slaTrendChart.options.scales.y.min = 0; slaTrendChart.options.scales.y.max = 110; slaTrendChart.options.scales.y.ticks = Object.assign({}, slaTrendChart.options.scales.y.ticks, { stepSize: 20, callback: v => v <= 100 ? v + '%' : '' }); }
           slaTrendChart.update();
         }
+        ppmRenderComponentChart();
       } catch (e) { console.warn('[PPM] chart post-process', e); }
     };
 
@@ -2264,8 +2336,6 @@
       _ppmUpdateDashboard.apply(this, arguments);
       try {
         const a = ppmAgg(AGGREGATED_CUBE.filter(r => ppmRowMatch(r, false)));
-        document.getElementById('kpiRespSlaRate').textContent = a.rsla === null ? 'N/A' : a.rsla.toFixed(2) + '%';
-        document.getElementById('kpiRespSlaCount').textContent = a.rsla === null ? '—' : a.rmet.toLocaleString();
         const byProv = new Map(); filteredPendingList.forEach(t => byProv.set(t.team, (byProv.get(t.team) || 0) + 1));
         const top = [...byProv.entries()].sort((x, y) => y[1] - x[1]);
         const b1 = document.getElementById('badgePendingHard'), b2 = document.getElementById('badgePendingSoft');
@@ -2315,15 +2385,13 @@
           worstCat ? `หมวดที่ปิดงานได้ต่ำสุด: ${b(esc(worstCat.k))} ที่ ${bad(f(worstCat.a.comp))}` : null,
           act(worstCat ? `วางแผนงาน ${b(esc(worstCat.k))} ใหม่ร่วมกับผู้ให้บริการและจองทรัพยากรช่วงสัปดาห์งานหนาแน่น ตั้งเป้าปิดงาน ≥ 95%` : 'คงแผนงานปัจจุบัน และทบทวนรายเดือน')]));
       const c2 = L(
-        `Completion SLA ${sl(a.sla, 95)} · Response SLA ${sl(a.rsla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
+        `Completion SLA ${sl(a.sla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
           needSla ? `Gap to 95%: ${bad(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'Completion SLA meets the 95% target.' : 'No SLA data in the file.'),
           worstProv ? `Lowest provider SLA: ${b(esc(worstProv.k))} ${bad(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? `; best ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}.` : null,
-          a.rsla === null ? 'Response SLA needs a response flag or response-due + acknowledged dates in the file.' : null,
           act(worstProv ? `hold a monthly SLA review with ${b(esc(worstProv.k))}; agree a recovery plan and apply KPI deductions if below target for 2 months.` : 'monitor weekly.')]),
-        `SLA ปิดงาน ${sl(a.sla, 95)} · SLA รับเรื่อง ${sl(a.rsla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
+        `SLA ปิดงาน ${sl(a.sla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
           needSla ? `ส่วนต่างถึงเป้า 95%: ต้องปิดงานตรงเวลาเพิ่ม ${bad(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'SLA ปิดงานถึงเป้า 95%' : 'ไม่มีข้อมูล SLA ในไฟล์'),
           worstProv ? `ผู้ให้บริการที่ SLA ต่ำสุด: ${b(esc(worstProv.k))} ${bad(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? ` ดีที่สุด ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}` : null,
-          a.rsla === null ? 'SLA รับเรื่องต้องมีคอลัมน์ผล SLA รับเรื่อง หรือวันครบกำหนดรับเรื่องและวันที่รับเรื่อง' : null,
           act(worstProv ? `ประชุมทบทวน SLA รายเดือนกับ ${b(esc(worstProv.k))} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หากต่ำกว่าเป้า 2 เดือนติด` : 'ติดตามรายสัปดาห์')]));
       const c3 = L(
         `${b(pend.length.toLocaleString())} unfinished tasks — ${stages || '-'}.` + ul([
@@ -2358,14 +2426,13 @@
         else el.insertBefore(document.createTextNode(' ' + txt + ' '), el.lastElementChild);
       };
       set('lblFilterTeam', 'Service Provider', 'ผู้ให้บริการ'); set('lblFilterCategory', 'Service Category', 'หมวดบริการ');
-      set('lblFilterFrequency', 'Frequency', 'ความถี่'); set('lblFilterStatus', 'Status', 'สถานะ'); set('lblFilterMonth', 'Month', 'เดือน');
+      set('lblFilterComponent', 'Component', 'Component'); set('lblFilterFrequency', 'Frequency', 'ความถี่'); set('lblFilterStatus', 'Status', 'สถานะ'); set('lblFilterMonth', 'Month', 'เดือน');
       set('lblKpiSla', 'Completion SLA', 'SLA ปิดงาน'); set('lblKpiSlaSub', 'Tasks Met Completion Target', 'งานที่ปิดตาม SLA');
-      set('lblKpiRespSla', 'Response SLA', 'SLA รับเรื่อง'); set('lblKpiRespSlaSub', 'Tasks Met Response Target', 'งานที่รับเรื่องตาม SLA');
       set('ppmLblFilters', 'Filters', 'ตัวกรอง'); set('lblResetFilter', 'Reset', 'รีเซ็ต');
       set('lblChartCategoryTitle', 'Service Category Share (%)', 'สัดส่วนหมวดบริการ (%)'); set('lblChartCategorySub', 'Click slice to filter by service category', 'คลิกที่ชิ้นกราฟเพื่อกรองตามหมวดบริการ');
       set('thTeam', 'Service Provider', 'ผู้ให้บริการ'); set('thCat', 'Service Category', 'หมวดบริการ');
       set('lblChartTrendSub', 'Stacked by service provider · click a bar to filter by month', 'แยกตามผู้ให้บริการ · คลิกแท่งเพื่อกรองตามเดือน');
-      set('lblChartSlaTrendTitle', 'Monthly SLA Trend: Completion vs Response (%)', 'แนวโน้ม SLA รายเดือน: ปิดงาน และ รับเรื่อง (%)');
+      set('lblChartSlaTrendTitle', 'Monthly SLA Compliance Trend (%)', 'แนวโน้ม SLA ปิดงานรายเดือน (%)');
       const cat = document.getElementById('filterCategory'); if (cat && cat.options[0]) cat.options[0].textContent = th ? 'ทุกหมวดบริการ' : 'All Categories';
       const tm = document.getElementById('filterTeam'); if (tm && tm.options[0]) tm.options[0].textContent = th ? 'ทุกผู้ให้บริการ' : 'All Providers';
     }
@@ -2384,6 +2451,22 @@
     .bg-cardbg, .bg-cardbg\/95 { background-color: rgba(15, 23, 42, 0.78) !important; }
     .bg-cardbg.rounded-xl { border-radius: 0.875rem !important; }
     .border-bordercol { border-color: rgba(51, 65, 85, 0.6) !important; }
+
+    /* ---- no "Filters" caption on desktop (more room for slicers); phones keep a small icon toggle ---- */
+    .dcc-mtitle .dcc-mlabel { display: none !important; }
+    @media (min-width: 768px) { .dcc-mtitle { display: none !important; } }
+    /* ---- score cards stay locked under the filter strip ---- */
+    #ppmFilterStrip { z-index: 45 !important; }
+    #ppmKpiRow {
+      position: sticky; top: var(--ppm-strip-bottom, 0px); z-index: 30; background: #0b1120;
+      display: flex !important; overflow-x: auto; gap: .6rem; padding: 6px 0; margin-top: 0 !important; box-shadow: 0 8px 10px -8px rgba(0,0,0,.55);
+    }
+    html.ppm-light #ppmKpiRow { background: #f1f5f9; box-shadow: 0 8px 10px -8px rgba(15,23,42,.25); }
+    #ppmKpiRow > * { flex: 1 0 170px; min-width: 170px; padding: .5rem .75rem !important; }
+    #ppmKpiRow h3 { font-size: 1.4rem !important; line-height: 1.7rem !important; }
+    #ppmKpiRow > * > .mt-3 { margin-top: .25rem !important; }
+    #ppmKpiRow > * .w-10 { width: 1.9rem !important; height: 1.9rem !important; }
+    #ppmKpiRow::-webkit-scrollbar { height: 4px; }
     .dcc-filter-strip { top: 53px; }
     html.dcc-embedded .dcc-filter-strip { top: 0; }
     html.dcc-embedded #dashboardWrapper > header { display: none !important; }
@@ -2609,7 +2692,7 @@
     // providers, categories ... can be compared side by side.
     // The original <select>s stay hidden at "All" for compatibility.
     // ======================================================================
-    const PPM_MS = { Year: 'filterYear', Month: 'filterMonth', Week: 'filterWeek', Day: 'filterDay', Team: 'filterTeam', Category: 'filterCategory', Frequency: 'filterFrequency', Status: 'filterStatus' };
+    const PPM_MS = { Year: 'filterYear', Month: 'filterMonth', Week: 'filterWeek', Day: 'filterDay', Team: 'filterTeam', Category: 'filterCategory', Frequency: 'filterFrequency', Status: 'filterStatus', Component: 'filterComponent' };
     const ppmMsId = k => 'ms_' + PPM_MS[k];
     function ppmIn(kind, v) { const st = DCC_MS[ppmMsId(kind)]; return !st || st.all || st.sel.has(v); }
     function ppmMsKey(kind) { const st = DCC_MS[ppmMsId(kind)]; return !st || st.all ? 'All' : [...st.sel].sort().join('+') || 'None'; }
@@ -2636,7 +2719,7 @@
         sel.classList.add('hidden'); sel.value = 'All';
         const host = document.createElement('div'); host.id = ppmMsId(kind); host.className = 'w-full';
         sel.insertAdjacentElement('afterend', host);
-        msInit(host.id, () => { if (kind === 'Team') ppmSyncTeams(); updateDashboard(); }, { search: ['Team', 'Category'].includes(kind) });
+        msInit(host.id, () => { if (kind === 'Team') ppmSyncTeams(); updateDashboard(); }, { search: ['Team', 'Category', 'Component'].includes(kind) });
       });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ppmMountMs); else ppmMountMs();
@@ -2649,6 +2732,7 @@
       msSetItems(ppmMsId('Month'), AVAILABLE_MONTHS.map(m => ({ v: m, l: m })), I18N[currentLang].allMonths);
       msSetItems(ppmMsId('Team'), Object.keys(CATEGORIES_BY_TEAM).sort().map(t => ({ v: t, l: t })), th ? 'ทุกผู้ให้บริการ' : 'All Providers');
       msSetItems(ppmMsId('Frequency'), AVAILABLE_FREQS.map(f => ({ v: f, l: f })), I18N[currentLang].allFrequencies);
+      msSetItems(ppmMsId('Component'), [...new Set(AGGREGATED_CUBE.map(r => r[12]).filter(Boolean))].sort().map(c => ({ v: c, l: c })), th ? 'ทุก Component' : 'All Components');
       const stages = [...new Set(AGGREGATED_CUBE.map(r => r[4]).filter(Boolean))].sort();
       msSetItems(ppmMsId('Status'), stages.map(x => ({ v: x, l: x })), th ? 'ทุกสถานะ' : 'All Statuses');
       ppmSyncTeams();
@@ -2687,5 +2771,23 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     })();
   </script>
+  <script>
+    // keeps --ppm-strip-bottom = bottom edge of the locked filter strip, so the score cards stick right below it
+    (function () {
+      function upd() {
+        const st = document.getElementById('ppmFilterStrip'); if (!st) return;
+        const v = (parseFloat(getComputedStyle(st).top) || 0) + st.offsetHeight;
+        document.documentElement.style.setProperty('--ppm-strip-bottom', v + 'px');
+      }
+      function start() {
+        upd();
+        const st = document.getElementById('ppmFilterStrip');
+        if (st) { if (window.ResizeObserver) new ResizeObserver(upd).observe(st); new MutationObserver(upd).observe(st, { attributes: true, attributeFilter: ['class', 'style'] }); }
+        window.addEventListener('resize', upd); setInterval(upd, 700);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    })();
+  </script>
+
 </body>
 </html>

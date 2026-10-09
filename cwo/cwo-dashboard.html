@@ -198,7 +198,7 @@
   <!-- Filter strips (Case style, full width) -->
   <div id="cwoDashStrip" class="dcc-filter-strip hidden sticky z-40 px-3 sm:px-6 lg:px-8 pt-3 pb-2.5 border-b border-slate-800 bg-[#0b1120]/95 backdrop-blur">
       <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
-        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cwoLblFilters">Filters</span></span></div>
+        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cwoLblFilters" class="dcc-mlabel">Filters</span></span></div>
         <div class="flex flex-col min-w-[72px] max-w-[95px] flex-1"><label id="lblFYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><select id="filterYear" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Years</option></select></div>
         <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="lblFMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><select id="filterMonth" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Months</option></select></div>
         <div class="flex flex-col min-w-[120px] max-w-[175px] flex-1"><label id="lblFWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week (Sun - Sat)</label><select id="filterWeek" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="All">All Weeks</option></select></div>
@@ -238,9 +238,7 @@
   </div>
   <div id="cwoCmpStrip" class="dcc-filter-strip hidden sticky z-40 px-3 sm:px-6 lg:px-8 pt-3 pb-2.5 border-b border-slate-800 bg-[#0b1120]/95 backdrop-blur">
       <div class="flex flex-wrap items-end gap-2 sm:gap-2.5">
-        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cmpLblCompare">Compare</span></span></div>
-        <div class="flex flex-col min-w-[100px] max-w-[130px] flex-1"><label id="cmpLblBy" class="block text-[9.5px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5 truncate">Compare By</label><select id="cmpBy" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"><option value="auto">Auto</option><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
-        <div class="flex flex-col min-w-[230px] max-w-[270px] flex-1"><label id="cmpLblRange" class="block text-[9.5px] font-bold text-indigo-300 uppercase tracking-wider mb-0.5 truncate" title="Days with no work orders inside this range are shown as 0">Date Range (From – To)</label><div class="flex items-center gap-1"><input type="date" id="cmpFrom" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none" style="min-width:0"><span class="text-slate-500 text-xs">–</span><input type="date" id="cmpTo" onchange="renderCwoCompare()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none" style="min-width:0"></div></div>
+        <div class="dcc-mtitle flex items-center gap-1.5 pr-2 border-r border-slate-800 shrink-0 self-end pb-1"><span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1"><i class="fa-solid fa-sliders text-indigo-400"></i><span id="cmpLblCompare" class="dcc-mlabel">Compare</span></span></div>
         <div class="flex flex-col min-w-[72px] max-w-[90px] flex-1"><label id="cmpLblYear" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Year</label><div id="cmpYear" class="w-full"></div></div>
         <div class="flex flex-col min-w-[85px] max-w-[115px] flex-1"><label id="cmpLblMonth" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Month</label><div id="cmpMonth" class="w-full"></div></div>
         <div class="flex flex-col min-w-[110px] max-w-[175px] flex-1"><label id="cmpLblWeek" class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">Week</label><div id="cmpWeek" class="w-full"></div></div>
@@ -3041,8 +3039,8 @@
       const wkMap = new Map(); byMonth.forEach(r => { if (r.wk) wkMap.set(r.wk, r.wkLabel); });
       const wOk = msSetItems('cmpWeek', [...wkMap.entries()].sort().map(([v, l]) => ({ v, l })), allL);
       const byWeek = byMonth.filter(r => wOk(r.wk));
-      const dOk = msSetItems('cmpDay', [...new Set(byWeek.map(r => r.day).filter(Boolean))].sort().map(d => { const [y, m, dd] = d.split('-').map(Number); return { v: d, l: `${String(dd).padStart(2, '0')} ${CMP_MON[m - 1]} ${y}` }; }), allL);
-      const byDay = byWeek.filter(r => dOk(r.day));
+      const dOk = msSetItems('cmpDay', Array.from({ length: 31 }, (_, i) => ({ v: String(i + 1), l: String(i + 1) })), allL);
+      const byDay = byWeek.filter(r => dOk(String(+String(r.day || '').slice(8, 10))));
       const cOk = msSetItems('cmpCategory', cmpVals(byDay.map(r => r.c)).map(([v, l]) => ({ v, l })), allL);
       const byCat = byDay.filter(r => cOk(r.c));
       const pOk = msSetItems('cmpPriority', cmpVals(byCat.map(r => r.p)).map(([v, l]) => ({ v, l })), allL);
@@ -3053,7 +3051,7 @@
       const tg = new Map(); byComp.forEach(r => { const t = cmpType(r); if (!tg.has(t)) tg.set(t, new Map()); tg.get(t).set(r.c, (tg.get(t).get(r.c) || 0) + 1); });
       const tItems = [...tg.entries()].map(([t, cm]) => ({ v: t, l: t, g: [...cm.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => a.g.localeCompare(b.g) || a.l.localeCompare(b.l));
       const tOk = msSetItems('cmpType', tItems, allL);
-      const rFrom = document.getElementById('cmpFrom')?.value || '', rTo = document.getElementById('cmpTo')?.value || '';
+      const rFrom = '', rTo = '';
       const rows = byComp.filter(r => tOk(cmpType(r)) && (!rFrom || !r.day || r.day >= rFrom) && (!rTo || !r.day || r.day <= rTo));
 
       // ---- periods = months
@@ -3074,15 +3072,20 @@
       const lo = rFrom || dataDays[0] || '', hi = rTo || dataDays[dataDays.length - 1] || '';
       const toD = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
       const spanDays = lo && hi ? Math.round((toD(hi) - toD(lo)) / 864e5) + 1 : 0;
-      let periodBy = byChoice !== 'auto' ? byChoice
+      // Specific day numbers ticked -> compare those days; a day with no work orders counts as 0
+      const selDays = msValues('cmpDay').map(Number).filter(n => n >= 1 && n <= 31).sort((a, b) => a - b);
+      let periodBy = selDays.length ? 'day' : byChoice !== 'auto' ? byChoice
         : (rFrom || rTo) ? (spanDays <= 14 ? 'day' : spanDays <= 98 ? 'week' : 'month')
         : (distinct('month') > 1 ? 'month' : distinct('week') > 1 ? 'week' : 'day');
       const periodKey = PERIOD_DEF[periodBy].key;
-      const periodMax = (rFrom || rTo) ? Math.max(PERIOD_DEF[periodBy].max, periodBy === 'day' ? 31 : 12) : PERIOD_DEF[periodBy].max;
+      const periodMax = selDays.length ? 31 : PERIOD_DEF[periodBy].max;
       pmap.clear();
       rows.forEach(r => { const k = periodKey(r); if (!k) return; if (!pmap.has(k)) pmap.set(k, { key: k, label: PERIOD_DEF[periodBy].label(k, r), rows: [] }); pmap.get(k).rows.push(r); });
       // Zero-fill: every day / week / month inside the range gets a period, even with no work orders (count 0)
-      if (lo && hi && lo <= hi) {
+      if (selDays.length) {
+        const p2 = n => String(n).padStart(2, '0');
+        new Set(byMonth.map(cmpMonthKey).filter(Boolean)).forEach(k => { const [y, m] = k.split('-').map(Number); const dim = new Date(y, m, 0).getDate(); selDays.forEach(dd => { if (dd > dim) return; const key = `${y}-${p2(m)}-${p2(dd)}`; if (!pmap.has(key)) pmap.set(key, { key, label: dayLabel(key), rows: [], empty: true }); }); });
+      } else if (lo && hi && lo <= hi) {
         const p2 = n => String(n).padStart(2, '0'), iso = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
         const add = (k, label) => { if (!pmap.has(k)) pmap.set(k, { key: k, label, rows: [], empty: true }); };
         if (periodBy === 'day') { for (let d = toD(lo); d <= toD(hi); d.setDate(d.getDate() + 1)) add(iso(d), dayLabel(iso(d))); }
@@ -3612,6 +3615,20 @@
     html.cwo-light #ppmCatLegend .text-white { color: #0f172a !important; }
     html.cwo-light #ppmCatLegend .text-slate-300 { color: #334155 !important; }
     html.cwo-light #ppmCatLegend { border-color: #e2e8f0 !important; }
+
+    /* ---- no "Filters"/"Compare" caption on desktop (more room for slicers); phones keep a small icon toggle ---- */
+    .dcc-mtitle .dcc-mlabel { display: none !important; }
+    @media (min-width: 768px) { .dcc-mtitle { display: none !important; } }
+    /* ---- score cards stay locked under the filter strip ---- */
+    [data-pdf-block="kpis"], #cmpKpis {
+      position: sticky; top: var(--cwo-strip-bottom, 0px); z-index: 30; background: #080d1a;
+      display: flex !important; overflow-x: auto; gap: .6rem; padding: 6px 0; box-shadow: 0 8px 10px -8px rgba(0,0,0,.55);
+    }
+    html.cwo-light [data-pdf-block="kpis"], html.cwo-light #cmpKpis { background: #f8fafc; box-shadow: 0 8px 10px -8px rgba(15,23,42,.25); }
+    [data-pdf-block="kpis"] > *, #cmpKpis > * { flex: 1 0 165px; min-width: 165px; padding: .5rem .75rem !important; }
+    [data-pdf-block="kpis"] .text-2xl, [data-pdf-block="kpis"] .text-3xl, #cmpKpis .text-2xl, #cmpKpis .text-3xl { font-size: 1.5rem !important; line-height: 1.8rem !important; }
+    #cmpKpis .mt-2, #cmpKpis .mt-1\.5 { margin-top: .25rem !important; }
+    [data-pdf-block="kpis"]::-webkit-scrollbar, #cmpKpis::-webkit-scrollbar { height: 4px; }
       #cmpFrom, #cmpTo { color-scheme: dark; } html.cwo-light #cmpFrom, html.cwo-light #cmpTo { color-scheme: light; background: #fff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
 </style>
   <script>
@@ -3650,6 +3667,27 @@
       }
       let t = null; const run = () => { clearTimeout(t); t = setTimeout(tint, 120); };
       const start = () => { tint(); new MutationObserver(run).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); new MutationObserver(run).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    })();
+  </script>
+
+  <script>
+    // keeps --cwo-strip-bottom = bottom edge of the visible (locked) filter strip, so the score cards stick right below it
+    (function () {
+      function upd() {
+        const st = [...document.querySelectorAll('.dcc-filter-strip')].find(x => x.getClientRects().length);
+        const v = st ? (parseFloat(getComputedStyle(st).top) || 0) + st.offsetHeight : 0;
+        document.documentElement.style.setProperty('--cwo-strip-bottom', v + 'px');
+      }
+      function start() {
+        upd();
+        document.querySelectorAll('.dcc-filter-strip').forEach(x => {
+          if (window.ResizeObserver) new ResizeObserver(upd).observe(x);
+          new MutationObserver(upd).observe(x, { attributes: true, attributeFilter: ['class', 'style'] });
+        });
+        window.addEventListener('resize', upd);
+        setInterval(upd, 700);
+      }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     })();
   </script>
