@@ -2847,6 +2847,9 @@
         let FILTERED_DATA = [];
         let TOTAL_DATASET_COUNT = 0;
         let CURRENT_PROJECT_NAME = "DCC";
+        // The header title follows the active tab group: Case, CWO and PPM each keep their own project name
+        const GROUP_BRAND = { case: "DCC", cwo: "DCC", ppm: "DCC" };
+        let HEADER_GROUP = "case";
         let CURRENT_VIEW = "dashboard";
         let CURRENT_LANG = "EN";
         let CURRENT_THEME = "dark";
@@ -3308,7 +3311,7 @@
             }
 
             // Update Dynamic Headings
-            updateProjectBranding(CURRENT_PROJECT_NAME);
+            refreshHeaderBrand();
             updateStatusDropdownLabel();
             updateZoneDropdownLabel();
             updateEventTypeDropdownLabel();
@@ -3514,25 +3517,32 @@
         }
 
         
-            function detectProjectFromFilename(fileName) {
+        function projectNameFromFile(fileName) {
             const upper = (fileName || '').toUpperCase();
-            if (upper.includes('OBK') || upper.includes('ONE BANGKOK') || upper.includes('ONEBANGKOK')) {
-                updateProjectBranding("One Bangkok");
-            } else if (upper.includes('FYI')) {
-                updateProjectBranding("FYI Center");
-            } else if (upper.includes('SYMT')) {
-                updateProjectBranding("Samyan Mitrtown Tower");
-            } else if (upper.includes('SYMR') || upper.includes('MITSTOWN RETAIL')) {
-                updateProjectBranding("Samyan Mitstown Retail");
-            } else if (upper.includes('TPQ') || upper.includes('PARQ')) {
-                updateProjectBranding("The PARQ");
-            }
+            if (upper.includes('OBK') || upper.includes('ONE BANGKOK') || upper.includes('ONEBANGKOK')) return "One Bangkok";
+            if (upper.includes('FYI')) return "FYI Center";
+            if (upper.includes('SYMT')) return "Samyan Mitrtown Tower";
+            if (upper.includes('SYMR') || upper.includes('MITSTOWN RETAIL')) return "Samyan Mitstown Retail";
+            if (upper.includes('TPQ') || upper.includes('PARQ')) return "The PARQ";
+            return null;
+        }
+        function detectProjectFromFilename(fileName) {
+            const n = projectNameFromFile(fileName);
+            if (n) updateProjectBranding(n);
         }
 
         function updateProjectBranding(cleanTitle) {
             const cleanName = (cleanTitle || "DCC").replace(/\s*\([^)]*\)/g, '').trim();
             CURRENT_PROJECT_NAME = cleanName;
-            
+            GROUP_BRAND.case = cleanName;
+            if (HEADER_GROUP === 'case') applyHeaderBrand(cleanName);
+        }
+        // header title for whichever group is on screen (Case keeps CURRENT_PROJECT_NAME; CWO / PPM use their own file names)
+        function refreshHeaderBrand() {
+            applyHeaderBrand(HEADER_GROUP === 'case' ? CURRENT_PROJECT_NAME : (GROUP_BRAND[HEADER_GROUP] || 'DCC'));
+        }
+        function applyHeaderBrand(cleanName) {
+            cleanName = cleanName || 'DCC';
             const titleHeader = document.getElementById('projectTitleHeader');
             const pageTitle = document.getElementById('pageTitle');
             const footerBrand = document.getElementById('footerBrand');
@@ -4308,7 +4318,10 @@
         }
         function onZoneCheckboxChange(e) {
             if (e.target.checked) SELECTED_ZONES.add(e.target.value); else SELECTED_ZONES.delete(e.target.value);
-            updateZoneDropdownLabel(); runFilterPipeline(); updateActiveFilterSummary();
+            updateZoneDropdownLabel(); updateActiveFilterBadgeCount();
+            // several ticks in a row run the (heavy) filter pass once
+            clearTimeout(window.__zoneFilterT);
+            window.__zoneFilterT = setTimeout(() => { runFilterPipeline(); updateActiveFilterSummary(); }, 450);
         }
         function selectAllZones(selectAll) {
             SELECTED_ZONES = selectAll ? new Set(ALL_ZONES) : new Set();
@@ -9427,7 +9440,17 @@
                 pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
                 pptx.layout = 'FRASERS_16X9';
 
-                const TOTAL_SLIDES = 6;
+                // Critical Incident Watchlist = the same cases, same order as the dashboard (top 4)
+                const critAll = (typeof fullDataset !== 'undefined')
+                    ? (window.CASE_CMP_FILTERED || fullDataset).filter(isCriticalIncident).sort((a, b) => {
+                        const wA = getSeverityWeight(a.Priority), wB = getSeverityWeight(b.Priority);
+                        if (wA !== wB) return wA - wB;
+                        return (b.DateOnly || '').localeCompare(a.DateOnly || '');
+                    })
+                    : [];
+                const critRows = critAll.slice(0, 4);
+                const off = critRows.length > 2 ? 1 : 0;   // cases 3-4 continue on their own slide
+                const TOTAL_SLIDES = 6 + off;
                 const dateObj = getFrasersDateFormatted();
                 const reportDateStr = dateObj.reportDate;
 
@@ -9486,67 +9509,70 @@
                     });
                 });
 
-                // Critical Incident Watchlist Table
+                // Critical Incident Watchlist: one framed card per case, like the dashboard
                 slide2.addText("Critical Incident Watchlist: Priority Escalations (True Incidents Ranked CAT 1-3)", {
                     x: 0.60, y: 2.45, w: 12.10, h: 0.35,
                     fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
                 });
-
-                // identical to the dashboard watchlist: same filter (isCriticalIncident), same ranking, same top 4
-                const critAll = (typeof fullDataset !== 'undefined')
-                    ? (window.CASE_CMP_FILTERED || fullDataset).filter(isCriticalIncident).sort((a, b) => {
-                        const wA = getSeverityWeight(a.Priority), wB = getSeverityWeight(b.Priority);
-                        if (wA !== wB) return wA - wB;
-                        return (b.DateOnly || '').localeCompare(a.DateOnly || '');
-                    })
-                    : [];
-                const critRows = critAll.slice(0, 4);
-
-                const watchTable = [
-                    [
-                        { text: "Priority", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                        { text: "Case No", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                        { text: "Incident Date", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                        { text: "Location", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                        { text: "Event Type", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } },
-                        { text: "Status", options: { bold: true, color: "FFFFFF", fill: { color: "1E293B" } } }
-                    ]
-                ];
-
-                const sliceWatch = critRows.length;
-                for (let i = 0; i < sliceWatch; i++) {
-                    const r = critRows[i];
-                    const bg = (i % 2 === 0) ? "FFFFFF" : "F8FAFC";
-                    watchTable.push([
-                        { text: String(r.Priority || '-'), options: { bold: true, color: "BE123C", fill: { color: bg } } },
-                        { text: String(r.CaseNo || '-'), options: { bold: true, color: "3730A3", fill: { color: bg } } },
-                        { text: String(r.DateOnly || '-'), options: { color: "475569", fill: { color: bg } } },
-                        { text: String(r.Location || '-'), options: { color: "1E293B", fill: { color: bg } } },
-                        { text: String(r.EventType || '-'), options: { bold: true, color: "0F172A", fill: { color: bg } } },
-                        { text: String(r.Status || 'Closed'), options: { bold: true, color: "059669", fill: { color: bg } } }
-                    ]);
-                }
-
-                if (critRows.length === 0) {
-                    watchTable.push([
-                        { text: "Zero critical high-impact escalations detected under active filter criteria.", options: { colspan: 6, align: "center", italic: true, color: "059669", fill: { color: "ECFDF5" } } }
-                    ]);
-                }
-
-                tplPagedTable(slide2, () => {
-                    const sx = pptx.addSlide();
-                    applyFrasersSlideHeaderFooter(sx, pptx, "Critical Incident Watchlist: Priority Escalations (cont.)", 2, TOTAL_SLIDES, reportDateStr);
-                    return sx;
-                }, watchTable, {
-                    colW: [0.90, 2.10, 1.30, 3.05, 3.55, 1.20], fontSize: 9.5, firstMaxH: 3.45, maxH: 5.15, contY: 1.10,
-                    table: { x: 0.60, y: 2.85, w: 12.10, border: { pt: 0.5, color: "CBD5E1" }, valign: 'top' }
+                const clip = (t, n) => { t = String(t == null ? '' : t).replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t; };
+                const domCards = Array.from(document.querySelectorAll('#highlightCasesContainer [data-card-id]'));
+                const critCards = critRows.map((c, i) => {
+                    const dc = domCards[i];
+                    const gen = (() => { try { return generateCriticalCardContent(c, currentLang); } catch (e) { return {}; } })();
+                    const tx = (sel, fb) => { const el = dc && dc.querySelector(sel); const t = el ? (el.innerText || el.textContent || '').trim() : ''; return t || fb || ''; };
+                    return {
+                        prio: String(c.Priority || 'CAT 3'),
+                        type: tx('.crit-tr', c.EventType),
+                        date: c.DateOnly || '-',
+                        caseNo: c.CaseNo || '-',
+                        loc: c.LocationDetail || c.Location || '-',
+                        summary: tx('.crit-summary-text', gen.summary),
+                        desc: tx('.crit-desc-text', gen.description),
+                        res: tx('.crit-res-text', gen.resolution)
+                    };
                 });
+                const drawCrit = (sl, cd, x, y, w, h) => {
+                    const F = 'Segoe UI';
+                    sl.addShape(pptx.ShapeType.roundRect, { x, y, w, h, fill: { color: 'FFFFFF' }, line: { color: 'CBD5E1', width: 1.25 }, rectRadius: 0.08 });
+                    const cat1 = /CAT\s*1|P1/i.test(cd.prio), cat2 = /CAT\s*2|P2/i.test(cd.prio);
+                    sl.addShape(pptx.ShapeType.roundRect, { x: x + 0.15, y: y + 0.12, w: 0.85, h: 0.28, fill: { color: cat1 ? 'DC2626' : (cat2 ? 'FECDD3' : 'FFE4E6') }, line: { color: cat1 ? 'DC2626' : 'FDA4AF', width: 0.75 }, rectRadius: 0.05 });
+                    sl.addText(cd.prio.toUpperCase(), { x: x + 0.15, y: y + 0.12, w: 0.85, h: 0.28, fontSize: 8.5, bold: true, color: cat1 ? 'FFFFFF' : '9F1239', align: 'center', valign: 'middle', fontFace: F, margin: 0 });
+                    sl.addText(clip(cd.type, 80), { x: x + 1.10, y: y + 0.10, w: w - 2.55, h: 0.32, fontSize: 10, bold: true, color: '0F172A', fontFace: F, valign: 'middle', fit: 'shrink' });
+                    sl.addText(String(cd.date), { x: x + w - 1.35, y: y + 0.10, w: 1.20, h: 0.32, fontSize: 9, color: '64748B', align: 'right', valign: 'middle', fontFace: F });
+                    sl.addShape(pptx.ShapeType.line, { x: x + 0.15, y: y + 0.46, w: w - 0.30, h: 0, line: { color: 'E2E8F0', width: 0.75 } });
+                    sl.addText([{ text: 'Case: ', options: { bold: true, color: '1E293B' } }, { text: clip(cd.caseNo, 40), options: { color: '475569' } }], { x: x + 0.15, y: y + 0.50, w: 2.55, h: 0.26, fontSize: 8.5, fontFace: F, valign: 'middle' });
+                    sl.addText([{ text: 'Location: ', options: { bold: true, color: '1E293B' } }, { text: clip(cd.loc, 60), options: { color: '475569' } }], { x: x + 2.70, y: y + 0.50, w: w - 2.85, h: 0.26, fontSize: 8, fontFace: F, valign: 'middle', fit: 'shrink' });
+                    const blocks = [
+                        { label: 'SUMMARY', text: cd.summary, bar: 'E11D48', lc: 'E11D48', bg: 'FFF1F2' },
+                        { label: 'DESCRIPTION (INCIDENT DETAILS)', text: cd.desc, bar: 'D97706', lc: 'B45309', bg: 'FFFBEB' },
+                        { label: 'RESOLUTION / FINDINGS', text: cd.res, bar: '059669', lc: '047857', bg: 'ECFDF5' }
+                    ];
+                    const top = y + 0.84, gap = 0.08, bh = (h - 0.84 - 0.12 - gap * 2) / 3;
+                    blocks.forEach((b, i) => {
+                        const by = top + i * (bh + gap);
+                        sl.addShape(pptx.ShapeType.rect, { x: x + 0.15, y: by, w: w - 0.30, h: bh, fill: { color: b.bg }, line: { color: b.bg, width: 0 } });
+                        sl.addShape(pptx.ShapeType.rect, { x: x + 0.15, y: by, w: 0.05, h: bh, fill: { color: b.bar }, line: { color: b.bar, width: 0 } });
+                        sl.addText(b.label, { x: x + 0.28, y: by + 0.03, w: w - 0.5, h: 0.20, fontSize: 7.5, bold: true, color: b.lc, fontFace: F, margin: 0 });
+                        sl.addText(clip(b.text, 330) || '-', { x: x + 0.28, y: by + 0.23, w: w - 0.50, h: bh - 0.26, fontSize: 8.5, color: '1E293B', fontFace: F, valign: 'top', margin: 0, fit: 'shrink' });
+                    });
+                };
+                if (critCards.length === 0) {
+                    slide2.addShape(pptx.ShapeType.roundRect, { x: 0.60, y: 3.2, w: 12.10, h: 1.4, fill: { color: 'ECFDF5' }, line: { color: 'A7F3D0', width: 1 }, rectRadius: 0.08 });
+                    slide2.addText("Zero critical high-impact escalations detected under active filter criteria.", { x: 0.60, y: 3.2, w: 12.10, h: 1.4, align: 'center', valign: 'middle', italic: true, fontSize: 12, color: '059669', fontFace: 'Segoe UI' });
+                } else {
+                    critCards.slice(0, 2).forEach((cd, i) => drawCrit(slide2, cd, 0.60 + i * 6.15, 2.88, 5.95, 3.95));
+                    if (critCards.length > 2) {
+                        const slideW = pptx.addSlide();
+                        applyFrasersSlideHeaderFooter(slideW, pptx, "Critical Incident Watchlist: Priority Escalations (cont.)", 3, TOTAL_SLIDES, reportDateStr);
+                        critCards.slice(2, 4).forEach((cd, i) => drawCrit(slideW, cd, 0.60 + i * 6.15, 1.15, 5.95, 3.95));
+                    }
+                }
 
                 // ----------------------------------------------------
                 // SLIDE 3: Top 5 Significant Delta Shifts
                 // ----------------------------------------------------
                 const slide3 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide3, pptx, "Top 5 Significant Delta Shifts - Multi-Period Comparison", 3, TOTAL_SLIDES, reportDateStr);
+                applyFrasersSlideHeaderFooter(slide3, pptx, "Top 5 Significant Delta Shifts - Multi-Period Comparison", 3+off, TOTAL_SLIDES, reportDateStr);
 
                 const shiftImg = captureCanvasImage('shiftChart');
 
@@ -9606,7 +9632,7 @@
                 // SLIDE 4: Top True vs False Incident Event Types
                 // ----------------------------------------------------
                 const slide4 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide4, pptx, "Top True & False Incident Event Types Telemetry", 4, TOTAL_SLIDES, reportDateStr);
+                applyFrasersSlideHeaderFooter(slide4, pptx, "Top True & False Incident Event Types Telemetry", 4+off, TOTAL_SLIDES, reportDateStr);
 
                 const trueImg = captureCanvasImage('trueEventChart');
                 const falseImg = captureCanvasImage('falseEventChart');
@@ -9659,7 +9685,7 @@
                 // SLIDE 5: Recurring Hotspots & Emerging New Event Types
                 // ----------------------------------------------------
                 const slide5 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide5, pptx, "Recurring Hotspots & Emerging Unseen Event Types", 5, TOTAL_SLIDES, reportDateStr);
+                applyFrasersSlideHeaderFooter(slide5, pptx, "Recurring Hotspots & Emerging Unseen Event Types", 5+off, TOTAL_SLIDES, reportDateStr);
 
                 const recurImg = captureCanvasImage('recurringChart');
 
@@ -9744,7 +9770,7 @@
                 // SLIDE 6: Executive Strategic Intelligence & Deep Dive
                 // ----------------------------------------------------
                 const slide6 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide6, pptx, "Executive Strategic Intelligence & Deep-Dive Root-Cause Analysis", 6, TOTAL_SLIDES, reportDateStr);
+                applyFrasersSlideHeaderFooter(slide6, pptx, "Executive Strategic Intelligence & Deep-Dive Root-Cause Analysis", 6+off, TOTAL_SLIDES, reportDateStr);
 
                 // Dynamically extract live deep dive cards if present, otherwise default to strategic baseline
                 const renderedDeepDive = Array.from(document.querySelectorAll('#deepDiveDynamicGrid > div'));
@@ -9759,8 +9785,12 @@
                         const cfg = colors[idx] || colors[0];
                         const title = card.querySelector('h4')?.innerText || card.querySelector('h3')?.innerText || `Strategic Focus ${idx + 1}`;
                         const badge = card.querySelector('.font-mono')?.innerText || "Executive Finding";
-                        const sum = card.querySelector('.summary-text')?.innerText || '';
-                        const fnd = card.querySelector('.finding-text')?.innerText || '';
+                        const sumEl = card.querySelector('.summary-text'), fndEl = card.querySelector('.finding-text');
+                        const sum = (sumEl?.innerText || '').trim();
+                        const fnd = (fndEl?.innerText || '').trim();
+                        // same section labels as the dashboard card (Executive Insight / Recommended Action)
+                        const labOf = (el, dflt) => { const t = (el?.previousElementSibling?.innerText || el?.parentElement?.querySelector('span')?.innerText || '').replace(/\s+/g, ' ').trim(); return t || dflt; };
+                        const sumLbl = labOf(sumEl, 'Executive Insight'), fndLbl = 'Recommended Action';
                         const fullText = (sum + (fnd ? '\n' + fnd : '')).trim() || card.innerText.replace(/\s+/g, ' ');
 
                         slide6.addShape(pptx.ShapeType.roundRect, {
@@ -9769,8 +9799,15 @@
                             rectRadius: 0.08
                         });
                         slide6.addText(title, pptFullText(title, { x: cfg.x + 0.25, y: cfg.y + 0.15, w: 5.45, h: 0.40 }, 12.5, { bold: true, color: cfg.textClr }));
-                        slide6.addText(badge.toUpperCase(), pptFullText(badge, { x: cfg.x + 0.25, y: cfg.y + 0.55, w: 5.45, h: 0.26 }, 8.5, { bold: true, color: cfg.textClr }));
-                        slide6.addText(fullText, pptFullText(fullText, { x: cfg.x + 0.25, y: cfg.y + 0.85, w: 5.45, h: 1.55 }, 10, { color: '1E293B' }));
+                        if (!(sum && fnd)) slide6.addText(badge.toUpperCase(), pptFullText(badge, { x: cfg.x + 0.25, y: cfg.y + 0.55, w: 5.45, h: 0.26 }, 8.5, { bold: true, color: cfg.textClr }));
+                        if (sum && fnd) {
+                            slide6.addText(sumLbl.toUpperCase(), { x: cfg.x + 0.25, y: cfg.y + 0.62, w: 5.45, h: 0.22, fontSize: 8.5, bold: true, color: cfg.textClr, fontFace: 'Segoe UI' });
+                            slide6.addText(sum, pptFullText(sum, { x: cfg.x + 0.25, y: cfg.y + 0.86, w: 5.45, h: 0.62 }, 9.5, { color: '1E293B' }));
+                            slide6.addText(fndLbl.toUpperCase(), { x: cfg.x + 0.25, y: cfg.y + 1.50, w: 5.45, h: 0.22, fontSize: 8.5, bold: true, color: cfg.textClr, fontFace: 'Segoe UI' });
+                            slide6.addText(fnd, pptFullText(fnd, { x: cfg.x + 0.25, y: cfg.y + 1.74, w: 5.45, h: 0.68 }, 9.5, { color: '1E293B' }));
+                        } else {
+                            slide6.addText(fullText, pptFullText(fullText, { x: cfg.x + 0.25, y: cfg.y + 0.85, w: 5.45, h: 1.55 }, 10, { color: '1E293B' }));
+                        }
                     });
                 } else {
                     const defaultDeepDive = [
@@ -10259,6 +10296,8 @@
             if (!ALL_VIEWS.includes(viewName)) viewName = 'dashboard';
             ACTIVE_VIEW = viewName;
             ACTIVE_GROUP = viewGroupOf(viewName);
+            HEADER_GROUP = ACTIVE_GROUP;
+            try { refreshHeaderBrand(); } catch (e) {}
 
             document.querySelectorAll('.ds-group-view').forEach(el => {
                 el.classList.toggle('hidden', el.dataset.group !== ACTIVE_GROUP);
@@ -10442,6 +10481,11 @@
         function renderGroup(group) {
             setTimeout(() => { try { dccSizeFrames(); } catch (e) {} }, 60);
             const g = DATA_GROUPS[group];
+            if (group !== 'case') {
+                let nm = null; for (const fn of g.files.keys()) { nm = projectNameFromFile(fn) || nm; }
+                GROUP_BRAND[group] = nm || 'DCC';
+                if (HEADER_GROUP === group) { try { refreshHeaderBrand(); } catch (e) {} }
+            }
             const empty = document.getElementById(group + 'Empty');
             const active = document.getElementById(group + 'Active');
             const hasData = g.files.size > 0;
