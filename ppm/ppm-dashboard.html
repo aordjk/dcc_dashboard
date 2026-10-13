@@ -1106,7 +1106,7 @@
       console.info('[PPM] detected columns:', PCOLS);
 
       rows.forEach(r => {
-        const cDate = (PCOLS.start ? ppmParseCreated(r[PCOLS.start]) : null) || (PCOLS.tstart ? ppmParseCreated(r[PCOLS.tstart]) : null) || (PCOLS.created ? ppmParseCreated(r[PCOLS.created]) : null);
+        const cDate = (PCOLS.tstart ? ppmParseCreated(r[PCOLS.tstart]) : null) || (PCOLS.start ? ppmParseCreated(r[PCOLS.start]) : null) || (PCOLS.created ? ppmParseCreated(r[PCOLS.created]) : null);
         const pDate = cDate || (PCOLS.date ? ppmParseDate(r[PCOLS.date]) : null);
         const T = ppmTimeFields(pDate);
         // month always comes from Created On (DD/MM/YYYY) when that column exists; else the Month column / schedule date
