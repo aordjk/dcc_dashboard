@@ -833,13 +833,38 @@
       e.target.value = ""; // Reset input
     }
 
+    // Report-style exports put a title / date-range block above the real header row, and a footer row at the end.
+    // Find the header line (the one that names Site / Status / Stage / Frequency ...), then build row objects from it.
+    function ppmRowsToObjects(grid) {
+      const norm = v => String(v == null ? '' : v).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const KEYS = ['site', 'stage', 'status', 'frequencytype', 'servicecategory', 'servicecategories', 'serviceprovider', 'servicinggroup'];
+      let hi = 0, best = -1;
+      for (let i = 0; i < Math.min(grid.length, 25); i++) {
+        const hits = grid[i].filter(c => KEYS.includes(norm(c))).length;
+        if (hits > best) { best = hits; hi = i; if (hits >= 3) break; }
+      }
+      if (best < 1) hi = 0;
+      const head = (grid[hi] || []).map(h => String(h == null ? '' : h).replace(/^\uFEFF/, '').trim());
+      const keep = []; const seen = new Set();
+      head.forEach((h, i) => { if (h && !seen.has(h)) { seen.add(h); keep.push([h, i]); } });
+      const out = [];
+      for (let i = hi + 1; i < grid.length; i++) {
+        const row = grid[i]; if (!row || !row.some(c => String(c == null ? '' : c).trim() !== '')) continue;
+        const o = {}; keep.forEach(([h, ix]) => { o[h] = row[ix] == null ? '' : row[ix]; });
+        // footer / stray rows carry none of the identifying fields
+        if (hi > 0 && !['Site', 'Stage', 'Status', 'Frequency Type', 'Servicing Group'].some(k => String(o[k] || '').trim())) continue;
+        out.push(o);
+      }
+      return out;
+    }
+
     // Helper: Parse single CSV via Promise
     function parseCsvFile(file) {
       return new Promise((resolve, reject) => {
         Papa.parse(file, {
-          header: true,
+          header: false,
           skipEmptyLines: true,
-          complete: (results) => resolve({ file, data: results.data }),
+          complete: (results) => resolve({ file, data: ppmRowsToObjects(results.data) }),
           error: (err) => reject({ file, error: err })
         });
       });
@@ -939,14 +964,18 @@
           n => n.includes('sla') && (n.includes('resp') || n.includes('ack')) && !n.includes('due') && !n.includes('date') && !n.includes('time')),
         ack: ppmFindCol(headers, ['acknowledgeddate','acknowledgedon','acknowledgeddatetime','ackdate','acktime','responsedate','respondedon','responsedatetime','starteddate','startedon','actualstart','actualstartdate']),
         respDue: ppmFindCol(headers, ['responsedue','responseduedate','responsetarget','responsetargetdate','ackdue','acknowledgedue','targetresponse']),
-        slaFlag: ppmFindCol(headers, ['metslacompletiontime','meetslacompletiontime','metslacompletion','meetslacompletion','metslaresolutiontime','metslaresolution','completionsla','slacompletion','sla','slamet','slastatus','slaresult','completionslastatus','completionslamet','slacompliance','withinsla','kpisla','ppmsla'],
+        slaFlag: ppmFindCol(headers, ['metslacompletetime','metslacompletiontime','meetslacompletiontime','metslacompletion','meetslacompletion','metslaresolutiontime','metslaresolution','completionsla','slacompletion','sla','slamet','slastatus','slaresult','completionslastatus','completionslamet','slacompliance','withinsla','kpisla','ppmsla'],
           n => n.includes('sla') && !n.includes('due') && !n.includes('target') && !n.includes('date') && !n.includes('time')),
-        done: ppmFindCol(headers, ['completeddate','completeddatetime','completedon','completiondate','completiondatetime','actualfinish','actualfinishdate','actualend','actualenddate','finishdate','finisheddate','closeddate','closedon','closeddatetime','clientverifiedon','verifieddate','verifiedon','resolveddate']),
+        done: ppmFindCol(headers, ['completeddate','completeddatetime','completedon','completiondate','completiondatetime','actualfinish','actualfinishdate','actualend','actualenddate','finishdate','finisheddate','actualcompletion','actualcompletiondate','actualcompletiontime','closeddate','closedon','closeddatetime','clientverifiedon','verifieddate','verifiedon','resolveddate']),
         due: ppmFindCol(headers, ['duedate','duedatetime','targetdate','targetcompletion','targetcompletiondate','targetfinish','targetfinishdate','scheduledend','scheduledenddate','scheduleenddate','planend','planenddate','plannedend','plannedenddate','plannedfinish','deadline','sladuedate','sladue','completiondue']),
         date: ppmFindCol(headers, ['scheduleddate','scheduledate','scheduleddatetime','schedulestartdate','scheduledstart','plannedstartdate','plannedstart','planneddate','planstartdate','planstart','plandate','startdate','startdatetime','duedate','targetdate','createdondatetime','createdon','createddate','createddatetime','date'],
           n => n.includes('date') && !n.includes('update') && !n.includes('complet') && !n.includes('finish') && !n.includes('close')),
         created: ppmFindCol(headers, ['createdon','createddate','createdondatetime','createddatetime','createdat']),
         site: ppmFindCol(headers, ['site','sitename']),
+        start: ppmFindCol(headers, ['actualstartdate','actualstart','actualstarttime','actualstartdatetime','startedon','starteddate']),
+        tstart: ppmFindCol(headers, ['targetstartdate','targetstart','scheduledstartdate','plannedstartdate']),
+        tech: ppmFindCol(headers, ['technician','technicianname','assignee','assignedto']),
+        sup: ppmFindCol(headers, ['supervisor','supervisorname']),
         id: ppmFindCol(headers, ['ppmid','ppmno','ppmnumber','ppmcode','workorderid','workorderno','workordernumber','woid','wono','wonumber','taskid','taskno','tasknumber','scheduleid','scheduleno','id'],
           n => n.includes('ppm') && (n.endsWith('id') || n.endsWith('no') || n.includes('number')))
       };
@@ -983,14 +1012,42 @@
       if (!isNaN(n)) return n > 0 ? '1' : '0';
       return null;
     }
+    // No SLA / due-date columns in the report? Fall back to a cycle-window rule:
+    // a task meets SLA when Actual Start -> Actual Completion fits inside its own cycle.
+    // Edit this table to match the contract target (hours).
+    const PPM_SLA_WINDOW_H = { 'daily': 24, 'customdaily': 24, 'weekly': 168, 'twoweekly': 336, 'monthly': 720, 'twomonthly': 1464, 'quarterly': 2208, 'halfyearly': 4392, 'yearly': 8760 };
+    function ppmParseStamp(v) {
+      const s = String(v ?? '').trim(); if (!s) return null;
+      const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})(?:[ T,]+(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?)?/);
+      if (!m) { const d = new Date(s); return isNaN(d) ? null : d; }
+      let y = +m[3]; if (y < 100) y += 2000; if (y > 2400) y -= 543;
+      let hh = m[4] ? +m[4] : 0; const mi = m[5] ? +m[5] : 0;
+      if (m[6]) { const pm = /p/i.test(m[6]); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
+      const d = new Date(y, +m[2] - 1, +m[1], hh, mi); return isNaN(d) ? null : d;
+    }
+    // Service provider is not a column in some exports: take it from the technician code (OBK-JLL-..., OBK-PCS-..., EST-Sup01-CN IFS)
+    function ppmDeriveProvider(r, C) {
+      const pick = col => { const t = String((col && r[col]) || '').trim(); if (!t) return ''; const p = t.split('-'); let k = (p.length > 1 ? p[1] : '').trim();
+        if (/^sup\d*$/i.test(k)) return /ifs/i.test(t) ? 'IFS' : 'EST'; return k; };
+      return pick(C.tech) || pick(C.sup) || '';
+    }
     function ppmComputeSla(r, C, stage) {
-      if (C.slaFlag) { const f = ppmParseSlaFlag(r[C.slaFlag]); if (f !== null) return f; }
+      if (C.slaFlag) { const f = ppmParseSlaFlag(r[C.slaFlag]); if (f !== null) return f; if (/^\s*$/.test(String(r[C.slaFlag] ?? ''))) {
+        // blank Met-SLA: judge against Target Completion Date -> not due yet = not evaluated, past due = missed
+        const dueB = C.due ? ppmParseStamp(r[C.due]) : null;
+        return dueB ? (dueB < new Date() ? '0' : '#NUM!') : '0';
+      } }
       if (C.due) {
         const due = ppmParseDate(r[C.due]);
         const done = C.done ? ppmParseDate(r[C.done]) : null;
         const finished = ['CLIENTVERIFIED', 'COMPLETED', 'CLOSED'].includes(String(stage || '').toUpperCase());
         if (due && done) return done <= due ? '1' : '0';
         if (due && !finished && due < new Date()) return '0';
+      }
+      if (!C.slaFlag && !C.due && C.start && C.done) {
+        const a = ppmParseStamp(r[C.start]), b = ppmParseStamp(r[C.done]);
+        const w = PPM_SLA_WINDOW_H[ppmNorm(r['Frequency Type'])];
+        if (a && b && w) return ((b - a) / 3600000) <= w ? '1' : '0';
       }
       return '#NUM!';
     }
@@ -1049,19 +1106,20 @@
       console.info('[PPM] detected columns:', PCOLS);
 
       rows.forEach(r => {
-        const cDate = PCOLS.created ? ppmParseCreated(r[PCOLS.created]) : null;
+        const cDate = (PCOLS.start ? ppmParseCreated(r[PCOLS.start]) : null) || (PCOLS.tstart ? ppmParseCreated(r[PCOLS.tstart]) : null) || (PCOLS.created ? ppmParseCreated(r[PCOLS.created]) : null);
         const pDate = cDate || (PCOLS.date ? ppmParseDate(r[PCOLS.date]) : null);
         const T = ppmTimeFields(pDate);
         // month always comes from Created On (DD/MM/YYYY) when that column exists; else the Month column / schedule date
-        const m = cDate ? PPM_MON3[cDate.getMonth()] : ((r['Month'] || '').trim() || (pDate ? PPM_MON3[pDate.getMonth()] : 'Jan'));
+        const m = cDate ? PPM_MON3[cDate.getMonth()] : ((r['Month'] || '').trim() || (pDate ? PPM_MON3[pDate.getMonth()] : 'N/A'));
         const comp = String((PCOLS.site && r[PCOLS.site]) || r['Component'] || 'CI').trim() || 'CI';
-        const team = String((PCOLS.provider && r[PCOLS.provider]) || r['Team'] || 'Unassigned').trim() || 'Unassigned';
+        const team = String((PCOLS.provider && r[PCOLS.provider]) || r['Team'] || (!PCOLS.provider && ppmDeriveProvider(r, PCOLS)) || 'Unassigned').trim() || 'Unassigned';
         const cat = String((PCOLS.category && r[PCOLS.category]) || r['Service Categories'] || 'General').trim() || 'General';
         const rsla = ppmComputeRespSla(r, PCOLS);
         const freq = (r['Frequency Type'] || 'Monthly').trim();
-        const stage = (r['Stage'] || 'COMPLETED').trim();
+        const stage = String(r['Stage'] || r['Status'] || 'COMPLETED').trim().toUpperCase();
         const sla = ppmComputeSla(r, PCOLS, stage);
-        const dur = parseFloat(r['Completion Taken Time (Min)']) || 0;
+        let dur = parseFloat(r['Completion Taken Time (Min)']) || 0;
+        if (!dur && PCOLS.start && PCOLS.done) { const a = ppmParseStamp(r[PCOLS.start]), b = ppmParseStamp(r[PCOLS.done]); if (a && b && b >= a) dur = Math.round((b - a) / 60000); }
 
         globalMonthSet.add(m);
         globalFreqSet.add(freq);
