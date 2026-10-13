@@ -3194,7 +3194,7 @@
         detail: { delta: cmpGrab('cmpDeltaList'), types: cmpGrab('cmpTypeList'), hot: cmpGrab('cmpHotspotList') },
         by: periodBy, labels: periods.map(p => p.label), latest: latest?.label || '', prev: prev?.label || '',
         kpis: [...document.querySelectorAll('#cmpKpis > div')].map(el => ({ label: el.children[0]?.children[0]?.innerText || '', val: el.children[1]?.innerText || '', sub: el.children[2]?.innerText || '' })),
-        brief: [['cmpB1T', 'cmpB1'], ['cmpB2T', 'cmpB2'], ['cmpB3T', 'cmpB3']].map(([a, b]) => ({ title: document.getElementById(a).innerText, text: document.getElementById(b).innerText })),
+        brief: [['cmpB1T', 'cmpB1'], ['cmpB2T', 'cmpB2'], ['cmpB3T', 'cmpB3']].map(([a, b]) => ({ title: document.getElementById(a).innerText, text: document.getElementById(b).innerText, html: document.getElementById(b).innerHTML })),
         delta: deltaTop.map(x => ({ t: x.label, old: x.old, cur: x.cur })),
         types: top5.map(x => ({ t: x.label, n: x.n })), hot: hot5.map(x => ({ t: x.label, n: x.n })),
         newTypes: newTypes.slice(0, 10).map(it => ({ t: it.t, n: it.n, loc: ([...it.locs.entries()].sort((a, b) => b[1] - a[1])[0] || ['-'])[0], open: it.open, mix: [...it.prio.entries()].sort().map(([p, c]) => `${p}: ${c}`).join(' / '), status: it.open === 0 ? 'Closed' : `${it.open} Open`, note: String(it.note || '') }))
