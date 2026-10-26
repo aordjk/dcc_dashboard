@@ -6284,7 +6284,9 @@ function dccExecPanel(hostId, o) {
             return () => { saved.forEach(([ds, orig]) => Object.assign(ds, orig)); clearCache(); try { chart.update('none'); } catch (e) {} };
         }
         const PPT_IMG_DIMS = new Map();
+        const PPT_IMG_CHART = new Map(), PPT_IMG_BOX = new Map();   // chart picture -> its live Chart.js chart + the box it was meant to fill
         function pptFit(img, x, y, w, h) {
+            PPT_IMG_BOX.set(img, { x, y, w, h });
             const d = PPT_IMG_DIMS.get(img);
             if (!d || !d.w || !d.h) return { x, y, w, h };
             const r = d.w / d.h;
@@ -6351,7 +6353,7 @@ function dccExecPanel(hostId, o) {
                     }
                     ctx.drawImage(canvas, 0, 0);
                     const b64 = offCanvas.toDataURL('image/png');
-                    if (b64 && b64.length > 100) { PPT_IMG_DIMS.set(b64, { w: offCanvas.width, h: offCanvas.height }); return b64; }
+                    if (b64 && b64.length > 100) { PPT_IMG_DIMS.set(b64, { w: offCanvas.width, h: offCanvas.height }); if (chartInst) PPT_IMG_CHART.set(b64, chartInst); return b64; }
                 } catch (e) {}
             }
 
@@ -6504,7 +6506,11 @@ function dccExecPanel(hostId, o) {
                 return _t(text, o2);
             };
             slide.addShape = (type, opts = {}) => _s(type, tplStyleOpts(tplGeom(opts)));
-            slide.addImage = (opts = {}) => _i(tplGeom(opts, true));
+            slide.addImage = (opts = {}) => {
+                // a chart picture becomes a real PowerPoint chart (editable numbers, fonts, colours)
+                try { const ch = opts && opts.data && PPT_IMG_CHART.get(opts.data), bx = ch && PPT_IMG_BOX.get(opts.data); if (ch && bx && tplNativeChart(slide, ch, bx.x, bx.y, bx.w, bx.h)) return slide; } catch (e) { console.warn('[native chart]', e); }
+                return _i(tplGeom(opts, true));
+            };
             const _c = slide.addChart.bind(slide);
             slide.addChart = (type, data, opts = {}) => _c(type, data, tplGeom(opts));
             slide.addTable = (rows, opts = {}) => {
@@ -6540,7 +6546,7 @@ function dccExecPanel(hostId, o) {
                 chartColors: items.map(i => i.c), dataBorder: { pt: 1, color: 'FFFFFF' }
             });
             const lx = x + dW + 0.15, lw = w - dW - 0.15;
-            const rh = Math.min(0.42, (h - 0.1) / Math.max(items.length, 1));
+            const rh = Math.min(0.42, (h - 0.4) / Math.max(items.length, 1));
             const ly = y + (h - rh * items.length) / 2;
             items.forEach((it, i) => {
                 const yy = ly + i * rh;
@@ -6551,6 +6557,80 @@ function dccExecPanel(hostId, o) {
             slide.addText(`Total: ${total.toLocaleString()}`, { x: lx + 0.22, y: Math.min(ly + items.length * rh + 0.02, y + h - 0.25), w: lw - 0.22, h: 0.25, fontSize: 8.5, bold: true, color: '475569', fontFace: 'Arial', margin: 0 });
             return true;
         }
+        // Chart.js chart -> native PowerPoint chart (line / bar / stacked bar / doughnut / bar+line). Returns false when it cannot.
+        function tplNativeChart(slide, chart, x, y, w, h) {
+            if (!chart || !chart.data || !(chart.data.datasets || []).length) return false;
+            const k = dccPptScale(), fs = n => Math.max(5, Math.round(n * k * 2) / 2);
+            const type = chart.config.type;
+            const labels = (chart.data.labels || []).map(l => Array.isArray(l) ? l.join(' ') : String(l == null ? '' : l));
+            if (!labels.length) return false;
+            const num = v => +((v && typeof v === 'object') ? (v.y ?? v.x ?? 0) : v) || 0;
+            const dss = chart.data.datasets.filter(d => !d.hidden);
+            const sc = chart.options.scales || {};
+            const pal = i => TPL_CHART_PAL[i % TPL_CHART_PAL.length];
+            const pctAxis = dss.some(d => /%/.test(String(d.label || ''))) || (sc.y && sc.y.max >= 100 && /sla|%/i.test((dss[0] && dss[0].label) || ''));
+            const common = {
+                x, y, w, h, showTitle: false, fontFace: 'Arial',
+                catAxisLabelFontSize: fs(labels.length > 12 ? 8 : 9), catAxisLabelFontFace: 'Arial', catAxisLabelColor: '333333',
+                valAxisLabelFontSize: fs(8), valAxisLabelFontFace: 'Arial', valAxisLabelColor: '796D6D',
+                valGridLine: { color: 'EDEDEE', size: 0.5 }, catGridLine: { style: 'none' }, valAxisLineShow: false, catAxisLineShow: true, catAxisLineColor: 'D9D9D9',
+                showLegend: dss.length > 1, legendPos: 'b', legendFontSize: fs(9), legendFontFace: 'Arial', legendColor: '333333',
+                showValue: true, dataLabelFontSize: fs(8.5), dataLabelFontBold: true, dataLabelColor: '1A1A1A', dataLabelFontFace: 'Arial',
+                dataLabelFormatCode: pctAxis ? '0.0"%"' : '#,##0'
+            };
+            if (sc.y && typeof sc.y.min === 'number') common.valAxisMinVal = sc.y.min;
+            if (sc.y && typeof sc.y.max === 'number') common.valAxisMaxVal = Math.max(sc.y.max, 0);
+            if (pctAxis) { common.valAxisLabelFormatCode = '0"%"'; common.valAxisMaxVal = common.valAxisMaxVal || 100; }
+            const ser = ds => ({ name: String(ds.label == null || ds.label === 'undefined' ? 'Value' : ds.label), labels, values: labels.map((_, i) => num((ds.data || [])[i])) });
+            if (type === 'doughnut' || type === 'pie') {
+                const d0 = dss[0]; const vals = labels.map((_, i) => num((d0.data || [])[i]));
+                const idx = vals.map((v, i) => i).filter(i => vals[i] > 0); if (!idx.length) return false;
+                slide.addChart('doughnut', [{ name: 'Share', labels: idx.map(i => labels[i]), values: idx.map(i => vals[i]) }], {
+                    x, y, w, h, holeSize: 55, showLegend: true, legendPos: 'r', legendFontSize: fs(9), legendFontFace: 'Arial', showTitle: false,
+                    showPercent: true, showValue: false, showLabel: false, dataLabelColor: 'FFFFFF', dataLabelFontSize: fs(9), dataLabelFontBold: true, dataLabelFontFace: 'Arial',
+                    chartColors: idx.map(i => pal(i)), dataBorder: { pt: 1, color: 'FFFFFF' }
+                });
+                return true;
+            }
+            if (type === 'line') {
+                const data = dss.map(ser);
+                slide.addChart('line', data, Object.assign({}, common, {
+                    chartColors: dss.map((d, i) => pal(i)), lineSize: 2.25, lineDataSymbol: 'circle', lineDataSymbolSize: 7,
+                    lineDash: dss.map(d => (Array.isArray(d.borderDash) && d.borderDash.length) ? 'sysDash' : 'solid'),
+                    lineSmooth: dss.some(d => d.tension > 0), dataLabelPosition: 't'
+                }));
+                return true;
+            }
+            if (type === 'bar') {
+                const barDs = dss.filter(d => !d.type || d.type === 'bar'), lineDs = dss.filter(d => d.type === 'line');
+                const horiz = chart.options.indexAxis === 'y';
+                const stacked = !!((sc.x && sc.x.stacked) || (sc.y && sc.y.stacked));
+                const single = barDs.length === 1;
+                let colors;
+                if (single) {
+                    const bg = barDs[0].backgroundColor;
+                    colors = Array.isArray(bg) && new Set(bg.map(String)).size > 1 ? labels.map((_, i) => pal(i)) : [TPL.red];
+                } else colors = barDs.map((d, i) => pal(i));
+                const bo = Object.assign({}, common, {
+                    barDir: horiz ? 'bar' : 'col', barGrouping: stacked ? 'stacked' : 'clustered', barGapWidthPct: horiz ? 45 : 60, chartColors: colors,
+                    dataLabelPosition: stacked ? 'ctr' : 'outEnd', showLegend: barDs.length + lineDs.length > 1,
+                    catAxisOrientation: horiz ? 'maxMin' : 'minMax'
+                });
+                if (stacked) bo.dataLabelColor = 'FFFFFF';
+                bo.valAxisMinVal = 0;
+                if (lineDs.length) {
+                    // a 'Total' line over a stacked bar: show the total in the category label instead (one clean, editable chart)
+                    const tot = lineDs[0].data || [];
+                    const lab2 = labels.map((l, i) => `${l} (Σ ${num(tot[i]).toLocaleString()})`);
+                    slide.addChart('bar', barDs.map(d => Object.assign(ser(d), { labels: lab2 })), bo);
+                    return true;
+                }
+                slide.addChart('bar', barDs.map(ser), bo); return true;
+                return true;
+            }
+            return false;
+        }
+
         // Horizontal bars with full category names (PowerPoint wraps them, nothing is cut at the edge)
         function tplHBar(slide, pptx, chart, x, y, w, h) {
             const d = tplChartData(chart); if (!d) return false;
@@ -11813,6 +11893,7 @@ function dccExecPanel(hostId, o) {
             try { tplUndo(); } catch (e) {}
             const b64 = off.toDataURL('image/png');
             PPT_IMG_DIMS.set(b64, { w: off.width, h: off.height });
+            try { const ch2 = ChartLib && ChartLib.getChart(canvas); if (ch2) PPT_IMG_CHART.set(b64, ch2); } catch (e) {}
             return b64;
         }
 
