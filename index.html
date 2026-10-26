@@ -6595,8 +6595,7 @@ function dccExecPanel(hostId, o) {
             if (type === 'line') {
                 const data = dss.map(ser);
                 slide.addChart('line', data, Object.assign({}, common, {
-                    chartColors: dss.map((d, i) => pal(i)), lineSize: 2.25, lineDataSymbol: 'circle', lineDataSymbolSize: 7,
-                    lineDash: dss.map(d => (Array.isArray(d.borderDash) && d.borderDash.length) ? 'sysDash' : 'solid'),
+                    chartColors: dss.map((d, i) => ['ED1C24', '5F5F5F', 'D17156', 'AF837B', '968E85', '796D6D'][i % 6]), lineSize: 2.25, lineDataSymbol: 'circle', lineDataSymbolSize: 7,
                     lineSmooth: dss.some(d => d.tension > 0), dataLabelPosition: 't'
                 }));
                 return true;
