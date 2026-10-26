@@ -3565,6 +3565,7 @@
             const val = String(rawCreatedBy).trim();
             const lower = val.toLowerCase();
 
+            if (lower.includes('concierge')) return 'Concierge';   // every OBK-Siamraj-…-Concierge- CRMxx counts as one team
             if (lower.includes('jll')) return 'JLL';
             if (lower.includes('senses')) return 'Senses';
             if (lower.includes('iotservice') || lower.includes('iot')) return 'IOT';
