@@ -7757,38 +7757,59 @@ function dccExecPanel(hostId, o) {
             return 4;
         }
 
+        // Situation / Cause / Resolution-Recommendation, each <= 80 characters, built from
+        // Summary + Operator Comments + Findings/Resolution (rule-based: nothing is invented).
+        const DCC_SCR_MAX = 80;
+        function dccClamp(t, n = DCC_SCR_MAX) {
+            t = String(t == null ? '' : t).replace(/\s+/g, ' ').trim();
+            if (t.length <= n) return t;
+            let cut = t.slice(0, n - 1);
+            const sp = cut.lastIndexOf(' ');
+            if (sp > n * 0.55) cut = cut.slice(0, sp);   // cut between words / phrases
+            return cut.replace(/[\s,;:\-–(]+$/, '') + '…';
+        }
+        function dccScr(c, lang) {
+            const th = lang !== 'en', THAI = /[฀-๿]/;
+            const clean = v => sanitizeDccAckText(String(v || '').replace(/\r/g, '\n')).replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+            // bilingual "English … ภาษาไทย …": keep the half that matches the language
+            const pick = t => {
+                t = String(t || '').trim(); if (!t) return '';
+                const i = t.search(THAI);
+                if (i < 0) return t;                                  // English only (EN mode keeps it; TH mode shows it as is)
+                if (i === 0) return t;                                // Thai only (EN mode: translated afterwards)
+                const en = t.slice(0, i).replace(/[\s,;:\-–]+$/, ''), thp = t.slice(i);
+                return th ? thp : (en.length >= 8 ? en : t);
+            };
+            const summaryRaw = String(c.Summary || ''), descRaw = String(c.Description || '');
+            const pm = summaryRaw.match(/PointName:\s*([^,]+?)\s*,\s*AlarmValue:\s*([^\s,]+)/i);
+            const stripPoint = t => String(t || '').replace(/\s*[-–]\s*PointName:.*$/i, '').trim();
+            const finding = clean(c.Findings), comments = clean(c.OperatorComments);
+            const dropDate = t => t.replace(/^วันที่\s*[\d/.\-]+\s*/, '').trim();
+            // ---- Situation: what happened
+            let sit = pick(stripPoint(summaryRaw)) || pick(stripPoint(descRaw)) || pick(comments) || pick(String(c.EventType || ''));
+            sit = sit.split(/\s+[-–]\s+(?=[A-Za-z0-9ก-๙])/)[0];
+            // ---- Cause: only when the record states one
+            const pool = [finding, comments, clean(descRaw)].filter(Boolean).join(' • ');
+            const causeRes = [
+                /((?:root cause|cause[ds]?(?: by)?|due to|because(?: of)?|as a result of|result of)\s*[:\-]?\s*[^.;•\n]{3,})/i,
+                /((?:สาเหตุ|เกิดจาก|คาดว่า(?:เกิดจาก)?|เนื่องจาก|เพราะ)\s*[:\-]?\s*[^.;•\n]{3,})/,
+                /((?:พบว่า|ตรวจสอบพบ|found(?: that)?)\s*[^.;•\n]{3,})/i
+            ];
+            let cause = '';
+            for (const re of causeRes) { const m = pool.match(re); if (m) { cause = m[1].trim(); break; } }
+            if (!cause) {
+                if (pm) cause = th ? `จุดแจ้งเตือน ${pm[1].trim()} = ${pm[2]} (ไม่ระบุสาเหตุในบันทึก)` : `Alarm point ${pm[1].trim()} = ${pm[2]} (cause not recorded)`;
+                else cause = th ? 'ไม่ระบุสาเหตุในบันทึก' : 'Cause not recorded';
+            }
+            // ---- Resolution / recommendation: what was done, or what to do next
+            let res = pick(dropDate(finding)) || pick(dropDate(comments));
+            if (!res || res.length < 3) res = th ? 'ยังไม่มีบันทึกการแก้ไข — มอบหมายผู้รับผิดชอบและติดตามผล' : 'No resolution recorded — assign an owner and follow up';
+            return { situation: dccClamp(sit || '-'), cause: dccClamp(pick(cause)), resolution: dccClamp(res) };
+        }
         function generateCriticalCardContent(c, lang = 'en') {
             if (!c) return { summary: '-', description: '-', resolution: '-' };
-
-            let rawSummary = (c.Summary || '').trim();
-            let finalSummary = rawSummary ? rawSummary : '-';
-
-            let rawDesc = (c.Description || '').trim();
-            let finalDesc = '-';
-            if (rawDesc) {
-                finalDesc = sanitizeDccAckText(rawDesc);
-            }
-
-            let rawFinding = (c.Findings || '').trim();
-            let finalFinding = '-';
-            if (rawFinding) {
-                finalFinding = sanitizeDccAckText(rawFinding);
-            } else {
-                let fallback = (c.OperatorComments || c.PendingReason || '').trim();
-                finalFinding = fallback ? sanitizeDccAckText(fallback) : '-';
-            }
-
-            if (lang === 'en') {
-                finalSummary = translateDirectThaiToEnglish(finalSummary);
-                finalDesc = translateDirectThaiToEnglish(finalDesc);
-                finalFinding = translateDirectThaiToEnglish(finalFinding);
-            }
-
-            return {
-                summary: finalSummary || '-',
-                description: finalDesc || '-',
-                resolution: finalFinding || '-'
-            };
+            const r = dccScr(c, lang);
+            return { summary: r.situation || '-', description: r.cause || '-', resolution: r.resolution || '-' };
         }
 
         function renderHighlightCases(filtered) {
@@ -7854,21 +7875,21 @@ function dccExecPanel(hostId, o) {
                         <div class="space-y-2 text-xs">
                             <div class="flashcard-root p-2 rounded-r">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-rose-400 block mb-0.5">
-                                    <i class="fa-solid fa-align-left mr-1"></i>Summary
+                                    <i class="fa-solid fa-align-left mr-1"></i>${currentLang === 'th' ? 'สถานการณ์' : 'Situation'}
                                 </span>
                                 <div class="crit-summary-text crit-tr text-slate-100" data-raw="${escapeHTML(rawC.summary)}" contenteditable="${isEditingBriefing}">${content.summary}</div>
                             </div>
 
                             <div class="flashcard-trigger p-2 rounded-r">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-0.5">
-                                    <i class="fa-solid fa-file-lines mr-1"></i>Description (Incident Details)
+                                    <i class="fa-solid fa-file-lines mr-1"></i>${currentLang === 'th' ? 'สาเหตุ' : 'Cause'}
                                 </span>
                                 <div class="crit-desc-text crit-tr text-slate-100" data-raw="${escapeHTML(rawC.description)}" contenteditable="${isEditingBriefing}">${content.description}</div>
                             </div>
 
                             <div class="flashcard-action p-2 rounded-r">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
-                                    <i class="fa-solid fa-check-double mr-1"></i>Resolution / Findings
+                                    <i class="fa-solid fa-check-double mr-1"></i>${currentLang === 'th' ? 'การแก้ไข / ข้อเสนอแนะ' : 'Resolution / Recommendation'}
                                 </span>
                                 <div class="crit-res-text crit-tr text-slate-100" data-raw="${escapeHTML(rawC.resolution)}" contenteditable="${isEditingBriefing}">${content.resolution}</div>
                             </div>
@@ -7913,9 +7934,9 @@ function dccExecPanel(hostId, o) {
                 let en = _thTrCache.get(raw);
                 if (!en && tr) { try { en = await tr.translate(raw); _thTrCache.set(raw, en); } catch (e) { en = null; } }
                 if (currentLang !== 'en') return;
-                if (en && !/[\u0E00-\u0E7F]/.test(en)) { el.textContent = en.replace(/\s{2,}/g, ' '); continue; }
+                if (en && !/[\u0E00-\u0E7F]/.test(en)) { el.textContent = dccClamp(en.replace(/\s{2,}/g, ' ')); continue; }
                 const st = stripThai(el.textContent);
-                el.textContent = st.length >= 3 ? st : '(Thai-only entry — switch to TH to view)';
+                el.textContent = st.length >= 3 ? dccClamp(st) : '(Thai-only entry — switch to TH to view)';
             }
         }
         // Translate whenever the watchlist is (re)rendered by any code path
@@ -10259,10 +10280,11 @@ function dccExecPanel(hostId, o) {
                     sl.addShape(pptx.ShapeType.line, { x: x + 0.15, y: y + 0.46, w: w - 0.30, h: 0, line: { color: 'E2E8F0', width: 0.75 } });
                     sl.addText([{ text: 'Case: ', options: { bold: true, color: '1E293B' } }, { text: clip(cd.caseNo, 40), options: { color: '475569' } }], { x: x + 0.15, y: y + 0.50, w: 2.55, h: 0.26, fontSize: 8.5, fontFace: F, valign: 'middle' });
                     sl.addText([{ text: 'Location: ', options: { bold: true, color: '1E293B' } }, { text: clip(cd.loc, 60), options: { color: '475569' } }], { x: x + 2.70, y: y + 0.50, w: w - 2.85, h: 0.26, fontSize: 8, fontFace: F, valign: 'middle', fit: 'shrink' });
+                    const th0 = (currentLang === 'th');
                     const blocks = [
-                        { label: 'SUMMARY', text: cd.summary, bar: 'E11D48', lc: 'E11D48', bg: 'FFF1F2' },
-                        { label: 'DESCRIPTION (INCIDENT DETAILS)', text: cd.desc, bar: 'D97706', lc: 'B45309', bg: 'FFFBEB' },
-                        { label: 'RESOLUTION / FINDINGS', text: cd.res, bar: '059669', lc: '047857', bg: 'ECFDF5' }
+                        { label: th0 ? 'สถานการณ์ (SITUATION)' : 'SITUATION', text: cd.summary, bar: 'E11D48', lc: 'E11D48', bg: 'FFF1F2' },
+                        { label: th0 ? 'สาเหตุ (CAUSE)' : 'CAUSE', text: cd.desc, bar: 'D97706', lc: 'B45309', bg: 'FFFBEB' },
+                        { label: th0 ? 'การแก้ไข / ข้อเสนอแนะ (RESOLUTION / RECOMMENDATION)' : 'RESOLUTION / RECOMMENDATION', text: cd.res, bar: '059669', lc: '047857', bg: 'ECFDF5' }
                     ];
                     const top = y + 0.84, gap = 0.08, bh = (h - 0.84 - 0.12 - gap * 2) / 3;
                     blocks.forEach((b, i) => {
@@ -10270,7 +10292,7 @@ function dccExecPanel(hostId, o) {
                         sl.addShape(pptx.ShapeType.rect, { x: x + 0.15, y: by, w: w - 0.30, h: bh, fill: { color: b.bg }, line: { color: b.bg, width: 0 } });
                         sl.addShape(pptx.ShapeType.rect, { x: x + 0.15, y: by, w: 0.05, h: bh, fill: { color: b.bar }, line: { color: b.bar, width: 0 } });
                         sl.addText(b.label, { x: x + 0.28, y: by + 0.03, w: w - 0.5, h: 0.20, fontSize: 7.5, bold: true, color: b.lc, fontFace: F, margin: 0 });
-                        sl.addText(clip(b.text, 330) || '-', { x: x + 0.28, y: by + 0.23, w: w - 0.50, h: bh - 0.26, fontSize: 8.5, color: '1E293B', fontFace: F, valign: 'top', margin: 0, fit: 'shrink' });
+                        sl.addText(clip(b.text, 80) || '-', { x: x + 0.28, y: by + 0.23, w: w - 0.50, h: bh - 0.26, fontSize: 8.5, color: '1E293B', fontFace: F, valign: 'top', margin: 0, fit: 'shrink' });
                     });
                 };
                 if (critCards.length === 0) {
