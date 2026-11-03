@@ -6837,7 +6837,7 @@ function dccExecPanel(hostId, o) {
                 pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
                 pptx.layout = 'FRASERS_16X9';
 
-                const TOTAL_SLIDES = 8;
+                const TOTAL_SLIDES = 11;
                 const dateObj = getFrasersDateFormatted();
                 const reportDateStr = dateObj.reportDate;
 
@@ -7078,123 +7078,26 @@ function dccExecPanel(hostId, o) {
                 // ----------------------------------------------------
                 // SLIDE 4: Operational Trends (Monthly Incidents & SLA)
                 // ----------------------------------------------------
-                const slide4 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide4, pptx, "Incident Volume Trends & SLA Performance Telemetry", 5, TOTAL_SLIDES, reportDateStr);
-
-                const trendImg = captureCanvasImage('trendChart');
-                const slaImg = captureCanvasImage('slaTrendChart');
-
-                // Left: Trend Chart
-                slide4.addShape(pptx.ShapeType.roundRect, {
-                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                    rectRadius: 0.08
-                });
-                slide4.addText("Monthly Incident Trend & False Alarms", {
-                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-                });
-                if (trendImg) {
-                    slide4.addImage({ data: trendImg, ...pptFit(trendImg, 0.75, 1.65, 5.65, 4.85) });
-                } else {
-                    slide4.addText("Monthly trend chart active in interactive view.", {
-                        x: 0.80, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                    });
-                }
-
-                // Right: SLA Chart
-                slide4.addShape(pptx.ShapeType.roundRect, {
-                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                    rectRadius: 0.08
-                });
-                slide4.addText("SLA Performance Trend (Response vs Completion %)", {
-                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-                });
-                if (slaImg) {
-                    slide4.addImage({ data: slaImg, ...pptFit(slaImg, 6.90, 1.65, 5.65, 4.85) });
-                } else {
-                    slide4.addText("SLA performance trend chart active in interactive view.", {
-                        x: 6.95, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                    });
-                }
-
-                // ----------------------------------------------------
-                // SLIDE 5: Workload Distribution & Team Telemetry
-                // ----------------------------------------------------
-                const slide5 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide5, pptx, "Incident Category Distribution & Team Workload Telemetry", 6, TOTAL_SLIDES, reportDateStr);
-
-                const catImg = captureCanvasImage('categoryDonutChart');
-                const teamImg = captureCanvasImage('createdByChart');
-
-                // Left: Category Distribution
-                slide5.addShape(pptx.ShapeType.roundRect, {
-                    x: 0.60, y: 1.05, w: 5.95, h: 5.65,
-                    fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
-                    rectRadius: 0.08
-                });
-                slide5.addText("Incident Category Distribution Breakdown", {
-                    x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-                });
+                // one chart per slide so every chart is readable
                 const chartOf = id => { try { return Chart.getChart(document.getElementById(id)); } catch (e) { return null; } };
-                if (tplDonutWithLegend(slide5, pptx, chartOf('categoryDonutChart') || categoryDonutChart, 0.75, 1.65, 5.65, 4.85)) {
-                    // native doughnut + legend with count and share
-                } else if (catImg) {
-                    slide5.addImage({ data: catImg, ...pptFit(catImg, 0.75, 1.65, 5.65, 4.85) });
-                } else {
-                    slide5.addText("Category breakdown chart active in interactive view.", {
-                        x: 0.80, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                    });
-                }
-
-                // Right: Team Workload
-                slide5.addShape(pptx.ShapeType.roundRect, {
-                    x: 6.75, y: 1.05, w: 5.95, h: 5.65,
-                    fill: { color: FRASERS_LIGHT_BG }, line: { color: FRASERS_BORDER, width: 1 },
-                    rectRadius: 0.08
-                });
-                slide5.addText("Team Workload & Handling Capacity", {
-                    x: 6.95, y: 1.20, w: 5.55, h: 0.35,
-                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
-                });
-                if (tplHBar(slide5, pptx, chartOf('createdByChart') || createdByChart, 6.85, 1.60, 5.75, 4.95)) {
-                    // native bar chart: full team names, nothing cut at the edge
-                } else if (teamImg) {
-                    slide5.addImage({ data: teamImg, ...pptFit(teamImg, 6.90, 1.65, 5.65, 4.85) });
-                } else {
-                    slide5.addText("Team workload chart active in interactive view.", {
-                        x: 6.95, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center'
-                    });
-                }
-
-                // ----------------------------------------------------
-                // SLIDE 6: Unresolved Operational Tickets & Critical Backlog
-                // ----------------------------------------------------
-                // SLIDE 6: Incidents by Building Zone (Component) & Top 10 Incident Types
-                const slideZ = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slideZ, pptx, "Incidents by Building Zone & Top 10 Incident Types", 7, TOTAL_SLIDES, reportDateStr);
-                [
-                    { id: 'zoneChart', x: 0.60, title: (typeof I18N !== 'undefined' && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'] && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'].chart_zone_title) || 'Incidents by Building Zone' },
-                    { id: 'top10Chart', x: 6.75, title: (typeof I18N !== 'undefined' && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'] && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'].chart_top10_title) || 'Top 10 Incident Types' }
-                ].forEach(c => {
-                    slideZ.addShape(pptx.ShapeType.roundRect, { x: c.x, y: 1.05, w: 5.95, h: 5.65, fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 }, rectRadius: 0.08 });
-                    slideZ.addText(c.title, { x: c.x + 0.20, y: 1.20, w: 5.55, h: 0.35, fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI' });
-                    const inst = (() => { try { return Chart.getChart(document.getElementById(c.id)); } catch (e) { return null; } })();
-                    const img = captureCanvasImage(c.id);
-                    if (tplHBar(slideZ, pptx, inst, c.x + 0.10, 1.60, 5.75, 4.95)) {
-                        // native bar chart
-                    } else if (img) {
-                        slideZ.addImage({ data: img, ...pptFit(img, c.x + 0.15, 1.65, 5.65, 4.85) });
-                    } else {
-                        slideZ.addText("Chart active in interactive view.", { x: c.x + 0.2, y: 3.50, w: 5.55, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center' });
-                    }
-                });
+                let pgN = 5;
+                const oneChart = (title, fill, draw) => {
+                    const sl = pptx.addSlide();
+                    applyFrasersSlideHeaderFooter(sl, pptx, title, pgN++, TOTAL_SLIDES, reportDateStr);
+                    sl.addShape(pptx.ShapeType.roundRect, { x: 0.60, y: 1.05, w: 12.10, h: 5.65, fill: { color: fill }, line: { color: FRASERS_BORDER, width: 1 }, rectRadius: 0.08 });
+                    sl.addText(title, { x: 0.80, y: 1.20, w: 11.7, h: 0.35, fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI' });
+                    if (!draw(sl, 0.75, 1.65, 11.80, 4.90)) sl.addText("Chart active in interactive view.", { x: 0.80, y: 3.50, w: 11.7, h: 0.50, fontSize: 11, color: '94A3B8', align: 'center' });
+                };
+                const imgDraw = id => (sl, x, y, w, h) => { const im = captureCanvasImage(id); if (!im) return false; sl.addImage({ data: im, ...pptFit(im, x, y, w, h) }); return true; };
+                oneChart("Monthly Incident Trend & False Alarms", 'FFFFFF', imgDraw('trendChart'));
+                oneChart("SLA Performance Trend (Response vs Completion %)", 'FFFFFF', imgDraw('slaTrendChart'));
+                oneChart("Incident Category Distribution Breakdown", 'FFFFFF', (sl, x, y, w, h) => tplDonutWithLegend(sl, pptx, chartOf('categoryDonutChart') || categoryDonutChart, x, y, w, h) || imgDraw('categoryDonutChart')(sl, x, y, w, h));
+                oneChart("Team Workload & Handling Capacity", FRASERS_LIGHT_BG, (sl, x, y, w, h) => tplHBar(sl, pptx, chartOf('createdByChart') || createdByChart, x, y - 0.05, w, h + 0.05) || imgDraw('createdByChart')(sl, x, y, w, h));
+                oneChart((typeof I18N !== 'undefined' && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'] && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'].chart_zone_title) || 'Incidents by Building Zone', 'FFFFFF', (sl, x, y, w, h) => tplHBar(sl, pptx, chartOf('zoneChart'), x, y - 0.05, w, h + 0.05) || imgDraw('zoneChart')(sl, x, y, w, h));
+                oneChart((typeof I18N !== 'undefined' && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'] && I18N[CURRENT_LANG === 'TH' ? 'th' : 'en'].chart_top10_title) || 'Top 10 Incident Types', 'FFFFFF', (sl, x, y, w, h) => tplHBar(sl, pptx, chartOf('top10Chart'), x, y - 0.05, w, h + 0.05) || imgDraw('top10Chart')(sl, x, y, w, h));
 
                 const slide6 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(slide6, pptx, "Unresolved Operational Tickets & Critical Backlog Telemetry", 8, TOTAL_SLIDES, reportDateStr);
+                applyFrasersSlideHeaderFooter(slide6, pptx, "Unresolved Operational Tickets & Critical Backlog Telemetry", 11, TOTAL_SLIDES, reportDateStr);
 
                 const pendingRows = (typeof currentPendingData !== 'undefined' && currentPendingData.length > 0)
                     ? currentPendingData
@@ -7242,7 +7145,7 @@ function dccExecPanel(hostId, o) {
                 let extraSlides = 0;
                 tplPagedTable(slide6, (i) => {
                     const sx = pptx.addSlide(); extraSlides++;
-                    applyFrasersSlideHeaderFooter(sx, pptx, "Unresolved Operational Tickets & Critical Backlog (cont.)", 8 + i, TOTAL_SLIDES, reportDateStr);
+                    applyFrasersSlideHeaderFooter(sx, pptx, "Unresolved Operational Tickets & Critical Backlog (cont.)", 11 + i, TOTAL_SLIDES, reportDateStr);
                     return sx;
                 }, tableRows, {
                     colW: [1.45, 1.40, 1.25, 3.00, 2.30, 1.20, 1.50], fontSize: 9.5, maxH: 5.15, contY: 1.10,
@@ -11932,7 +11835,7 @@ function dccExecPanel(hostId, o) {
                 const pptx = new PptxGenJS();
                 pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
                 pptx.layout = 'FRASERS_16X9';
-                const TOTAL = 7, dateStr = getFrasersDateFormatted().reportDate;
+                const TOTAL = 10, dateStr = getFrasersDateFormatted().reportDate;
                 const list = S.filteredRecords;
                 const F = 'Segoe UI';
 
@@ -12023,24 +11926,25 @@ function dccExecPanel(hostId, o) {
 
                 // 4-6. Charts at true aspect ratio
                 const cap = id => dccxCaptureCanvas(doc, win.Chart, id);
-                const s4 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s4, pptx, 'CWO Volume Trend & SLA Performance', 4, TOTAL, dateStr);
-                dccxChartBox(s4, pptx, cap('cwoTrendChart'), 'Monthly CWO Volume Trend', 0.60, 1.05, 5.95, 5.65);
-                dccxChartBox(s4, pptx, cap('slaTrendChart'), 'SLA Trend: Acknowledge vs Resolve (%)', 6.75, 1.05, 5.95, 5.65);
-
-                const s5 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s5, pptx, 'Source, Category & Component Breakdown', 5, TOTAL, dateStr);
-                dccxNativeDonutBox(s5, pptx, doc, win.Chart, 'sourceChart', 'Source Distribution', 0.60, 1.05, 3.90, 5.65);
-                dccxChartBox(s5, pptx, cap('categoryChart'), 'Work Orders by Category', 4.715, 1.05, 3.90, 5.65);
-                dccxChartBox(s5, pptx, cap('componentChart'), 'Component Breakdown', 8.83, 1.05, 3.90, 5.65);
+                // one chart per slide so every chart is readable
+                { const a = pptx.addSlide(); applyFrasersSlideHeaderFooter(a, pptx, 'Monthly CWO Volume Trend', 4, TOTAL, dateStr);
+                  dccxChartBox(a, pptx, cap('cwoTrendChart'), 'Monthly CWO Volume Trend', 0.60, 1.05, 12.13, 5.65);
+                  const b = pptx.addSlide(); applyFrasersSlideHeaderFooter(b, pptx, 'SLA Trend: Acknowledge vs Resolve (%)', 5, TOTAL, dateStr);
+                  dccxChartBox(b, pptx, cap('slaTrendChart'), 'SLA Trend: Acknowledge vs Resolve (%)', 0.60, 1.05, 12.13, 5.65);
+                  const c = pptx.addSlide(); applyFrasersSlideHeaderFooter(c, pptx, 'Source Distribution', 6, TOTAL, dateStr);
+                  dccxNativeDonutBox(c, pptx, doc, win.Chart, 'sourceChart', 'Source Distribution', 0.60, 1.05, 12.13, 5.65);
+                  const d = pptx.addSlide(); applyFrasersSlideHeaderFooter(d, pptx, 'Work Orders by Category', 7, TOTAL, dateStr);
+                  dccxChartBox(d, pptx, cap('categoryChart'), 'Work Orders by Category', 0.60, 1.05, 12.13, 5.65);
+                  const e = pptx.addSlide(); applyFrasersSlideHeaderFooter(e, pptx, 'Component Breakdown', 8, TOTAL, dateStr);
+                  dccxChartBox(e, pptx, cap('componentChart'), 'Component Breakdown', 0.60, 1.05, 12.13, 5.65); }
 
                 const s6 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s6, pptx, 'Top 10 Frequent CWO Defects & Problem Types', 6, TOTAL, dateStr);
+                applyFrasersSlideHeaderFooter(s6, pptx, 'Top 10 Frequent CWO Defects & Problem Types', 9, TOTAL, dateStr);
                 dccxChartBox(s6, pptx, cap('top10Chart'), 'Top 10 Problem Types by Frequency', 0.60, 1.05, 12.13, 5.65);
 
                 // 7. Pending table
                 const s7 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s7, pptx, 'Unfinished & Pending Work Orders', 7, TOTAL, dateStr);
+                applyFrasersSlideHeaderFooter(s7, pptx, 'Unfinished & Pending Work Orders', 10, TOTAL, dateStr);
                 const pend = list.filter(r => DCCX_CWO_PENDING.includes(r.st)).sort((a, b) => (b.aging || 0) - (a.aging || 0)).slice(0, 13);
                 const hd = (t) => ({ text: t, options: { bold: true, color: 'FFFFFF', fill: { color: '1E293B' } } });
                 const rows = [[hd('CWO ID'), hd('Created'), hd('Aging'), hd('Category'), hd('Priority'), hd('Stage'), hd('Component'), hd('Description')]];
@@ -12104,7 +12008,7 @@ function dccExecPanel(hostId, o) {
                 const pptx = new PptxGenJS();
                 pptx.defineLayout({ name: 'FRASERS_16X9', width: 13.333, height: 7.5 });
                 pptx.layout = 'FRASERS_16X9';
-                const TOTAL = 6, dateStr = getFrasersDateFormatted().reportDate, F = 'Segoe UI';
+                const TOTAL = 8, dateStr = getFrasersDateFormatted().reportDate, F = 'Segoe UI';
 
                 createFrasersCoverSlide(pptx, `${S.name} PPM OPERATIONS`, 'Preventive Maintenance Executive Telemetry & Action Plan', dccxPpmMeta(S), dateStr);
                 try { dccxAddExecSlide(pptx, (S.frame.win.__execSummaries || {}).ppmExecSummary, dateStr); } catch (e) { console.warn('[exec slide]', e); }
@@ -12150,22 +12054,19 @@ function dccExecPanel(hostId, o) {
                 });
 
                 const cap = id => dccxCaptureCanvas(doc, win.Chart, id);
-                const s3 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s3, pptx, 'PPM Monthly Workload & SLA Compliance Trend', 3, TOTAL, dateStr);
-                dccxChartBox(s3, pptx, cap('monthlyChart'), S.t('lblChartTrendTitle') || 'Monthly Workload Volume', 0.60, 1.05, 5.95, 5.65);
-                dccxChartBox(s3, pptx, cap('slaTrendChart'), S.t('lblChartSlaTrendTitle') || 'SLA Compliance Trend', 6.75, 1.05, 5.95, 5.65);
-
-                const s4 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s4, pptx, 'PPM Service Category & Maintenance Frequency', 4, TOTAL, dateStr);
-                dccxNativeDonutBox(s4, pptx, doc, win.Chart, 'categoryChart', S.t('lblChartCategoryTitle') || 'Service Category Share', 0.60, 1.05, 5.95, 5.65);
-                dccxChartBox(s4, pptx, cap('frequencyChart'), S.t('lblChartFreqTitle') || 'Maintenance Frequency', 6.75, 1.05, 5.95, 5.65);
+                // one chart per slide so every chart is readable
+                { const t1 = S.t('lblChartTrendTitle') || 'Monthly Workload Volume', t2 = S.t('lblChartSlaTrendTitle') || 'SLA Compliance Trend', t3 = S.t('lblChartCategoryTitle') || 'Service Category Share', t4 = S.t('lblChartFreqTitle') || 'Maintenance Frequency';
+                  const a = pptx.addSlide(); applyFrasersSlideHeaderFooter(a, pptx, t1, 3, TOTAL, dateStr); dccxChartBox(a, pptx, cap('monthlyChart'), t1, 0.60, 1.05, 12.13, 5.65);
+                  const b = pptx.addSlide(); applyFrasersSlideHeaderFooter(b, pptx, t2, 4, TOTAL, dateStr); dccxChartBox(b, pptx, cap('slaTrendChart'), t2, 0.60, 1.05, 12.13, 5.65);
+                  const c = pptx.addSlide(); applyFrasersSlideHeaderFooter(c, pptx, t3, 5, TOTAL, dateStr); dccxNativeDonutBox(c, pptx, doc, win.Chart, 'categoryChart', t3, 0.60, 1.05, 12.13, 5.65);
+                  const d = pptx.addSlide(); applyFrasersSlideHeaderFooter(d, pptx, t4, 6, TOTAL, dateStr); dccxChartBox(d, pptx, cap('frequencyChart'), t4, 0.60, 1.05, 12.13, 5.65); }
 
                 const sC = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(sC, pptx, 'PPM Tasks by Component', 5, TOTAL, dateStr);
+                applyFrasersSlideHeaderFooter(sC, pptx, 'PPM Tasks by Component', 7, TOTAL, dateStr);
                 dccxChartBox(sC, pptx, cap('componentChart'), S.t('lblChartCompTitle') || 'PPM Tasks by Component', 0.60, 1.05, 12.13, 5.65);
 
                 const s5 = pptx.addSlide();
-                applyFrasersSlideHeaderFooter(s5, pptx, 'Unfinish PPM Tasks Registry', 6, TOTAL, dateStr);
+                applyFrasersSlideHeaderFooter(s5, pptx, 'Unfinish PPM Tasks Registry', 8, TOTAL, dateStr);
                 const pend = (S.pending || []).slice(0, 13);
                 const hd = t => ({ text: t, options: { bold: true, color: 'FFFFFF', fill: { color: '1E293B' } } });
                 const rows = [[hd('PPM ID'), hd('Servicing Group / Task'), hd('Service Provider'), hd('Service Category'), hd('Frequency'), hd('Component'), hd('Stage'), hd('Month')]];
