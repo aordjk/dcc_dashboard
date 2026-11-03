@@ -1478,7 +1478,7 @@
         #cmpKpiGrid { display: flex !important; flex-wrap: wrap; overflow: visible; gap: .6rem; }
         #cmpKpiGrid > .glass-card { flex: 1 1 calc(16.666% - .6rem); min-width: 190px; padding: .55rem .75rem !important; }
         /* 12 comparison cards wrap into rows (nothing runs off-screen); only lock them while scrolling on tall screens */
-        @media (max-height: 899px) { #cmpKpiGrid { position: static !important; box-shadow: none; } }
+        @media (max-height: 999px) { #cmpKpiGrid { position: static !important; box-shadow: none; } }
         #cmpKpiGrid > .glass-card .mt-2 { margin-top: .25rem !important; }
         #cmpKpiGrid > .glass-card [class*="text-3xl"] { font-size: 1.5rem !important; line-height: 1.8rem !important; }
         #kpiContainer::-webkit-scrollbar, #cmpKpiGrid::-webkit-scrollbar { height: 4px; }
@@ -2909,7 +2909,7 @@
                                     </span>
                                     <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Top 5 Hotspots</span>
                                 </div>
-                                <div id="recurringSummaryList" class="space-y-1.5 overflow-y-auto custom-scrollbar pr-1 flex-1 min-h-0 content-start"></div>
+                                <div id="recurringSummaryList" class="space-y-1.5 overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex-1"></div>
                             </div>
                         </div>
                     </div>
@@ -4006,7 +4006,7 @@ function dccExecPanel(hostId, o) {
                 if (!(r.height > 0)) return;
                 // bottom edge it will have once pinned (sticky `top` + its height), independent of current scroll
                 const stuckBottom = cs.position === 'fixed' ? r.bottom : (parseFloat(cs.top) || 0) + r.height + (ctx.frame ? 0 : 0);
-                if (stuckBottom > b && stuckBottom < 420 && (cs.position === 'fixed' ? r.top < 260 : true)) b = stuckBottom;
+                if (stuckBottom > b && stuckBottom < ctx.win.innerHeight * 0.65 && (cs.position === 'fixed' ? r.top < 260 : true)) b = stuckBottom;
             });
             return b;
         }
@@ -6605,7 +6605,7 @@ function dccExecPanel(hostId, o) {
             }
             if (type === 'bar') {
                 const barDs = dss.filter(d => !d.type || d.type === 'bar'), lineDs = dss.filter(d => d.type === 'line');
-                const horiz = chart.options.indexAxis === 'y' || (labels.length >= 3 && labels.some(l => l.length > 22));
+                const horiz = chart.options.indexAxis === 'y' || (chart.canvas && chart.canvas.id === 'recurringChart') || (labels.length >= 3 && labels.some(l => l.length > 22));
                 const stacked = !!((sc.x && sc.x.stacked) || (sc.y && sc.y.stacked));
                 const single = barDs.length === 1;
                 let colors;
@@ -9418,7 +9418,7 @@ function dccExecPanel(hostId, o) {
             const evSel = recEventSelection();
             const equipOf = pair => { const r = filtered.find(d => `${d.EventType} @@ ${recLocDetail(d)}` === pair); return r ? recEquip(r) : (pair.split(' @@ ')[1] || pair); };
             topPairs.forEach(t => { t.equip = equipOf(t.pair); });
-            const labels = topPairs.map(e => evSel ? wrapLabel(e.equip, 28) : [].concat(wrapLabel(e.pair.split(' @@ ')[0], 30), wrapLabel(e.equip.split(' › ').slice(-2).join(' › '), 30)));
+            const labels = topPairs.map(e => evSel ? wrapLabel(e.equip, 24) : shortLabel(e.pair, 18));
             const nG = comparisonGroups.length;
             const datasets = comparisonGroups.map((grp, idx) => {
                 const color = PALETTES.recurring[idx % PALETTES.recurring.length];
@@ -9433,11 +9433,7 @@ function dccExecPanel(hostId, o) {
                 };
             });
             window.__recTitleSuffix = recTitleSuffix();
-            // give every bar room: height grows with (events x periods) so labels never overlap
-            { const host = document.getElementById('recurringChart')?.parentElement;
-              if (host) { host.classList.remove('h-80', 'sm:h-96'); host.style.height = Math.max(400, topPairs.length * (nG * 17 + 44) + 70) + 'px';
-                const lst = document.getElementById('recurringSummaryList'); if (lst) lst.style.maxHeight = (parseInt(host.style.height) - 70) + 'px'; } }
-            { const t3 = document.getElementById('chart3Title'); if (t3) t3.innerHTML = `<i class="fa-solid fa-repeat text-indigo-400 mr-1.5"></i>${I18N_COMPARE[currentLang].chart3T}${escapeHTML(recTitleSuffix())}`; }
+                        { const t3 = document.getElementById('chart3Title'); if (t3) t3.innerHTML = `<i class="fa-solid fa-repeat text-indigo-400 mr-1.5"></i>${I18N_COMPARE[currentLang].chart3T}${escapeHTML(recTitleSuffix())}`; }
 
             const ctx = document.getElementById('recurringChart');
             if (!ctx) return;
@@ -9448,7 +9444,6 @@ function dccExecPanel(hostId, o) {
                 type: 'bar',
                 data: { labels, datasets },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     categoryPercentage: 0.88,
@@ -9478,21 +9473,25 @@ function dccExecPanel(hostId, o) {
                         datalabels: {
                             color: isLight ? '#0f172a' : '#fff',
                             anchor: 'end',
-                            align: 'end',
-                            offset: 2,
+                            align: 'top',
+                            offset: -2,
                             font: { size: comparisonGroups.length > 8 ? 8 : (comparisonGroups.length > 4 ? 9 : 10), weight: 'bold' },
                             formatter: (v) => v > 0 ? v : ''
                         }
                     },
                     scales: {
-                        y: {
-                            ticks: { color: isLight ? '#1e293b' : '#e2e8f0', font: { size: 10.5, weight: '600' }, autoSkip: false, padding: 6 },
-                            grid: { display: false }
+                        x: { 
+                            ticks: { 
+                                color: isLight ? '#1e293b' : '#94a3b8', 
+                                font: { size: comparisonGroups.length > 8 ? 9.5 : 10 },
+                                autoSkip: false, maxRotation: 0, minRotation: 0
+                            }, 
+                            grid: { display: false } 
                         },
-                        x: {
-                            beginAtZero: true,
-                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 10 }, precision: 0 }, grace: '12%',
-                            grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' }
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 10 } },
+                            grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' } 
                         }
                     }
                 }
