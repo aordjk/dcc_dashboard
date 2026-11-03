@@ -1475,8 +1475,10 @@
             #cmpKpiGrid > .glass-card { flex: 1 0 150px; min-width: 150px; }
             #cmpKpiGrid > .glass-card [id$="Detail"] { display: none; }
         }
-        #cmpKpiGrid { display: flex !important; overflow-x: auto; gap: .6rem; }
-        #cmpKpiGrid > .glass-card { flex: 1 0 210px; min-width: 210px; padding: .55rem .75rem !important; }
+        #cmpKpiGrid { display: flex !important; flex-wrap: wrap; overflow: visible; gap: .6rem; }
+        #cmpKpiGrid > .glass-card { flex: 1 1 calc(16.666% - .6rem); min-width: 190px; padding: .55rem .75rem !important; }
+        /* 12 comparison cards wrap into rows (nothing runs off-screen); only lock them while scrolling on tall screens */
+        @media (max-height: 899px) { #cmpKpiGrid { position: static !important; box-shadow: none; } }
         #cmpKpiGrid > .glass-card .mt-2 { margin-top: .25rem !important; }
         #cmpKpiGrid > .glass-card [class*="text-3xl"] { font-size: 1.5rem !important; line-height: 1.8rem !important; }
         #kpiContainer::-webkit-scrollbar, #cmpKpiGrid::-webkit-scrollbar { height: 4px; }
