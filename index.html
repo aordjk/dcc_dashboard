@@ -2899,7 +2899,7 @@
                             <div class="lg:col-span-8 xl:col-span-8 h-80 sm:h-96">
                                 <canvas id="recurringChart"></canvas>
                             </div>
-                            <div class="lg:col-span-4 xl:col-span-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 flex flex-col justify-between">
+                            <div class="lg:col-span-4 xl:col-span-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 sm:p-3.5 flex flex-col justify-start">
                                 <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
                                     <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                                         <i class="fa-solid fa-repeat text-indigo-400"></i>
@@ -2907,7 +2907,7 @@
                                     </span>
                                     <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Top 5 Hotspots</span>
                                 </div>
-                                <div id="recurringSummaryList" class="space-y-1.5 overflow-y-auto max-h-[300px] custom-scrollbar pr-1 flex-1"></div>
+                                <div id="recurringSummaryList" class="space-y-1.5 overflow-y-auto custom-scrollbar pr-1 flex-1 min-h-0 content-start"></div>
                             </div>
                         </div>
                     </div>
@@ -8472,7 +8472,7 @@ function dccExecPanel(hostId, o) {
             const cFalseTitle = document.getElementById('chartFalseTitle');
             if (cFalseTitle) cFalseTitle.innerHTML = `<i class="fa-solid fa-bell-slash text-amber-400 mr-1.5"></i>${txt.chartFalseT}`;
             const c3Title = document.getElementById('chart3Title');
-            if (c3Title) c3Title.innerHTML = `<i class="fa-solid fa-repeat text-indigo-400 mr-1.5"></i>${txt.chart3T}`;
+            if (c3Title) c3Title.innerHTML = `<i class="fa-solid fa-repeat text-indigo-400 mr-1.5"></i>${txt.chart3T}${escapeHTML(recTitleSuffix())}`;
 
             const tblTitle = document.getElementById('tableTitle');
             if (tblTitle) tblTitle.innerHTML = `<i class="fa-solid fa-radar text-cyan-400 mr-2"></i>${txt.tableT}`;
@@ -8850,6 +8850,29 @@ function dccExecPanel(hostId, o) {
             return segs.length ? segs.join(' › ') : 'General';
         }
         function recLocDetail(d) { return d.LocationDetail || d.Location || 'Area'; }
+        // Equipment tag view: Component/Zone › Floor › Ref. device (drops building / event noise)
+        function recEquip(d) {
+            const segs = String(recLocDetail(d)).split(' › ').map(x => x.trim()).filter(Boolean);
+            if (segs.length <= 1) return segs[0] || 'Area';
+            const out = [segs[0]];
+            const fl = segs.slice(1, -1).find(x => /^(Floor|Fl\b|ชั้น|B\d|L\d)/i.test(x));
+            if (fl) out.push(fl);
+            const last = segs[segs.length - 1];
+            if (!out.includes(last)) out.push(last);
+            return out.join(' › ');
+        }
+        // true when the Event Type filter is narrowed to a subset of the available events
+        function recEventSelection() {
+            const all = new Set((typeof fullDataset !== 'undefined' ? fullDataset : []).filter(d => !selectedFilters.categories || selectedFilters.categories.size === 0 || selectedFilters.categories.has(d.EventCategory)).map(d => d.EventType));
+            const sel = [...(selectedFilters.eventTypes || [])];
+            return (sel.length && sel.length < all.size) ? sel : null;
+        }
+        function recTitleSuffix() {
+            const sel = recEventSelection();
+            if (!sel) return '';
+            const txt = sel.length <= 2 ? sel.join(' + ') : `${sel.slice(0, 2).join(' + ')} +${sel.length - 2}`;
+            return ` — ${txt}`;
+        }
         function extractFloor(s) { const m = String(s || '').match(/\b(?:Floor|Fl\.?|ชั้น)\s*([A-Z]?\d+[A-Z]?|G|B\d+)\b/i) || String(s || '').match(/\b(B\d+)\b/); return m ? m[1].toUpperCase() : ''; }
 
         // ---- Latest vs previous chip + insight line for compare summaries ----
@@ -9390,7 +9413,11 @@ function dccExecPanel(hostId, o) {
                 return wrapLabel(s, 24);
             }
 
-            const labels = topPairs.map(e => shortLabel(e.pair, 18));
+            const evSel = recEventSelection();
+            const equipOf = pair => { const r = filtered.find(d => `${d.EventType} @@ ${recLocDetail(d)}` === pair); return r ? recEquip(r) : (pair.split(' @@ ')[1] || pair); };
+            topPairs.forEach(t => { t.equip = equipOf(t.pair); });
+            const labels = topPairs.map(e => evSel ? wrapLabel(e.equip, 28) : [].concat(wrapLabel(e.pair.split(' @@ ')[0], 30), wrapLabel(e.equip.split(' › ').slice(-2).join(' › '), 30)));
+            const nG = comparisonGroups.length;
             const datasets = comparisonGroups.map((grp, idx) => {
                 const color = PALETTES.recurring[idx % PALETTES.recurring.length];
                 const labelName = getComparisonLabel(grp, comparisonType, filtered);
@@ -9400,9 +9427,15 @@ function dccExecPanel(hostId, o) {
                     backgroundColor: color.fill,
                     borderColor: color.stroke,
                     borderWidth: 1,
-                    borderRadius: 4
+                    borderRadius: 3
                 };
             });
+            window.__recTitleSuffix = recTitleSuffix();
+            // give every bar room: height grows with (events x periods) so labels never overlap
+            { const host = document.getElementById('recurringChart')?.parentElement;
+              if (host) { host.classList.remove('h-80', 'sm:h-96'); host.style.height = Math.max(400, topPairs.length * (nG * 17 + 44) + 70) + 'px';
+                const lst = document.getElementById('recurringSummaryList'); if (lst) lst.style.maxHeight = (parseInt(host.style.height) - 70) + 'px'; } }
+            { const t3 = document.getElementById('chart3Title'); if (t3) t3.innerHTML = `<i class="fa-solid fa-repeat text-indigo-400 mr-1.5"></i>${I18N_COMPARE[currentLang].chart3T}${escapeHTML(recTitleSuffix())}`; }
 
             const ctx = document.getElementById('recurringChart');
             if (!ctx) return;
@@ -9413,6 +9446,7 @@ function dccExecPanel(hostId, o) {
                 type: 'bar',
                 data: { labels, datasets },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     categoryPercentage: 0.88,
@@ -9442,25 +9476,21 @@ function dccExecPanel(hostId, o) {
                         datalabels: {
                             color: isLight ? '#0f172a' : '#fff',
                             anchor: 'end',
-                            align: 'top',
-                            offset: -2,
+                            align: 'end',
+                            offset: 2,
                             font: { size: comparisonGroups.length > 8 ? 8 : (comparisonGroups.length > 4 ? 9 : 10), weight: 'bold' },
                             formatter: (v) => v > 0 ? v : ''
                         }
                     },
                     scales: {
-                        x: { 
-                            ticks: { 
-                                color: isLight ? '#1e293b' : '#94a3b8', 
-                                font: { size: comparisonGroups.length > 8 ? 9.5 : 10 },
-                                autoSkip: false, maxRotation: 0, minRotation: 0
-                            }, 
-                            grid: { display: false } 
+                        y: {
+                            ticks: { color: isLight ? '#1e293b' : '#e2e8f0', font: { size: 10.5, weight: '600' }, autoSkip: false, padding: 6 },
+                            grid: { display: false }
                         },
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 10 } },
-                            grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' } 
+                        x: {
+                            beginAtZero: true,
+                            ticks: { color: isLight ? '#1e293b' : '#94a3b8', font: { size: 10 }, precision: 0 }, grace: '12%',
+                            grid: { color: isLight ? 'rgba(203, 213, 225, 0.7)' : 'rgba(51, 65, 85, 0.3)' }
                         }
                     }
                 }
@@ -9482,7 +9512,7 @@ function dccExecPanel(hostId, o) {
                     return `
                         <div class="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 transition cursor-pointer" onclick="selectedFilters.eventTypes = new Set(['${escapeQuotes(evName)}']); renderAllDropdownMenus(); renderCompareDashboard();" title="Filter by ${escapeHTML(evName)}">
                             <div class="flex items-center justify-between gap-1 mb-1">
-                                <span class="text-xs font-bold text-white leading-snug break-words" title="${escapeHTML(evName + ' @ ' + locName)}">${labelRank}: <span class="text-indigo-300 font-bold">${escapeHTML(evName)}</span> <span class="text-slate-400">@</span> ${escapeHTML(locName)}</span>
+                                <span class="text-xs font-bold text-white leading-snug break-words" title="${escapeHTML(evSel ? p.equip : evName + ' @ ' + locName)}">${labelRank}: ${evSel ? `<span class="text-indigo-300 font-bold">${escapeHTML(p.equip)}</span>` : `<span class="text-indigo-300 font-bold">${escapeHTML(evName)}</span> <span class="text-slate-400">@</span> ${escapeHTML(locName)}`}</span>
                             </div>
                             <div class="flex items-center gap-1.5 text-[10px] font-mono flex-wrap">
                                 <span class="px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 font-semibold">${currentLang === 'th' ? 'รวม' : 'Total'}: ${total.toLocaleString()}</span>
@@ -10434,21 +10464,21 @@ function dccExecPanel(hostId, o) {
                     fill: { color: 'FFFFFF' }, line: { color: FRASERS_BORDER, width: 1 },
                     rectRadius: 0.08
                 });
-                slide5.addText("Recurring Hotspots: Event + Location Telemetry", {
+                slide5.addText("Recurring Hotspots" + ((() => { const t = recTitleSuffix(); return t.length > 62 ? t.slice(0, 60) + '…' : t; })() || ": Event + Location Telemetry"), {
                     x: 0.80, y: 1.20, w: 5.55, h: 0.35,
-                    fontSize: 12, bold: true, color: '1E293B', fontFace: 'Segoe UI'
+                    fontSize: 10.5, bold: true, color: '1E293B', fontFace: 'Segoe UI'
                 });
                 if (recurImg) {
-                    slide5.addImage({ data: recurImg, ...pptFit(recurImg, 0.75, 1.55, 5.65, 1.70) });
+                    slide5.addImage({ data: recurImg, ...pptFit(recurImg, 0.75, 1.55, 5.65, 2.30) });
                 }
                 const recurListEl = document.getElementById('recurringSummaryList');
                 const recurSummaryText = pptListText(recurListEl);
                 slide5.addShape(pptx.ShapeType.roundRect, {
-                    x: 0.75, y: 3.30, w: 5.65, h: 3.30,
+                    x: 0.75, y: 3.95, w: 5.65, h: 2.65,
                     fill: { color: FRASERS_LIGHT_BG }, line: { color: 'CBD5E1', width: 1 },
                     rectRadius: 0.06
                 });
-                { const w = pptItemsEl(recurListEl); dccxRichText(slide5, w || (recurSummaryText || 'Spatial hotspots cross-analyzed for systemic operational flaws.'), { x: 0.85, y: 3.35, w: 5.45, h: 3.08 }, 8.5, { color: '334155', boldColor: '0F172A', minSize: 5, space: 1 }); }
+                { const w = pptItemsEl(recurListEl); dccxRichText(slide5, w || (recurSummaryText || 'Spatial hotspots cross-analyzed for systemic operational flaws.'), { x: 0.85, y: 4.0, w: 5.45, h: 2.55 }, 8, { color: '334155', boldColor: '0F172A', minSize: 5, space: 1 }); }
 
                 // Right: New Emerging Event Types Table
                 slide5.addShape(pptx.ShapeType.roundRect, {
