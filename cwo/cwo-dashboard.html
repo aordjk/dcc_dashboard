@@ -337,6 +337,8 @@
     </div>
 
     <!-- Executive Briefing: Deep Command Center Telemetry & Strategy -->
+    <div id="cwoExecSummary" data-pdf-block="exec"></div>
+
     <div class="bg-[#0f172a] border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
       
       <!-- Briefing Header -->
@@ -634,6 +636,8 @@
   <!-- ================================================================== -->
   <main id="compareMain" class="max-w-[1750px] mx-auto px-4 lg:px-8 py-6 space-y-6 hidden">
     <div id="cmpKpis" data-pdf-compare-block="kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3 sm:gap-4"></div>
+
+    <div id="cmpExecSummary" data-pdf-compare-block="exec"></div>
 
     <div data-pdf-compare-block="brief" class="glass-card bg-[#0f172a] border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
@@ -2779,7 +2783,77 @@
       if (!CWO_FILES.size || !confirm(currentLang === 'th' ? 'ลบไฟล์ CWO ทั้งหมด?' : 'Remove all CWO files?')) return;
       CWO_FILES.clear(); cwoRebuild(true);
     }
+
+    // ---------------------------------------------------------------
+    // DATE FORMAT AUTO-DETECTION (DD/MM/YYYY vs MM/DD/YYYY) per uploaded file
+    // Date-looking columns are found by their values, the file's reading is detected from the rows
+    // (a day > 12 in either position settles it), and dates are normalised to DD/MM/YYYY before parsing.
+    // ---------------------------------------------------------------
+    const DCCF_RE = /^\s*(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/;
+    const DCCF_INFO = {}, DCCF_MODE = {}, DCCF_STORE = {};
+    function dccfDetect(vals) {
+      let dmy = 0, mdy = 0, amb = 0; const pairs = [];
+      for (const v of vals) {
+        if (!v) continue; const m = DCCF_RE.exec(String(v)); if (!m) continue;
+        const a = +m[1], b = +m[2];
+        if (a > 12 && b <= 12) dmy++; else if (b > 12 && a <= 12) mdy++;
+        else if (a <= 12 && b <= 12) { amb++; if (pairs.length < 4000) pairs.push([a, b, +m[3]]); }
+      }
+      let fmt = 'DMY', conf = 'none';
+      if (dmy > 0 && mdy === 0) { fmt = 'DMY'; conf = 'certain'; }
+      else if (mdy > 0 && dmy === 0) { fmt = 'MDY'; conf = 'certain'; }
+      else if (dmy > 0 && mdy > 0) { fmt = dmy >= mdy ? 'DMY' : 'MDY'; conf = 'mixed'; }
+      else if (amb > 0) {
+        const smooth = (di, mi) => { let s = 0, prev = null; for (const q of pairs) { let y = q[2]; if (y < 100) y += 2000; if (y > 2400) y -= 543; const t = Date.UTC(y, q[mi] - 1, q[di]) / 86400000; if (prev !== null) s += Math.abs(t - prev); prev = t; } return s; };
+        const sd = smooth(0, 1), sm = smooth(1, 0);
+        if (sd < sm * 0.7) { fmt = 'DMY'; conf = 'likely'; } else if (sm < sd * 0.7) { fmt = 'MDY'; conf = 'likely'; }
+        else { const loc = (navigator.language || 'en-GB').toLowerCase(); fmt = (loc === 'en-us' || loc === 'en-ph') ? 'MDY' : 'DMY'; conf = 'guess'; }
+      }
+      return { fmt, conf, dmy, mdy, amb };
+    }
+    function dccfNormalize(rows, fileName) {
+      try {
+        if (!rows || !rows.length) return null;
+        let st = DCCF_STORE[fileName];
+        if (!st || st.rows !== rows) {
+          const cols = []; const keys = Object.keys(rows[0] || {});
+          keys.forEach(k => {
+            let n = 0, hit = 0;
+            for (let i = 0; i < rows.length && n < 60; i++) { const v = rows[i] && rows[i][k]; if (v) { n++; if (DCCF_RE.test(String(v))) hit++; } }
+            if (n >= 3 && hit / n >= 0.6) cols.push(k);
+          });
+          st = { rows, cols, orig: {} };
+          cols.forEach(c => { st.orig[c] = rows.map(r => r ? r[c] : undefined); });
+          DCCF_STORE[fileName] = st;
+        } else st.cols.forEach(c => rows.forEach((r, i) => { if (r) r[c] = st.orig[c][i]; }));
+        if (!st.cols.length) return null;
+        const vals = [], step = Math.max(1, Math.floor(rows.length / 6000));
+        for (let i = 0; i < rows.length; i += step) st.cols.forEach(c => { if (rows[i]) vals.push(rows[i][c]); });
+        const det = dccfDetect(vals), mode = DCCF_MODE[fileName] || 'AUTO', fmt = mode === 'AUTO' ? det.fmt : mode;
+        rows.forEach(r => { if (!r) return; st.cols.forEach(c => {
+          const v = r[c]; if (!v) return; const m = DCCF_RE.exec(String(v)); if (!m) return;
+          const a = +m[1], b = +m[2]; let mdy;
+          if (a > 12 && b <= 12) mdy = false; else if (b > 12 && a <= 12) mdy = true; else mdy = (fmt === 'MDY');
+          if (mdy) r[c] = String(v).replace(DCCF_RE, (all, x, y, z) => `${y}/${x}/${z}`);
+        }); });
+        return (DCCF_INFO[fileName] = { fmt, conf: mode === 'AUTO' ? det.conf : 'manual', dmy: det.dmy, mdy: det.mdy, amb: det.amb });
+      } catch (e) { console.error('dccfNormalize', e); return null; }
+    }
+    function dccfBadge(fileName) {
+      const info = DCCF_INFO[fileName]; if (!info) return '';
+      const unc = ['guess', 'likely', 'mixed'].includes(info.conf);
+      const cls = unc ? 'bg-amber-500/15 text-amber-300 border-amber-500/40' : (info.conf === 'manual' ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30');
+      const why = info.conf === 'certain' ? `Detected from ${(info.fmt === 'DMY' ? info.dmy : info.mdy).toLocaleString()} unambiguous dates` : info.conf === 'mixed' ? 'Mixed file - majority used' : info.conf === 'likely' ? 'All dates ambiguous - chronological order suggests this reading' : info.conf === 'guess' ? 'All dates ambiguous - guessed from regional setting' : info.conf === 'manual' ? 'Set manually' : '';
+      return `<button type="button" title="${why}. Click to switch: Auto / DD/MM / MM/DD" class="px-1.5 py-0.5 rounded border text-[9px] font-mono font-semibold ${cls}" onclick="dccfCycle(decodeURIComponent('${encodeURIComponent(fileName)}'))">${unc ? '? ' : ''}${info.fmt === 'MDY' ? 'MM/DD' : 'DD/MM'}${info.conf === 'manual' ? ' ✎' : ''}</button>`;
+    }
+    function dccfCycle(fileName) {
+      const order = ['AUTO', 'DMY', 'MDY'], cur = DCCF_MODE[fileName] || 'AUTO';
+      DCCF_MODE[fileName] = order[(order.indexOf(cur) + 1) % order.length];
+      if (typeof window.__dccfRebuild === 'function') window.__dccfRebuild();
+    }
+    window.__dccfRebuild = () => cwoRebuild(true);
     function cwoRebuild(notify) {
+      CWO_FILES.forEach(({ rows }, name) => dccfNormalize(rows, name));
       renderCwoFileChips();
       if (!CWO_FILES.size) {
         isDataLoaded = false; records = []; filteredRecords = [];
@@ -2803,7 +2877,7 @@
       host.innerHTML = Array.from(CWO_FILES.entries()).map(([name, f]) => `
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-[11px] text-slate-200">
           <i class="fa-solid fa-file-csv text-emerald-400"></i>${esc(name)}
-          <span class="font-mono text-[10px] text-slate-400">(${f.rows.length.toLocaleString()})</span>
+          <span class="font-mono text-[10px] text-slate-400">(${f.rows.length.toLocaleString()})</span>${dccfBadge(name)}
           <button type="button" title="Remove" class="ml-0.5 text-slate-400 hover:text-rose-400" onclick="cwoRemoveFile(decodeURIComponent('${encodeURIComponent(name)}'))"><i class="fa-solid fa-xmark"></i></button>
         </span>`).join('');
     }
@@ -3124,8 +3198,83 @@
         kcard('r', cmpT('Response SLA', 'SLA รับเรื่อง'), cmpT('Acknowledge', 'รับเรื่อง'), 'bg-sky-500/20 text-sky-300', fmtPct(S.respPct), 'text-sky-400', `${vsPrev}: ${cmpDelta(latest?.S.respPct ?? null, prev?.S.respPct ?? null, ' pp', true)}`),
         kcard('m', cmpT('Mean TTR (MTTR)', 'เวลาซ่อมเฉลี่ย'), 'MTTR', 'bg-purple-500/20 text-purple-300', S.mtAvgMin === null ? 'N/A' : `${hrs(S.mtAvgMin).toFixed(1)} ${cmpT('hrs', 'ชม.')}`, 'text-purple-400', `${vsPrev}: ${cmpDelta(hrs(latest?.S.mtAvgMin ?? null), hrs(prev?.S.mtAvgMin ?? null), ' h', false)}`),
         kcard('b', cmpT('Backlog / Pending', 'งานค้าง'), cmpT('Pending Action', 'รอดำเนินการ'), 'bg-amber-500/20 text-amber-300', rows.filter(cmpIsPending).length.toLocaleString(), 'text-amber-400', `${rows.length ? (rows.filter(cmpIsPending).length / rows.length * 100).toFixed(1) : '0.0'}% ${cmpT('of filtered total', 'ของทั้งหมด')} · ${cmpDelta(latest?.pending ?? null, prev?.pending ?? null, '', false, 0)}`),
-        kcard('n', cmpT('New Problem Types', 'ประเภทปัญหาใหม่'), cmpT('Emerging', 'เกิดใหม่'), 'bg-cyan-500/20 text-cyan-300', newTypes.length.toLocaleString(), 'text-cyan-400', latest ? `${cmpT('Unseen before', 'ไม่เคยพบก่อน')} ${cmpEsc(latest.label)}` : '—')
+        kcard('n', cmpT('New Problem Types', 'ประเภทปัญหาใหม่'), cmpT('Emerging', 'เกิดใหม่'), 'bg-cyan-500/20 text-cyan-300', newTypes.length.toLocaleString(), 'text-cyan-400', latest ? `${cmpT('Unseen before', 'ไม่เคยพบก่อน')} ${cmpEsc(latest.label)}` : '—'),
+        ...(() => {
+          const N = rows.length, esc = cmpEsc;
+          const closedPct = l => l.length ? (l.length - l.filter(cmpIsPending).length) / l.length * 100 : null;
+          const isHi = r => /high|urgent|critical|emergency|^p?1$|cat\s*1/i.test(String(r.p || ''));
+          const hiPct = l => l.length ? l.filter(isHi).length / l.length * 100 : null;
+          const dayN = new Set(rows.map(r => r.day).filter(Boolean)).size || 1;
+          const dm = new Map(); rows.forEach(r => { if (r.day) dm.set(r.day, (dm.get(r.day) || 0) + 1); });
+          let pk = '', pv = 0; dm.forEach((v, k) => { if (v > pv) { pv = v; pk = k; } });
+          const tc = [...cmpCount(rows, cmpType).entries()].sort((a, b) => b[1] - a[1])[0];
+          const cc = [...cmpCount(rows, r => r.comp || '-').entries()].sort((a, b) => b[1] - a[1])[0];
+          const breach = S.r2Base - S.r2Pass;
+          return [
+            kcard('x1', cmpT('Resolution Rate', 'อัตราปิดงาน'), cmpT('Closure', 'ปิดงาน'), 'bg-teal-500/20 text-teal-300', N ? closedPct(rows).toFixed(1) + '%' : 'N/A', 'text-teal-400', `${vsPrev}: ${cmpDelta(latest ? closedPct(latest.rows) : null, prev ? closedPct(prev.rows) : null, ' pp', true)}`),
+            kcard('x2', cmpT('High Priority Share', 'งานสำคัญสูง'), cmpT('Severity', 'ความรุนแรง'), 'bg-red-500/20 text-red-300', N ? hiPct(rows).toFixed(1) + '%' : 'N/A', 'text-red-400', `${rows.filter(isHi).length.toLocaleString()} ${cmpT('WOs', 'งาน')} · ${cmpDelta(latest ? hiPct(latest.rows) : null, prev ? hiPct(prev.rows) : null, ' pp', false)}`),
+            kcard('x3', cmpT('Completion SLA Breaches', 'งานเกิน SLA'), cmpT('Risk', 'ความเสี่ยง'), 'bg-rose-500/20 text-rose-300', S.r2Base ? breach.toLocaleString() : 'N/A', 'text-rose-400', S.r2Base ? `${(breach / S.r2Base * 100).toFixed(1)}% ${cmpT('of measured WOs', 'ของงานที่วัดผล')}` : '—'),
+            kcard('x4', cmpT('Avg WOs / Day', 'งานเฉลี่ย/วัน'), cmpT('Volume', 'ปริมาณ'), 'bg-blue-500/20 text-blue-300', (N / dayN).toFixed(1), 'text-blue-400', pv ? `${cmpT('Peak', 'สูงสุด')} ${esc(pk.slice(8, 10) + '/' + pk.slice(5, 7))}: ${pv} · ${dayN} ${cmpT('days', 'วัน')}` : '—'),
+            kcard('x5', cmpT('Top Problem Type', 'ปัญหาสูงสุด'), cmpT('Hotspot', 'จุดเสี่ยง'), 'bg-orange-500/20 text-orange-300', tc ? (tc[1] / N * 100).toFixed(0) + '%' : 'N/A', 'text-orange-400', tc ? `${esc(tc[0])} (${tc[1].toLocaleString()})` : '—'),
+            kcard('x6', cmpT('Top Component', 'อาคาร/โซนสูงสุด'), cmpT('Hotspot', 'จุดเสี่ยง'), 'bg-fuchsia-500/20 text-fuchsia-300', cc ? (cc[1] / N * 100).toFixed(0) + '%' : 'N/A', 'text-fuchsia-400', cc ? `${esc(cc[0])} (${cc[1].toLocaleString()})` : '—')
+          ];
+        })()
       ].join('');
+
+      // ---- Executive summary (CWO Comparison) ----
+      {
+        const th = currentLang === 'th', L = (en, t) => th ? t : en, N0 = x => Number(x).toLocaleString(), esc = cmpEsc;
+        const Bd = (v, c = 'text-white') => `<strong class="${c}">${v}</strong>`, bad = 'text-rose-400', good = 'text-emerald-400';
+        const lr = latest ? latest.rows : rows, pr = prev ? prev.rows : null;
+        const LS = cwoSlaStats(lr), PS = pr ? cwoSlaStats(pr) : null;
+        const ln = latest ? esc(latest.label) : '', pn = prev ? esc(prev.label) : '';
+        const vC = lr.length, vP = pr ? pr.length : null, vD = vP ? (vC - vP) / vP * 100 : null;
+        const blC = lr.filter(cmpIsPending).length;
+        const tc = cmpCount(lr, cmpType), tp = pr ? cmpCount(pr, cmpType) : new Map();
+        const topT = [...tc.entries()].sort((a, b) => b[1] - a[1])[0];
+        const surge = [...tc.entries()].map(([t, c]) => ({ t, c, p: tp.get(t) || 0 })).filter(x => pr && x.c - x.p >= 5).sort((a, b) => (b.c - b.p) - (a.c - a.p))[0];
+        const hotL = [...cmpCount(lr, r => r.loc || '').entries()].sort((a, b) => b[1] - a[1])[0];
+        const cC = LS.compPct, cP = PS ? PS.compPct : null, rC = LS.respPct;
+        const sC = cC === null ? 'a' : cC >= 90 ? 'g' : cC >= 75 ? 'a' : 'r', sR = rC === null ? 'a' : rC >= 95 ? 'g' : rC >= 85 ? 'a' : 'r';
+        const sV = vD === null ? 'a' : vD <= 10 ? 'g' : vD <= 30 ? 'a' : 'r', sB = blC === 0 ? 'g' : (vC && blC / vC <= 0.1) ? 'a' : 'r';
+        const sN = newTypes.length === 0 ? 'g' : newTypes.length <= 3 ? 'a' : 'r';
+        const al = [sC, sR, sV, sB, sN], reds = al.filter(x => x === 'r').length, ambs = al.filter(x => x === 'a').length;
+        const status = reds >= 2 || sC === 'r' ? 'r' : (reds || ambs >= 2) ? 'a' : 'g';
+        const dpp = (a, b) => (a === null || b === null) ? '' : ` (${a - b >= 0 ? '+' : ''}${(a - b).toFixed(1)} pp)`;
+        const f1 = v => v === null ? 'N/A' : v.toFixed(1) + '%';
+        const mtL = LS.mtAvgMin === null ? null : LS.mtAvgMin / 60, mtP = PS && PS.mtAvgMin !== null ? PS.mtAvgMin / 60 : null;
+        const headline = L(
+          `${Bd(ln)}: ${Bd(N0(vC))} work orders` + (vD !== null ? ` (${Bd((vD >= 0 ? '+' : '') + vD.toFixed(0) + '%', vD > 10 ? bad : good)} vs ${pn})` : '') + '.' +
+          (cC !== null ? ` Completion SLA ${Bd(f1(cC), cC >= 90 ? good : bad)}${dpp(cC, cP)}.` : '') +
+          ` ${Bd(N0(blC), blC ? 'text-amber-400' : good)} still open.` + (newTypes.length ? ` ${Bd(N0(newTypes.length), 'text-cyan-400')} new problem type(s) appeared.` : '') +
+          (topT ? ` Biggest driver: ${Bd(esc(topT[0]))} (${N0(topT[1])}).` : ''),
+          `${Bd(ln)}: ${Bd(N0(vC))} คำสั่งงาน` + (vD !== null ? ` (${Bd((vD >= 0 ? '+' : '') + vD.toFixed(0) + '%', vD > 10 ? bad : good)} เทียบ ${pn})` : '') +
+          (cC !== null ? ` · SLA ปิดงาน ${Bd(f1(cC), cC >= 90 ? good : bad)}${dpp(cC, cP)}` : '') +
+          ` · ค้างอยู่ ${Bd(N0(blC), blC ? 'text-amber-400' : good)} งาน` + (newTypes.length ? ` · พบปัญหาประเภทใหม่ ${Bd(N0(newTypes.length), 'text-cyan-400')} ประเภท` : '') +
+          (topT ? ` · ประเด็นใหญ่สุด: ${Bd(esc(topT[0]))} (${N0(topT[1])})` : ''));
+        const risks = [];
+        if (cC !== null && cC < 90) risks.push(L(`Completion SLA ${f1(cC)}${cP !== null ? ` (${cC >= cP ? 'improving' : 'worsening'} vs ${pn})` : ''} — below the 90% target.`, `SLA ปิดงาน ${f1(cC)}${cP !== null ? ` (${cC >= cP ? 'ดีขึ้น' : 'แย่ลง'}เทียบ ${pn})` : ''} — ต่ำกว่าเป้า 90%`));
+        if (rC !== null && rC < 95) risks.push(L(`Response SLA ${f1(rC)} — below the 95% target.`, `SLA รับเรื่อง ${f1(rC)} — ต่ำกว่าเป้า 95%`));
+        if (surge) risks.push(L(`${esc(surge.t)} jumped ${surge.p} → ${surge.c} vs ${pn} — probable new root cause.`, `${esc(surge.t)} เพิ่มจาก ${surge.p} → ${surge.c} เทียบ ${pn} — น่าจะมีสาเหตุใหม่`));
+        if (newTypes.length) risks.push(L(`New problem types: ${newTypes.slice(0, 3).map(x => esc(x.t)).join(', ')} — not seen before ${ln}.`, `ปัญหาประเภทใหม่: ${newTypes.slice(0, 3).map(x => esc(x.t)).join(', ')} — ไม่เคยพบก่อน ${ln}`));
+        if (blC) risks.push(L(`${N0(blC)} WOs still open in ${ln}.`, `ยังมี ${N0(blC)} งานค้างใน ${ln}`));
+        if (mtL !== null && mtP !== null && mtL > mtP * 1.15) risks.push(L(`Repair time rose to ${mtL.toFixed(1)} h from ${mtP.toFixed(1)} h.`, `เวลาซ่อมเฉลี่ยเพิ่มเป็น ${mtL.toFixed(1)} ชม. จาก ${mtP.toFixed(1)} ชม.`));
+        const actions = [];
+        if (cC !== null && cC < 90) actions.push({ a: L(`SLA recovery: daily review of late WOs${topT ? `, starting with ${esc(topT[0])}` : ''}; target ≥ 90%.`, `ฟื้น SLA: ทบทวนงานเลยกำหนดทุกวัน${topT ? ` เริ่มจาก ${esc(topT[0])}` : ''} เป้า ≥ 90%`), o: L('Facility / Technical Manager', 'ผู้จัดการอาคาร / ฝ่ายช่าง'), d: L('Start in 3 days · review in 2 weeks', 'เริ่มใน 3 วัน · ทบทวนใน 2 สัปดาห์') });
+        if (surge || newTypes.length) actions.push({ a: L(`RCA on ${esc(surge ? surge.t : newTypes[0].t)}${hotL ? `; focus on ${esc(hotL[0])}` : ''}.`, `ทำ RCA เรื่อง ${esc(surge ? surge.t : newTypes[0].t)}${hotL ? ` เน้นที่ ${esc(hotL[0])}` : ''}`), o: L('System owner + Engineering', 'เจ้าของระบบ + วิศวกรรม'), d: L('RCA in 14 days', 'RCA ใน 14 วัน') });
+        else if (hotL) actions.push({ a: L(`Add ${esc(hotL[0])} (${hotL[1]} WOs) to the PPM route and verify after each fix.`, `เพิ่ม ${esc(hotL[0])} (${hotL[1]} งาน) เข้ารอบ PPM และตรวจซ้ำหลังแก้ไข`), o: L('Technical Supervisor', 'หัวหน้าช่าง'), d: L('Within 14 days', 'ภายใน 14 วัน') });
+        if (blC) actions.push({ a: L(`Assign owners and close-by dates to the ${N0(blC)} open WOs.`, `กำหนดผู้รับผิดชอบและวันปิดงานให้ ${N0(blC)} งานที่ค้าง`), o: L('Supervisor', 'หัวหน้างาน'), d: L('Within 7 days', 'ภายใน 7 วัน') });
+        if (!actions.length) actions.push({ a: L('On target — keep the current routine.', 'อยู่ในเป้า — คงรูปแบบการทำงาน'), o: L('Facility Manager', 'ผู้จัดการอาคาร'), d: L('Monthly review', 'ทบทวนรายเดือน') });
+        dccExecPanel('cmpExecSummary', { th, status, title: L(`Executive Summary — ${prev ? ln + ' vs ' + pn : ln}`, `สรุปสำหรับผู้บริหาร — ${prev ? ln + ' เทียบ ' + pn : ln}`), headline,
+          tiles: [
+            { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(cC), t: L('target ≥ 90%', 'เป้า ≥ 90%') + dpp(cC, cP), s: sC },
+            { l: L('Response SLA', 'SLA รับเรื่อง'), v: f1(rC), t: L('target ≥ 95%', 'เป้า ≥ 95%'), s: sR },
+            { l: 'MTTR', v: mtL === null ? 'N/A' : mtL.toFixed(1) + (th ? ' ชม.' : ' h'), t: mtP === null ? L('mean time to repair', 'เวลาซ่อมเฉลี่ย') : `${L('vs', 'เทียบ')} ${mtP.toFixed(1)} ${th ? 'ชม.' : 'h'}`, s: mtL !== null && mtP !== null ? (mtL > mtP * 1.15 ? 'r' : 'g') : 'a' },
+            { l: L('Volume', 'ปริมาณงาน'), v: N0(vC), t: vD === null ? ln : `${vD >= 0 ? '+' : ''}${vD.toFixed(0)}% vs ${pn}`, s: sV },
+            { l: L('Open WOs', 'งานค้าง'), v: N0(blC), t: L('target 0', 'เป้า 0'), s: sB },
+            { l: L('New problem types', 'ปัญหาประเภทใหม่'), v: N0(newTypes.length), t: L('vs history', 'เทียบประวัติ'), s: sN }
+          ], risks: risks.slice(0, 4), actions: actions.slice(0, 4) });
+      }
 
       // ---- shifts between the latest two months
       const shift = [];
@@ -3402,6 +3551,103 @@
     }
     const _cwoGenBrief = generateExecutiveBriefing;
     window.generateExecutiveBriefing = function () { const r = _cwoGenBrief.apply(this, arguments); try { cwoDeepBriefing(); } catch (e) { console.warn(e); } return r; };
+// ===== Executive summary panel (shared by every dashboard) =====
+// o = { th, title, status:'g'|'a'|'r', headline, tiles:[{l,v,t,s}], risks:[html], actions:[{a,o,d}] }
+function dccExecPanel(hostId, o) {
+  const host = document.getElementById(hostId); if (!host) return;
+  const th = !!o.th;
+  const S = { g: ['emerald', th ? 'อยู่ในเป้า' : 'ON TRACK', '🟢'], a: ['amber', th ? 'เฝ้าระวัง' : 'WATCH', '🟡'], r: ['rose', th ? 'ต้องเร่งแก้ไข' : 'ACTION NEEDED', '🔴'] };
+  const st = S[o.status] || S.a;
+  const strip = h => String(h == null ? '' : h).replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
+  (window.__execSummaries = window.__execSummaries || {})[hostId] = window.__execSummary = { title: o.title, status: o.status, statusLabel: st[1], headline: strip(o.headline),
+    tiles: (o.tiles || []).map(t => ({ l: strip(t.l), v: strip(t.v), t: strip(t.t), s: t.s })),
+    risks: (o.risks || []).map(strip), actions: (o.actions || []).map(a => ({ a: strip(a.a), o: strip(a.o), d: strip(a.d) })) };
+  const tone = s => s === 'r' ? 'text-rose-400' : s === 'a' ? 'text-amber-400' : s === 'g' ? 'text-emerald-400' : 'text-sky-400';
+  const dot = s => s === 'r' ? 'bg-rose-500' : s === 'a' ? 'bg-amber-500' : s === 'g' ? 'bg-emerald-500' : 'bg-sky-500';
+  const tiles = (o.tiles || []).map(t => `
+    <div class="rounded-lg bg-slate-900/60 border border-slate-800 p-2.5 min-w-0">
+      <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dot(t.s)} shrink-0"></span><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">${t.l}</span></div>
+      <div class="text-xl font-extrabold ${tone(t.s)} mt-1">${t.v}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5 leading-snug">${t.t || ''}</div></div>`).join('');
+  const risks = (o.risks || []).map((r, i) => `<li class="flex gap-2"><span class="font-bold text-rose-400 shrink-0">${i + 1}.</span><span>${r}</span></li>`).join('');
+  const acts = (o.actions || []).map((a, i) => `
+    <li class="rounded-md bg-slate-900/50 border border-slate-800 p-2"><div class="flex gap-2"><span class="font-bold text-emerald-400 shrink-0">${i + 1}.</span><span>${a.a}</span></div>
+      <div class="flex flex-wrap gap-1.5 mt-1.5 pl-5"><span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">👤 ${a.o}</span><span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/25">⏱ ${a.d}</span></div></li>`).join('');
+  host.innerHTML = `
+  <div class="exec-bottomline rounded-xl border border-${st[0]}-500/40 bg-${st[0]}-950/10 p-4 space-y-3 text-xs">
+    <div class="flex flex-wrap items-center gap-2 justify-between">
+      <div class="flex items-center gap-2"><span class="text-base">${st[2]}</span><h3 class="text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">${o.title}</h3></div>
+      <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-${st[0]}-500/20 text-${st[0]}-300 border border-${st[0]}-500/30">${st[1]}</span></div>
+    <p class="text-sm sm:text-[15px] leading-relaxed font-semibold text-slate-100">${o.headline}</p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">${tiles}</div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div><div class="text-[11px] font-bold uppercase tracking-wider text-rose-300 mb-1.5">${th ? '⚠ ประเด็นที่ผู้บริหารต้องรับทราบ' : '⚠ Needs executive attention'}</div><ul class="space-y-1.5 text-slate-300 leading-relaxed">${risks || `<li class="text-slate-400">${th ? 'ไม่พบความเสี่ยงสำคัญ' : 'No material risks detected.'}</li>`}</ul></div>
+      <div><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 mb-1.5">${th ? '✔ ข้อเสนอเพื่อตัดสินใจ / ดำเนินการ' : '✔ Recommended decisions & actions'}</div><ul class="space-y-1.5 text-slate-300 leading-relaxed">${acts}</ul></div>
+    </div></div>`;
+}
+
+    function cwoExec() {
+      const host = document.getElementById('cwoExecSummary'); if (!host) return;
+      if (!isDataLoaded || !filteredRecords.length) { host.innerHTML = ''; return; }
+      const th = currentLang === 'th', L = (en, t) => th ? t : en, N0 = x => Number(x).toLocaleString();
+      const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const list = filteredRecords, n = list.length, type = r => r.probType || r.c || 'Other';
+      const cnt = (arr, f) => { const m = new Map(); arr.forEach(r => { const k = f(r); if (k) m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()].sort((a, c) => c[1] - a[1]); };
+      const pct = (a, c) => c ? a / c * 100 : 0;
+      const Bd = (v, c = 'text-white') => `<strong class="${c}">${v}</strong>`, bad = 'text-rose-400', good = 'text-emerald-400';
+      const S = cwoSlaStats(list);
+      const months = META.months.filter(m => list.some(r => r.m === m));
+      const lm = months[months.length - 1], pm = months[months.length - 2];
+      const lc = list.filter(r => r.m === lm).length, pc = pm ? list.filter(r => r.m === pm).length : 0;
+      const tr = pm && pc ? (lc - pc) / pc * 100 : null;
+      const P = list.filter(r => ['NEW', 'ASSIGNMENT', 'ACKNOWLEDGEMENT', 'INPROGRESS'].includes(String(r.st || '').toUpperCase()));
+      const a30 = P.filter(r => (r.aging || 0) > 30).length;
+      const cat1 = list.filter(r => /1/.test(String(r.p || ''))).length;
+      const types = cnt(list, type), top = types[0], top3 = pct(types.slice(0, 3).reduce((a, x) => a + x[1], 0), n);
+      const loc = cnt(list, r => r.loc)[0], pCat = cnt(P, r => r.c)[0];
+      const need = S.compPct !== null && S.compPct < 90 ? Math.ceil(0.9 * S.r2Base - S.r2Pass) : 0;
+      const mt = S.mtAvgMin === null ? null : S.mtAvgMin / 60;
+      const sC = S.compPct === null ? 'a' : S.compPct >= 90 ? 'g' : S.compPct >= 75 ? 'a' : 'r';
+      const sR = S.respPct === null ? 'a' : S.respPct >= 95 ? 'g' : S.respPct >= 85 ? 'a' : 'r';
+      const sB = pct(a30, n) <= 5 && a30 === 0 ? 'g' : pct(a30, n) <= 5 ? 'a' : 'r';
+      const sT = tr === null ? 'a' : tr <= 10 ? 'g' : tr <= 30 ? 'a' : 'r';
+      const all = [sC, sR, sB, sT], reds = all.filter(x => x === 'r').length, ambs = all.filter(x => x === 'a').length;
+      const status = reds >= 2 || sC === 'r' ? 'r' : (reds || ambs >= 2) ? 'a' : 'g';
+      const f1 = v => v === null ? 'N/A' : v.toFixed(1) + '%';
+      const headline = L(
+        `${Bd(N0(n))} work orders` + (pm && tr !== null ? ` — ${Bd(esc(lm))} ${Bd(N0(lc))} vs ${esc(pm)} ${N0(pc)} (${Bd((tr >= 0 ? '+' : '') + tr.toFixed(0) + '%', tr > 10 ? bad : good)})` : '') + '.' +
+        (S.compPct !== null ? ` Completion SLA ${Bd(f1(S.compPct), S.compPct >= 90 ? good : bad)} ${S.compPct >= 90 ? 'meets' : `is ${(90 - S.compPct).toFixed(1)} pts below`} the 90% target` + (need ? ` (${Bd(N0(need))} more WOs must close on time)` : '') + '.' : ' SLA data not available in this file.') +
+        (P.length ? ` ${Bd(N0(P.length), 'text-amber-400')} WOs open${a30 ? `, ${Bd(N0(a30), bad)} older than 30 days` : ', none older than 30 days'}.` : '') +
+        (top ? ` Largest driver: ${Bd(esc(top[0]))} (${pct(top[1], n).toFixed(0)}%).` : ''),
+        `${Bd(N0(n))} คำสั่งงาน` + (pm && tr !== null ? ` — ${Bd(esc(lm))} ${Bd(N0(lc))} เทียบ ${esc(pm)} ${N0(pc)} (${Bd((tr >= 0 ? '+' : '') + tr.toFixed(0) + '%', tr > 10 ? bad : good)})` : '') +
+        (S.compPct !== null ? ` · SLA ปิดงาน ${Bd(f1(S.compPct), S.compPct >= 90 ? good : bad)} ${S.compPct >= 90 ? 'ถึงเป้า 90%' : `ต่ำกว่าเป้า 90% อยู่ ${(90 - S.compPct).toFixed(1)} จุด`}` + (need ? ` (ต้องปิดตรงเวลาเพิ่ม ${Bd(N0(need))} งาน)` : '') : ' · ไฟล์นี้ไม่มีข้อมูล SLA') +
+        (P.length ? ` · ค้าง ${Bd(N0(P.length), 'text-amber-400')} งาน${a30 ? ` ค้างเกิน 30 วัน ${Bd(N0(a30), bad)} งาน` : ' ไม่มีรายการเกิน 30 วัน'}` : '') +
+        (top ? ` · ปัญหาหลัก: ${Bd(esc(top[0]))} (${pct(top[1], n).toFixed(0)}%)` : ''));
+      const risks = [];
+      if (S.compPct !== null && S.compPct < 90) risks.push(L(`Completion SLA ${f1(S.compPct)} vs 90% target — ${N0(need)} WOs short; service-level exposure with tenants/contract.`, `SLA ปิดงาน ${f1(S.compPct)} ต่ำกว่าเป้า 90% — ขาดอีก ${N0(need)} งาน เสี่ยงต่อข้อตกลงบริการ`));
+      if (S.respPct !== null && S.respPct < 95) risks.push(L(`Response SLA ${f1(S.respPct)} vs 95% target — acknowledgement is slower than agreed.`, `SLA รับเรื่อง ${f1(S.respPct)} ต่ำกว่าเป้า 95%`));
+      if (a30) risks.push(L(`${N0(a30)} WOs open > 30 days${pCat ? `, concentrated in ${esc(pCat[0])}` : ''} — risk of repeat failures and complaints.`, `${N0(a30)} งานค้างเกิน 30 วัน${pCat ? ` กระจุกที่ ${esc(pCat[0])}` : ''} — เสี่ยงเกิดซ้ำและข้อร้องเรียน`));
+      if (tr !== null && tr > 10) risks.push(L(`Demand up ${tr.toFixed(0)}% vs ${pm} — confirm technician capacity.`, `ปริมาณงานเพิ่ม ${tr.toFixed(0)}% เทียบ ${pm} — ตรวจสอบกำลังช่าง`));
+      if (top3 >= 50) risks.push(L(`Top 3 problem types = ${top3.toFixed(0)}% of work — a few root causes drive most demand.`, `3 ปัญหาหลักคิดเป็น ${top3.toFixed(0)}% ของงาน — แก้สาเหตุไม่กี่จุดลดภาระได้มาก`));
+      if (cat1) risks.push(L(`${N0(cat1)} CAT 1 (highest-priority) work orders — verify each is closed with a root-cause note.`, `มีงาน CAT 1 ${N0(cat1)} งาน — ยืนยันว่าปิดพร้อมบันทึกสาเหตุ`));
+      const actions = [];
+      if (S.compPct !== null && S.compPct < 90) actions.push({ a: L(`Daily SLA huddle on late WOs${top ? `, starting with ${esc(top[0])}` : ''}; target ≥ 90% completion.`, `ประชุม SLA รายวันเรื่องงานเลยกำหนด${top ? ` เริ่มจาก ${esc(top[0])}` : ''} เป้า ≥ 90%`), o: L('Facility / Technical Manager', 'ผู้จัดการอาคาร / ฝ่ายช่าง'), d: L('Start in 3 days · review in 2 weeks', 'เริ่มใน 3 วัน · ทบทวนใน 2 สัปดาห์') });
+      if (a30) actions.push({ a: L(`Give each of the ${N0(a30)} WOs older than 30 days an owner and close-by date; weekly review until cleared.`, `มอบหมายผู้รับผิดชอบและวันปิดให้ ${N0(a30)} งานที่ค้างเกิน 30 วัน ทบทวนทุกสัปดาห์`), o: L('Supervisor / Contractor lead', 'หัวหน้างาน / ผู้รับเหมา'), d: L('Within 7 days', 'ภายใน 7 วัน') });
+      if (top) actions.push({ a: L(`Root-cause review on ${esc(top[0])}${loc ? ` (hotspot ${esc(loc[0])})` : ''} and add to the PPM checklist; a 20% cut removes ~${Math.round(top[1] * 0.2)} WOs per period.`, `ทำ Root-cause review เรื่อง ${esc(top[0])}${loc ? ` (จุดเสี่ยง ${esc(loc[0])})` : ''} และเพิ่มในแผน PPM ลดได้ 20% จะลดราว ${Math.round(top[1] * 0.2)} งานต่อรอบ`), o: L('System owner + Engineering', 'เจ้าของระบบ + วิศวกรรม'), d: L('RCA in 14 days · fix in 30 days', 'RCA ใน 14 วัน · แก้ไขใน 30 วัน') });
+      if (!actions.length) actions.push({ a: L('On target — keep the current routine and review monthly.', 'อยู่ในเป้า — คงรูปแบบการทำงานและทบทวนรายเดือน'), o: L('Facility Manager', 'ผู้จัดการอาคาร'), d: L('Monthly', 'รายเดือน') });
+      dccExecPanel('cwoExecSummary', {
+        th, status, title: L('Executive Summary — Bottom Line', 'สรุปสำหรับผู้บริหาร — ภาพรวมและสิ่งที่ต้องตัดสินใจ'), headline,
+        tiles: [
+          { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(S.compPct), t: L('target ≥ 90%', 'เป้า ≥ 90%'), s: sC },
+          { l: L('Response SLA', 'SLA รับเรื่อง'), v: f1(S.respPct), t: L('target ≥ 95%', 'เป้า ≥ 95%'), s: sR },
+          { l: 'MTTR', v: mt === null ? 'N/A' : mt.toFixed(1) + (th ? ' ชม.' : ' h'), t: L('mean time to repair', 'เวลาซ่อมเฉลี่ย'), s: 'b' },
+          { l: L('Open > 30 days', 'ค้างเกิน 30 วัน'), v: N0(a30), t: L(`of ${N0(P.length)} open · target 0`, `จากค้าง ${N0(P.length)} · เป้า 0`), s: sB },
+          { l: L('Volume vs prev.', 'ปริมาณเทียบก่อนหน้า'), v: tr === null ? 'n/a' : (tr >= 0 ? '+' : '') + tr.toFixed(0) + '%', t: pm ? `${lm} vs ${pm}` : L('single month', 'เดือนเดียว'), s: sT },
+          { l: L('CAT 1 WOs', 'งาน CAT 1'), v: N0(cat1), t: L('highest priority', 'ความสำคัญสูงสุด'), s: cat1 ? 'a' : 'g' }
+        ], risks: risks.slice(0, 4), actions: actions.slice(0, 4) });
+    }
+    const _cwoGenBrief2 = window.generateExecutiveBriefing;
+    window.generateExecutiveBriefing = function () { const r = _cwoGenBrief2.apply(this, arguments); try { cwoExec(); } catch (e) { console.warn('[cwoExec]', e); } return r; };
   </script>
   <!-- ================================================================== -->
   <!-- SHARED LOOK (matches the Case Management tab)                       -->
