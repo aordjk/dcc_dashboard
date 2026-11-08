@@ -3253,25 +3253,25 @@
           ` · ค้างอยู่ ${Bd(N0(blC), blC ? 'text-amber-400' : good)} งาน` + (newTypes.length ? ` · พบปัญหาประเภทใหม่ ${Bd(N0(newTypes.length), 'text-cyan-400')} ประเภท` : '') +
           (topT ? ` · ประเด็นใหญ่สุด: ${Bd(esc(topT[0]))} (${N0(topT[1])})` : ''));
         const risks = [];
-        if (cC !== null && cC < 90) risks.push(L(`Completion SLA ${f1(cC)}${cP !== null ? ` (${cC >= cP ? 'improving' : 'worsening'} vs ${pn})` : ''} — below the 90% target.`, `SLA ปิดงาน ${f1(cC)}${cP !== null ? ` (${cC >= cP ? 'ดีขึ้น' : 'แย่ลง'}เทียบ ${pn})` : ''} — ต่ำกว่าเป้า 90%`));
-        if (rC !== null && rC < 95) risks.push(L(`Response SLA ${f1(rC)} — below the 95% target.`, `SLA รับเรื่อง ${f1(rC)} — ต่ำกว่าเป้า 95%`));
+        if (cC !== null && cC < 90) risks.push(L(`Completion SLA ${f1(cC)}${cP !== null ? ` (${cC >= cP ? 'improving' : 'worsening'} vs ${pn})` : ''}.`, `SLA ปิดงาน ${f1(cC)}${cP !== null ? ` (${cC >= cP ? 'ดีขึ้น' : 'แย่ลง'}เทียบ ${pn})` : ''}`));
+        if (rC !== null && rC < 95) risks.push(L(`Response SLA ${f1(rC)}.`, `SLA รับเรื่อง ${f1(rC)}`));
         if (surge) risks.push(L(`${esc(surge.t)} jumped ${surge.p} → ${surge.c} vs ${pn} — probable new root cause.`, `${esc(surge.t)} เพิ่มจาก ${surge.p} → ${surge.c} เทียบ ${pn} — น่าจะมีสาเหตุใหม่`));
         if (newTypes.length) risks.push(L(`New problem types: ${newTypes.slice(0, 3).map(x => esc(x.t)).join(', ')} — not seen before ${ln}.`, `ปัญหาประเภทใหม่: ${newTypes.slice(0, 3).map(x => esc(x.t)).join(', ')} — ไม่เคยพบก่อน ${ln}`));
         if (blC) risks.push(L(`${N0(blC)} WOs still open in ${ln}.`, `ยังมี ${N0(blC)} งานค้างใน ${ln}`));
         if (mtL !== null && mtP !== null && mtL > mtP * 1.15) risks.push(L(`Repair time rose to ${mtL.toFixed(1)} h from ${mtP.toFixed(1)} h.`, `เวลาซ่อมเฉลี่ยเพิ่มเป็น ${mtL.toFixed(1)} ชม. จาก ${mtP.toFixed(1)} ชม.`));
         const actions = [];
-        if (cC !== null && cC < 90) actions.push({ a: L(`SLA recovery: daily review of late WOs${topT ? `, starting with ${esc(topT[0])}` : ''}; target ≥ 90%.`, `ฟื้น SLA: ทบทวนงานเลยกำหนดทุกวัน${topT ? ` เริ่มจาก ${esc(topT[0])}` : ''} เป้า ≥ 90%`), o: L('Facility / Technical Manager', 'ผู้จัดการอาคาร / ฝ่ายช่าง'), d: L('Start in 3 days · review in 2 weeks', 'เริ่มใน 3 วัน · ทบทวนใน 2 สัปดาห์') });
+        if (cC !== null && cC < 90) actions.push({ a: L(`SLA recovery: daily review of late WOs${topT ? `, starting with ${esc(topT[0])}` : ''}.`, `ฟื้น SLA: ทบทวนงานเลยกำหนดทุกวัน${topT ? ` เริ่มจาก ${esc(topT[0])}` : ''}`), o: L('Facility / Technical Manager', 'ผู้จัดการอาคาร / ฝ่ายช่าง'), d: L('Start in 3 days · review in 2 weeks', 'เริ่มใน 3 วัน · ทบทวนใน 2 สัปดาห์') });
         if (surge || newTypes.length) actions.push({ a: L(`RCA on ${esc(surge ? surge.t : newTypes[0].t)}${hotL ? `; focus on ${esc(hotL[0])}` : ''}.`, `ทำ RCA เรื่อง ${esc(surge ? surge.t : newTypes[0].t)}${hotL ? ` เน้นที่ ${esc(hotL[0])}` : ''}`), o: L('System owner + Engineering', 'เจ้าของระบบ + วิศวกรรม'), d: L('RCA in 14 days', 'RCA ใน 14 วัน') });
         else if (hotL) actions.push({ a: L(`Add ${esc(hotL[0])} (${hotL[1]} WOs) to the PPM route and verify after each fix.`, `เพิ่ม ${esc(hotL[0])} (${hotL[1]} งาน) เข้ารอบ PPM และตรวจซ้ำหลังแก้ไข`), o: L('Technical Supervisor', 'หัวหน้าช่าง'), d: L('Within 14 days', 'ภายใน 14 วัน') });
         if (blC) actions.push({ a: L(`Assign owners and close-by dates to the ${N0(blC)} open WOs.`, `กำหนดผู้รับผิดชอบและวันปิดงานให้ ${N0(blC)} งานที่ค้าง`), o: L('Supervisor', 'หัวหน้างาน'), d: L('Within 7 days', 'ภายใน 7 วัน') });
-        if (!actions.length) actions.push({ a: L('On target — keep the current routine.', 'อยู่ในเป้า — คงรูปแบบการทำงาน'), o: L('Facility Manager', 'ผู้จัดการอาคาร'), d: L('Monthly review', 'ทบทวนรายเดือน') });
+        if (!actions.length) actions.push({ a: L('Keep the current routine.', 'คงรูปแบบการทำงาน'), o: L('Facility Manager', 'ผู้จัดการอาคาร'), d: L('Monthly review', 'ทบทวนรายเดือน') });
         dccExecPanel('cmpExecSummary', { th, status, title: L(`Executive Summary — ${prev ? ln + ' vs ' + pn : ln}`, `สรุปสำหรับผู้บริหาร — ${prev ? ln + ' เทียบ ' + pn : ln}`), headline,
           tiles: [
-            { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(cC), t: L('target ≥ 90%', 'เป้า ≥ 90%') + dpp(cC, cP), s: sC },
-            { l: L('Response SLA', 'SLA รับเรื่อง'), v: f1(rC), t: L('target ≥ 95%', 'เป้า ≥ 95%'), s: sR },
+            { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(cC), t: '' + dpp(cC, cP), s: sC },
+            { l: L('Response SLA', 'SLA รับเรื่อง'), v: f1(rC), t: '', s: sR },
             { l: 'MTTR', v: mtL === null ? 'N/A' : mtL.toFixed(1) + (th ? ' ชม.' : ' h'), t: mtP === null ? L('mean time to repair', 'เวลาซ่อมเฉลี่ย') : `${L('vs', 'เทียบ')} ${mtP.toFixed(1)} ${th ? 'ชม.' : 'h'}`, s: mtL !== null && mtP !== null ? (mtL > mtP * 1.15 ? 'r' : 'g') : 'a' },
             { l: L('Volume', 'ปริมาณงาน'), v: N0(vC), t: vD === null ? ln : `${vD >= 0 ? '+' : ''}${vD.toFixed(0)}% vs ${pn}`, s: sV },
-            { l: L('Open WOs', 'งานค้าง'), v: N0(blC), t: L('target 0', 'เป้า 0'), s: sB },
+            { l: L('Open WOs', 'งานค้าง'), v: N0(blC), t: '', s: sB },
             { l: L('New problem types', 'ปัญหาประเภทใหม่'), v: N0(newTypes.length), t: L('vs history', 'เทียบประวัติ'), s: sN }
           ], risks: risks.slice(0, 4), actions: actions.slice(0, 4) });
       }
@@ -3390,7 +3390,7 @@
           risers.length ? `Rising: ${risers.map(x => `${b(e(x.label))} (+${x.d})`).join(', ')}.` : null,
           fallers.length ? `Improving: ${fallers.map(x => `${b(e(x.label))} (${x.d})`).join(', ')}.` : null,
           `Concentration: the top 3 problem types make up ${b(top3Share.toFixed(0) + '%')} of all work orders.`,
-          act(risers.length ? `open a root-cause review on ${b(e(risers[0].label))} this week; target a 20% reduction next month.` : `keep the preventive plan; volume is stable or falling.`)
+          act(risers.length ? `open a root-cause review on ${b(e(risers[0].label))} this week.` : `keep the preventive plan; volume is stable or falling.`)
         ]),
         `${b(e(latest.label))} มีคำสั่งงาน ${b(latest.rows.length.toLocaleString())} รายการ เทียบกับ ${b(prev.rows.length.toLocaleString())} ใน ${e(prev.label)} (${b((vd >= 0 ? '+' : '') + vd.toFixed(1) + '%')}) ${latest.rows.length > avg ? 'สูงกว่า' : 'ต่ำกว่า'}ค่าเฉลี่ย ${periods.length} ${({ week: 'สัปดาห์', day: 'วัน' })[window.CMP_PERIOD_BY] || 'เดือน'} (${b(avg.toFixed(0))})` + ul([
           !latest.rows.length ? `${b(e(latest.label))}: ไม่มีการเปิดใบงานเลย (0) — โปรดยืนยันว่าไฟล์ครอบคลุมช่วงนี้ หากใช่ แปลว่าไม่มีงานเข้า` : null,
@@ -3398,7 +3398,7 @@
           risers.length ? `เพิ่มขึ้น: ${risers.map(x => `${b(e(x.label))} (+${x.d})`).join(', ')}` : null,
           fallers.length ? `ดีขึ้น: ${fallers.map(x => `${b(e(x.label))} (${x.d})`).join(', ')}` : null,
           `ความกระจุกตัว: 3 ประเภทปัญหาหลักคิดเป็น ${b(top3Share.toFixed(0) + '%')} ของงานทั้งหมด`,
-          act(risers.length ? `ทำ Root-cause review สำหรับ ${b(e(risers[0].label))} ภายในสัปดาห์นี้ ตั้งเป้าลดลง 20% ในเดือนถัดไป` : `คงแผนบำรุงรักษาเชิงป้องกัน ปริมาณงานคงที่หรือลดลง`)
+          act(risers.length ? `ทำ Root-cause review สำหรับ ${b(e(risers[0].label))} ภายในสัปดาห์นี้` : `คงแผนบำรุงรักษาเชิงป้องกัน ปริมาณงานคงที่หรือลดลง`)
         ]));
       // SLA by category in latest month (worst with n >= 5)
       const catStats = [...cmpCount(latest.rows, r => r.c).keys()].map(c => ({ c, s: cwoSlaStats(latest.rows.filter(r => r.c === c)), n: latest.rows.filter(r => r.c === c).length }))
@@ -3409,13 +3409,13 @@
       const b2 = cmpT(
         `Completion SLA ${b(f(latest.S.compPct))} (${cmpDelta(latest.S.compPct, prev.S.compPct, ' pp', true)}) · Response SLA ${b(f(latest.S.respPct))} (${cmpDelta(latest.S.respPct, prev.S.respPct, ' pp', true)}) · MTTR ${b(mtNow === null ? 'N/A' : mtNow.toFixed(1) + ' h')} (${cmpDelta(mtNow, mtPrev, ' h', false)}).` + ul([
           worst ? `Weakest category: ${b(e(worst.c))} at ${b(f(worst.s.compPct))} completion SLA (${worst.n} WOs).` : null,
-          latest.S.respPct !== null && latest.S.respPct < 90 ? `Response SLA is ${b((90 - latest.S.respPct).toFixed(1) + ' pp')} below a 90% target; acknowledgement is the bottleneck.` : null,
-          act(worst ? `set a daily SLA check for ${b(e(worst.c))} and pre-assign technicians for repeat types; target ≥ 90% completion SLA.` : `hold current dispatch rules; review weekly.`)
+          latest.S.respPct !== null && latest.S.respPct < 90 ? `Response SLA is only ${b(latest.S.respPct.toFixed(1) + '%')}; acknowledgement is the bottleneck.` : null,
+          act(worst ? `set a daily SLA check for ${b(e(worst.c))} and pre-assign technicians for repeat types.` : `hold current dispatch rules; review weekly.`)
         ]),
         `SLA ปิดงาน ${b(f(latest.S.compPct))} (${cmpDelta(latest.S.compPct, prev.S.compPct, ' pp', true)}) · SLA รับเรื่อง ${b(f(latest.S.respPct))} (${cmpDelta(latest.S.respPct, prev.S.respPct, ' pp', true)}) · MTTR ${b(mtNow === null ? 'N/A' : mtNow.toFixed(1) + ' ชม.')} (${cmpDelta(mtNow, mtPrev, ' h', false)})` + ul([
           worst ? `หมวดที่ SLA ต่ำสุด: ${b(e(worst.c))} ที่ ${b(f(worst.s.compPct))} (${worst.n} งาน)` : null,
-          latest.S.respPct !== null && latest.S.respPct < 90 ? `SLA รับเรื่องต่ำกว่าเป้า 90% อยู่ ${b((90 - latest.S.respPct).toFixed(1) + ' pp')} คอขวดอยู่ที่การรับเรื่อง` : null,
-          act(worst ? `ติดตาม SLA รายวันของหมวด ${b(e(worst.c))} และจัดช่างล่วงหน้าสำหรับงานที่เกิดซ้ำ ตั้งเป้า SLA ปิดงาน ≥ 90%` : `คงกฎการจ่ายงานปัจจุบัน และทบทวนรายสัปดาห์`)
+          latest.S.respPct !== null && latest.S.respPct < 90 ? `SLA รับเรื่องอยู่ที่ ${b(latest.S.respPct.toFixed(1) + '%')} คอขวดอยู่ที่การรับเรื่อง` : null,
+          act(worst ? `ติดตาม SLA รายวันของหมวด ${b(e(worst.c))} และจัดช่างล่วงหน้าสำหรับงานที่เกิดซ้ำ` : `คงกฎการจ่ายงานปัจจุบัน และทบทวนรายสัปดาห์`)
         ]));
       const old30 = rows.filter(r => cmpIsPending(r) && (r.aging || 0) > 30).length;
       const hotTop = hot5[0];
@@ -3511,18 +3511,18 @@
       const need = S.compPct !== null && S.compPct < 90 ? Math.ceil(0.9 * S.r2Base - S.r2Pass) : 0;
       const c2 = L(
         `Completion SLA ${sla(S.compPct, 90)} · Response SLA ${sla(S.respPct, 95)} · MTTR ${b(S.mtAvgMin === null ? 'N/A' : (S.mtAvgMin / 60).toFixed(1) + ' h')}.` + ul([
-          need ? `Gap to a 90% completion target: ${bad(need.toLocaleString())} more WOs must close on time.` : (S.compPct !== null ? `Completion SLA is at or above the 90% target.` : null),
+          need ? `Gap: ${bad(need.toLocaleString())} more WOs must close on time.` : (S.compPct !== null ? `No on-time shortfall identified.` : null),
           worstC ? `Weakest completion: ${b(esc(worstC.c))} ${bad(f1(worstC.s.compPct))} (${worstC.k} WOs).` : null,
           worstR && worstR !== worstC ? `Weakest response: ${b(esc(worstR.c))} ${bad(f1(worstR.s.respPct))}.` : null,
           slowT ? `Slowest repair: ${b(esc(slowT.t))} averages ${b((slowT.s.mtAvgMin / 60).toFixed(1) + ' h')}.` : null,
-          act(`${worstC ? `daily SLA huddle for ${b(esc(worstC.c))}; ` : ''}${slowT ? `stock spares and a standard fix for ${b(esc(slowT.t))}; ` : ''}target ≥ 90% completion and ≥ 95% response.`)
+          act(`${worstC ? `daily SLA huddle for ${b(esc(worstC.c))}; ` : ''}${slowT ? `stock spares and a standard fix for ${b(esc(slowT.t))}; ` : ''}track weekly.`)
         ]),
         `SLA ปิดงาน ${sla(S.compPct, 90)} · SLA รับเรื่อง ${sla(S.respPct, 95)} · MTTR ${b(S.mtAvgMin === null ? 'N/A' : (S.mtAvgMin / 60).toFixed(1) + ' ชม.')}` + ul([
-          need ? `ส่วนต่างถึงเป้า 90%: ต้องปิดงานตรงเวลาเพิ่มอีก ${bad(need.toLocaleString())} งาน` : (S.compPct !== null ? `SLA ปิดงานถึงเป้า 90% แล้ว` : null),
+          need ? `ส่วนต่าง: ต้องปิดงานตรงเวลาเพิ่มอีก ${bad(need.toLocaleString())} งาน` : (S.compPct !== null ? `ไม่พบส่วนต่างการปิดงานตรงเวลา` : null),
           worstC ? `หมวดที่ปิดงานช้าที่สุด: ${b(esc(worstC.c))} ${bad(f1(worstC.s.compPct))} (${worstC.k} งาน)` : null,
           worstR && worstR !== worstC ? `หมวดที่รับเรื่องช้าที่สุด: ${b(esc(worstR.c))} ${bad(f1(worstR.s.respPct))}` : null,
           slowT ? `ซ่อมนานที่สุด: ${b(esc(slowT.t))} เฉลี่ย ${b((slowT.s.mtAvgMin / 60).toFixed(1) + ' ชม.')}` : null,
-          act(`${worstC ? `ประชุม SLA รายวันสำหรับ ${b(esc(worstC.c))} ` : ''}${slowT ? `สำรองอะไหล่และทำวิธีแก้มาตรฐานสำหรับ ${b(esc(slowT.t))} ` : ''}ตั้งเป้า SLA ปิดงาน ≥ 90% และรับเรื่อง ≥ 95%`)
+          act(`${worstC ? `ประชุม SLA รายวันสำหรับ ${b(esc(worstC.c))} ` : ''}${slowT ? `สำรองอะไหล่และทำวิธีแก้มาตรฐานสำหรับ ${b(esc(slowT.t))} ` : ''}ติดตามรายสัปดาห์`)
         ]));
 
       // ---- Card 3: backlog aging & ownership
@@ -3537,13 +3537,13 @@
           `Aging: ≤7d ${b(a7)} · 8–30d ${b(a30)} · 31–90d ${a90 ? warn(a90) : b(a90)} · >90d ${a90p ? bad(a90p) : b(a90p)}.`,
           oldest ? `Oldest: ${(oldest.aging || 0) > 30 ? bad(esc(oldest.id)) : b(esc(oldest.id))} (${oldest.aging || 0} days, ${esc(type(oldest))} @ ${esc(oldest.loc)}).` : null,
           pCat ? `Backlog concentrated in ${b(esc(pCat[0]))} (${pCat[1]})${pLoc ? ` and at ${b(esc(pLoc[0]))} (${pLoc[1]})` : ''}.` : null,
-          act(`${a90 + a90p ? `escalate the ${a90 + a90p} items over 30 days to supervisors with a close-by date; ` : ''}weekly backlog review; target < 5% of WOs older than 30 days.`)
+          act(`${a90 + a90p ? `escalate the ${a90 + a90p} items over 30 days to supervisors with a close-by date; ` : ''}weekly backlog review.`)
         ]),
         `งานค้าง ${b(P.length.toLocaleString())} งาน (${pct(P.length, n).toFixed(1)}%) — ${stages || '-'}` + ul([
           `อายุงาน: ≤7 วัน ${b(a7)} · 8–30 วัน ${b(a30)} · 31–90 วัน ${a90 ? warn(a90) : b(a90)} · >90 วัน ${a90p ? bad(a90p) : b(a90p)}`,
           oldest ? `ค้างนานที่สุด: ${(oldest.aging || 0) > 30 ? bad(esc(oldest.id)) : b(esc(oldest.id))} (${oldest.aging || 0} วัน, ${esc(type(oldest))} @ ${esc(oldest.loc)})` : null,
           pCat ? `งานค้างกระจุกที่หมวด ${b(esc(pCat[0]))} (${pCat[1]})${pLoc ? ` และพื้นที่ ${b(esc(pLoc[0]))} (${pLoc[1]})` : ''}` : null,
-          act(`${a90 + a90p ? `ส่งต่องานที่ค้างเกิน 30 วัน ${a90 + a90p} งานให้หัวหน้างานพร้อมกำหนดวันปิด ` : ''}ทบทวนงานค้างทุกสัปดาห์ ตั้งเป้างานค้างเกิน 30 วัน < 5%`)
+          act(`${a90 + a90p ? `ส่งต่องานที่ค้างเกิน 30 วัน ${a90 + a90p} งานให้หัวหน้างานพร้อมกำหนดวันปิด ` : ''}ทบทวนงานค้างทุกสัปดาห์`)
         ]));
       document.getElementById('bfContent1').innerHTML = c1;
       document.getElementById('bfContent2').innerHTML = c2;
@@ -3616,32 +3616,32 @@ function dccExecPanel(hostId, o) {
       const f1 = v => v === null ? 'N/A' : v.toFixed(1) + '%';
       const headline = L(
         `${Bd(N0(n))} work orders` + (pm && tr !== null ? ` — ${Bd(esc(lm))} ${Bd(N0(lc))} vs ${esc(pm)} ${N0(pc)} (${Bd((tr >= 0 ? '+' : '') + tr.toFixed(0) + '%', tr > 10 ? bad : good)})` : '') + '.' +
-        (S.compPct !== null ? ` Completion SLA ${Bd(f1(S.compPct), S.compPct >= 90 ? good : bad)} ${S.compPct >= 90 ? 'meets' : `is ${(90 - S.compPct).toFixed(1)} pts below`} the 90% target` + (need ? ` (${Bd(N0(need))} more WOs must close on time)` : '') + '.' : ' SLA data not available in this file.') +
+        (S.compPct !== null ? ` Completion SLA ${Bd(f1(S.compPct), S.compPct >= 90 ? good : bad)}` + (need ? ` (${Bd(N0(need))} more WOs must close on time)` : '') + '.' : ' SLA data not available in this file.') +
         (P.length ? ` ${Bd(N0(P.length), 'text-amber-400')} WOs open${a30 ? `, ${Bd(N0(a30), bad)} older than 30 days` : ', none older than 30 days'}.` : '') +
         (top ? ` Largest driver: ${Bd(esc(top[0]))} (${pct(top[1], n).toFixed(0)}%).` : ''),
         `${Bd(N0(n))} คำสั่งงาน` + (pm && tr !== null ? ` — ${Bd(esc(lm))} ${Bd(N0(lc))} เทียบ ${esc(pm)} ${N0(pc)} (${Bd((tr >= 0 ? '+' : '') + tr.toFixed(0) + '%', tr > 10 ? bad : good)})` : '') +
-        (S.compPct !== null ? ` · SLA ปิดงาน ${Bd(f1(S.compPct), S.compPct >= 90 ? good : bad)} ${S.compPct >= 90 ? 'ถึงเป้า 90%' : `ต่ำกว่าเป้า 90% อยู่ ${(90 - S.compPct).toFixed(1)} จุด`}` + (need ? ` (ต้องปิดตรงเวลาเพิ่ม ${Bd(N0(need))} งาน)` : '') : ' · ไฟล์นี้ไม่มีข้อมูล SLA') +
+        (S.compPct !== null ? ` · SLA ปิดงาน ${Bd(f1(S.compPct), S.compPct >= 90 ? good : bad)}` + (need ? ` (ต้องปิดตรงเวลาเพิ่ม ${Bd(N0(need))} งาน)` : '') : ' · ไฟล์นี้ไม่มีข้อมูล SLA') +
         (P.length ? ` · ค้าง ${Bd(N0(P.length), 'text-amber-400')} งาน${a30 ? ` ค้างเกิน 30 วัน ${Bd(N0(a30), bad)} งาน` : ' ไม่มีรายการเกิน 30 วัน'}` : '') +
         (top ? ` · ปัญหาหลัก: ${Bd(esc(top[0]))} (${pct(top[1], n).toFixed(0)}%)` : ''));
       const risks = [];
-      if (S.compPct !== null && S.compPct < 90) risks.push(L(`Completion SLA ${f1(S.compPct)} vs 90% target — ${N0(need)} WOs short; service-level exposure with tenants/contract.`, `SLA ปิดงาน ${f1(S.compPct)} ต่ำกว่าเป้า 90% — ขาดอีก ${N0(need)} งาน เสี่ยงต่อข้อตกลงบริการ`));
-      if (S.respPct !== null && S.respPct < 95) risks.push(L(`Response SLA ${f1(S.respPct)} vs 95% target — acknowledgement is slower than agreed.`, `SLA รับเรื่อง ${f1(S.respPct)} ต่ำกว่าเป้า 95%`));
+      if (S.compPct !== null && S.compPct < 90) risks.push(L(`Completion SLA ${f1(S.compPct)} — ${N0(need)} WOs short; service-level exposure with tenants/contract.`, `SLA ปิดงาน ${f1(S.compPct)} — ขาดอีก ${N0(need)} งาน เสี่ยงต่อข้อตกลงบริการ`));
+      if (S.respPct !== null && S.respPct < 95) risks.push(L(`Response SLA ${f1(S.respPct)} — acknowledgement is slower than agreed.`, `SLA รับเรื่อง ${f1(S.respPct)}`));
       if (a30) risks.push(L(`${N0(a30)} WOs open > 30 days${pCat ? `, concentrated in ${esc(pCat[0])}` : ''} — risk of repeat failures and complaints.`, `${N0(a30)} งานค้างเกิน 30 วัน${pCat ? ` กระจุกที่ ${esc(pCat[0])}` : ''} — เสี่ยงเกิดซ้ำและข้อร้องเรียน`));
       if (tr !== null && tr > 10) risks.push(L(`Demand up ${tr.toFixed(0)}% vs ${pm} — confirm technician capacity.`, `ปริมาณงานเพิ่ม ${tr.toFixed(0)}% เทียบ ${pm} — ตรวจสอบกำลังช่าง`));
       if (top3 >= 50) risks.push(L(`Top 3 problem types = ${top3.toFixed(0)}% of work — a few root causes drive most demand.`, `3 ปัญหาหลักคิดเป็น ${top3.toFixed(0)}% ของงาน — แก้สาเหตุไม่กี่จุดลดภาระได้มาก`));
       if (cat1) risks.push(L(`${N0(cat1)} CAT 1 (highest-priority) work orders — verify each is closed with a root-cause note.`, `มีงาน CAT 1 ${N0(cat1)} งาน — ยืนยันว่าปิดพร้อมบันทึกสาเหตุ`));
       const actions = [];
-      if (S.compPct !== null && S.compPct < 90) actions.push({ a: L(`Daily SLA huddle on late WOs${top ? `, starting with ${esc(top[0])}` : ''}; target ≥ 90% completion.`, `ประชุม SLA รายวันเรื่องงานเลยกำหนด${top ? ` เริ่มจาก ${esc(top[0])}` : ''} เป้า ≥ 90%`), o: L('Facility / Technical Manager', 'ผู้จัดการอาคาร / ฝ่ายช่าง'), d: L('Start in 3 days · review in 2 weeks', 'เริ่มใน 3 วัน · ทบทวนใน 2 สัปดาห์') });
+      if (S.compPct !== null && S.compPct < 90) actions.push({ a: L(`Daily SLA huddle on late WOs${top ? `, starting with ${esc(top[0])}` : ''}.`, `ประชุม SLA รายวันเรื่องงานเลยกำหนด${top ? ` เริ่มจาก ${esc(top[0])}` : ''}`), o: L('Facility / Technical Manager', 'ผู้จัดการอาคาร / ฝ่ายช่าง'), d: L('Start in 3 days · review in 2 weeks', 'เริ่มใน 3 วัน · ทบทวนใน 2 สัปดาห์') });
       if (a30) actions.push({ a: L(`Give each of the ${N0(a30)} WOs older than 30 days an owner and close-by date; weekly review until cleared.`, `มอบหมายผู้รับผิดชอบและวันปิดให้ ${N0(a30)} งานที่ค้างเกิน 30 วัน ทบทวนทุกสัปดาห์`), o: L('Supervisor / Contractor lead', 'หัวหน้างาน / ผู้รับเหมา'), d: L('Within 7 days', 'ภายใน 7 วัน') });
       if (top) actions.push({ a: L(`Root-cause review on ${esc(top[0])}${loc ? ` (hotspot ${esc(loc[0])})` : ''} and add to the PPM checklist; a 20% cut removes ~${Math.round(top[1] * 0.2)} WOs per period.`, `ทำ Root-cause review เรื่อง ${esc(top[0])}${loc ? ` (จุดเสี่ยง ${esc(loc[0])})` : ''} และเพิ่มในแผน PPM ลดได้ 20% จะลดราว ${Math.round(top[1] * 0.2)} งานต่อรอบ`), o: L('System owner + Engineering', 'เจ้าของระบบ + วิศวกรรม'), d: L('RCA in 14 days · fix in 30 days', 'RCA ใน 14 วัน · แก้ไขใน 30 วัน') });
-      if (!actions.length) actions.push({ a: L('On target — keep the current routine and review monthly.', 'อยู่ในเป้า — คงรูปแบบการทำงานและทบทวนรายเดือน'), o: L('Facility Manager', 'ผู้จัดการอาคาร'), d: L('Monthly', 'รายเดือน') });
+      if (!actions.length) actions.push({ a: L('Keep the current routine and review monthly.', 'คงรูปแบบการทำงานและทบทวนรายเดือน'), o: L('Facility Manager', 'ผู้จัดการอาคาร'), d: L('Monthly', 'รายเดือน') });
       dccExecPanel('cwoExecSummary', {
         th, status, title: L('Executive Summary — Bottom Line', 'สรุปสำหรับผู้บริหาร — ภาพรวมและสิ่งที่ต้องตัดสินใจ'), headline,
         tiles: [
-          { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(S.compPct), t: L('target ≥ 90%', 'เป้า ≥ 90%'), s: sC },
-          { l: L('Response SLA', 'SLA รับเรื่อง'), v: f1(S.respPct), t: L('target ≥ 95%', 'เป้า ≥ 95%'), s: sR },
+          { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(S.compPct), t: '', s: sC },
+          { l: L('Response SLA', 'SLA รับเรื่อง'), v: f1(S.respPct), t: '', s: sR },
           { l: 'MTTR', v: mt === null ? 'N/A' : mt.toFixed(1) + (th ? ' ชม.' : ' h'), t: L('mean time to repair', 'เวลาซ่อมเฉลี่ย'), s: 'b' },
-          { l: L('Open > 30 days', 'ค้างเกิน 30 วัน'), v: N0(a30), t: L(`of ${N0(P.length)} open · target 0`, `จากค้าง ${N0(P.length)} · เป้า 0`), s: sB },
+          { l: L('Open > 30 days', 'ค้างเกิน 30 วัน'), v: N0(a30), t: L(`of ${N0(P.length)} open`, `จากค้าง ${N0(P.length)}`), s: sB },
           { l: L('Volume vs prev.', 'ปริมาณเทียบก่อนหน้า'), v: tr === null ? 'n/a' : (tr >= 0 ? '+' : '') + tr.toFixed(0) + '%', t: pm ? `${lm} vs ${pm}` : L('single month', 'เดือนเดียว'), s: sT },
           { l: L('CAT 1 WOs', 'งาน CAT 1'), v: N0(cat1), t: L('highest priority', 'ความสำคัญสูงสุด'), s: cat1 ? 'a' : 'g' }
         ], risks: risks.slice(0, 4), actions: actions.slice(0, 4) });

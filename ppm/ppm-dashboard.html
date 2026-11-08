@@ -2546,28 +2546,28 @@ function dccExecPanel(hostId, o) {
       const sg = v => v === null ? '' : ` (${v >= 0 ? '+' : ''}${v.toFixed(1)} pp)`;
       const headline = L(
         `${Bd(N0(a.total))} planned PPM tasks — ${Bd(f1(a.comp), a.comp >= 95 ? good : bad)} completed` + (prev && dC !== null ? ` (${last.m} vs ${prev.m}${sg(dC)})` : '') + '.' +
-        (a.sla !== null ? ` Completion SLA ${Bd(f1(a.sla), a.sla >= 95 ? good : bad)} ${a.sla >= 95 ? 'meets' : `is ${(95 - a.sla).toFixed(1)} pts below`} the 95% target` + (needSla ? ` (${Bd(N0(needSla))} more tasks needed on time)` : '') + '.' : '') +
+        (a.sla !== null ? ` Completion SLA ${Bd(f1(a.sla), a.sla >= 95 ? good : bad)}` + (needSla ? ` (${Bd(N0(needSla))} more tasks needed on time)` : '') + '.' : '') +
         (unf ? ` ${Bd(N0(unf), 'text-amber-400')} tasks unfinished` + (pP ? `, most with ${Bd(esc(pP[0]))} (${pP[1]})` : '') + '.' : ' All planned tasks are completed.'),
         `แผน PPM ${Bd(N0(a.total))} รายการ — ปิดงานแล้ว ${Bd(f1(a.comp), a.comp >= 95 ? good : bad)}` + (prev && dC !== null ? ` (${last.m} เทียบ ${prev.m}${sg(dC)})` : '') +
-        (a.sla !== null ? ` · SLA ปิดงาน ${Bd(f1(a.sla), a.sla >= 95 ? good : bad)} ${a.sla >= 95 ? 'ถึงเป้า 95%' : `ต่ำกว่าเป้า 95% อยู่ ${(95 - a.sla).toFixed(1)} จุด`}` + (needSla ? ` (ต้องปิดตรงเวลาเพิ่ม ${Bd(N0(needSla))} รายการ)` : '') : '') +
+        (a.sla !== null ? ` · SLA ปิดงาน ${Bd(f1(a.sla), a.sla >= 95 ? good : bad)}` + (needSla ? ` (ต้องปิดตรงเวลาเพิ่ม ${Bd(N0(needSla))} รายการ)` : '') : '') +
         (unf ? ` · ยังไม่เสร็จ ${Bd(N0(unf), 'text-amber-400')} รายการ` + (pP ? ` ค้างที่ ${Bd(esc(pP[0]))} มากที่สุด (${pP[1]})` : '') : ' · แผนงานเสร็จครบทุกรายการ'));
       const risks = [];
-      if (a.sla !== null && a.sla < 95) risks.push(L(`Completion SLA ${f1(a.sla)} vs 95% — ${N0(needSla)} tasks short; contract KPI exposure.`, `SLA ปิดงาน ${f1(a.sla)} ต่ำกว่าเป้า 95% — ขาดอีก ${N0(needSla)} รายการ เสี่ยงต่อ KPI ตามสัญญา`));
+      if (a.sla !== null && a.sla < 95) risks.push(L(`Completion SLA ${f1(a.sla)} — ${N0(needSla)} tasks short; contract KPI exposure.`, `SLA ปิดงาน ${f1(a.sla)} — ขาดอีก ${N0(needSla)} รายการ เสี่ยงต่อ KPI ตามสัญญา`));
       if (worstP && worstP.a.sla < 95) risks.push(L(`Weakest provider: ${esc(worstP.k)} at ${f1(worstP.a.sla)} SLA (${worstP.a.total} tasks).`, `ผู้ให้บริการที่ต่ำสุด: ${esc(worstP.k)} SLA ${f1(worstP.a.sla)} (${worstP.a.total} งาน)`));
       if (worstC && worstC.a.comp < 95) risks.push(L(`Lowest completion category: ${esc(worstC.k)} at ${f1(worstC.a.comp)}.`, `หมวดที่ปิดงานต่ำสุด: ${esc(worstC.k)} ที่ ${f1(worstC.a.comp)}`));
       if (unf) risks.push(L(`${N0(unf)} unfinished tasks${oldM ? `, oldest from ${esc(oldM)}` : ''}${pC ? `, mostly ${esc(pC[0])}` : ''} — missed PPM raises breakdown risk on those assets.`, `งานค้าง ${N0(unf)} รายการ${oldM ? ` เก่าสุดตั้งแต่ ${esc(oldM)}` : ''}${pC ? ` ส่วนใหญ่หมวด ${esc(pC[0])}` : ''} — งาน PPM ที่ไม่ทำเพิ่มความเสี่ยงอุปกรณ์เสีย`));
       if (dS !== null && dS < -3) risks.push(L(`SLA fell ${Math.abs(dS).toFixed(1)} pp vs ${prev.m}.`, `SLA ลดลง ${Math.abs(dS).toFixed(1)} จุด เทียบ ${prev.m}`));
       const actions = [];
-      if (worstP && worstP.a.sla < 95) actions.push({ a: L(`Monthly SLA review with ${esc(worstP.k)}; agree a recovery plan and apply KPI deductions if below target for 2 months.`, `ประชุมทบทวน SLA รายเดือนกับ ${esc(worstP.k)} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หากต่ำกว่าเป้า 2 เดือน`), o: L('FM Manager + Provider lead', 'ผู้จัดการ FM + ผู้นำผู้ให้บริการ'), d: L('Meeting within 7 days', 'ประชุมภายใน 7 วัน') });
+      if (worstP && worstP.a.sla < 95) actions.push({ a: L(`Monthly SLA review with ${esc(worstP.k)}; agree a recovery plan and apply KPI deductions if SLA stays low for 2 months.`, `ประชุมทบทวน SLA รายเดือนกับ ${esc(worstP.k)} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หาก SLA ยังต่ำต่อเนื่อง 2 เดือน`), o: L('FM Manager + Provider lead', 'ผู้จัดการ FM + ผู้นำผู้ให้บริการ'), d: L('Meeting within 7 days', 'ประชุมภายใน 7 วัน') });
       if (unf) actions.push({ a: L(`Catch-up plan for the ${N0(unf)} unfinished tasks with weekly burn-down; close ${oldM ? esc(oldM) + ' items' : 'oldest'} first.`, `แผนเร่งรัด ${N0(unf)} งานที่ค้าง ติดตามรายสัปดาห์ ปิดงานของ ${oldM ? esc(oldM) : 'เดือนเก่าสุด'} ก่อน`), o: L(pP ? esc(pP[0]) : 'Service provider', pP ? esc(pP[0]) : 'ผู้ให้บริการ'), d: L('Plan in 5 days · cleared in 30 days', 'ส่งแผนใน 5 วัน · เคลียร์ใน 30 วัน') });
-      if (worstC && worstC.a.comp < 95) actions.push({ a: L(`Re-plan ${esc(worstC.k)} schedules and lock resources for peak weeks; target ≥ 95%.`, `วางแผน ${esc(worstC.k)} ใหม่และจองทรัพยากรช่วงงานหนาแน่น เป้า ≥ 95%`), o: L('Planner / Technical lead', 'ผู้วางแผน / หัวหน้าช่าง'), d: L('Before next month plan', 'ก่อนแผนเดือนถัดไป') });
-      if (!actions.length) actions.push({ a: L('On target — keep the current plan and review monthly.', 'อยู่ในเป้า — คงแผนงานและทบทวนรายเดือน'), o: L('FM Manager', 'ผู้จัดการ FM'), d: L('Monthly', 'รายเดือน') });
+      if (worstC && worstC.a.comp < 95) actions.push({ a: L(`Re-plan ${esc(worstC.k)} schedules and lock resources for peak weeks.`, `วางแผน ${esc(worstC.k)} ใหม่และจองทรัพยากรช่วงงานหนาแน่น`), o: L('Planner / Technical lead', 'ผู้วางแผน / หัวหน้าช่าง'), d: L('Before next month plan', 'ก่อนแผนเดือนถัดไป') });
+      if (!actions.length) actions.push({ a: L('Keep the current plan and review monthly.', 'คงแผนงานและทบทวนรายเดือน'), o: L('FM Manager', 'ผู้จัดการ FM'), d: L('Monthly', 'รายเดือน') });
       dccExecPanel('ppmExecSummary', { th, status, title: L('Executive Summary — PPM Bottom Line', 'สรุปสำหรับผู้บริหาร — งาน PPM'), headline,
         tiles: [
-          { l: L('Completion', 'ปิดงาน'), v: f1(a.comp), t: L('target ≥ 95%', 'เป้า ≥ 95%') + (dC === null ? '' : sg(dC)), s: sC },
-          { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(a.sla), t: L('target ≥ 95%', 'เป้า ≥ 95%') + (dS === null ? '' : sg(dS)), s: sS },
+          { l: L('Completion', 'ปิดงาน'), v: f1(a.comp), t: '' + (dC === null ? '' : sg(dC)), s: sC },
+          { l: L('Completion SLA', 'SLA ปิดงาน'), v: f1(a.sla), t: '' + (dS === null ? '' : sg(dS)), s: sS },
           { l: L('Lowest category', 'หมวดต่ำสุด'), v: worstC ? f1(worstC.a.comp) : 'N/A', t: worstC ? esc(worstC.k) : '—', s: worstC ? (worstC.a.comp >= 95 ? 'g' : worstC.a.comp >= 85 ? 'a' : 'r') : 'a' },
-          { l: L('Unfinished', 'ยังไม่เสร็จ'), v: N0(unf), t: L('target 0', 'เป้า 0'), s: sU },
+          { l: L('Unfinished', 'ยังไม่เสร็จ'), v: N0(unf), t: '', s: sU },
           { l: L('Weakest provider', 'ผู้ให้บริการต่ำสุด'), v: worstP ? f1(worstP.a.sla) : 'N/A', t: worstP ? esc(worstP.k) : '—', s: sP },
           { l: L('Planned tasks', 'แผนทั้งหมด'), v: N0(a.total), t: prev ? `${last.m}: ${N0(last.a.total)}` : '', s: 'b' }
         ], risks: risks.slice(0, 4), actions: actions.slice(0, 4) });
@@ -2605,21 +2605,21 @@ function dccExecPanel(hostId, o) {
           cats[0] ? `Largest category: ${b(esc(cats[0].k))} (${cats[0].a.total}, ${(cats[0].a.total / a.total * 100).toFixed(0)}%).` : null,
           freqs.length ? `Frequency mix: ${freqs.slice(0, 3).map(x => `${esc(x.k)} ${x.a.total}`).join(' · ')}.` : null,
           worstCat ? `Lowest completion: ${b(esc(worstCat.k))} at ${bad(f(worstCat.a.comp))}.` : null,
-          act(worstCat ? `re-plan ${b(esc(worstCat.k))} schedules with the provider and lock resources for its peak week; target ≥ 95% completion.` : 'keep the current schedule; review monthly.')]),
+          act(worstCat ? `re-plan ${b(esc(worstCat.k))} schedules with the provider and lock resources for its peak week.` : 'keep the current schedule; review monthly.')]),
         `แผนงาน ${b(a.total.toLocaleString())} รายการ · ปิดงาน ${sl(a.comp, 95)}${prev ? ` · ${esc(last.m)} ${b(last.a.total)} เทียบ ${esc(prev.m)} ${prev.a.total}` : ''}` + ul([
           cats[0] ? `หมวดที่มีงานมากที่สุด: ${b(esc(cats[0].k))} (${cats[0].a.total}, ${(cats[0].a.total / a.total * 100).toFixed(0)}%)` : null,
           freqs.length ? `สัดส่วนความถี่: ${freqs.slice(0, 3).map(x => `${esc(x.k)} ${x.a.total}`).join(' · ')}` : null,
           worstCat ? `หมวดที่ปิดงานได้ต่ำสุด: ${b(esc(worstCat.k))} ที่ ${bad(f(worstCat.a.comp))}` : null,
-          act(worstCat ? `วางแผนงาน ${b(esc(worstCat.k))} ใหม่ร่วมกับผู้ให้บริการและจองทรัพยากรช่วงสัปดาห์งานหนาแน่น ตั้งเป้าปิดงาน ≥ 95%` : 'คงแผนงานปัจจุบัน และทบทวนรายเดือน')]));
+          act(worstCat ? `วางแผนงาน ${b(esc(worstCat.k))} ใหม่ร่วมกับผู้ให้บริการและจองทรัพยากรช่วงสัปดาห์งานหนาแน่น` : 'คงแผนงานปัจจุบัน และทบทวนรายเดือน')]));
       const c2 = L(
         `Completion SLA ${sl(a.sla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp vs ${esc(prev.m)}` : ''}.` + ul([
-          needSla ? `Gap to 95%: ${bad(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'Completion SLA meets the 95% target.' : 'No SLA data in the file.'),
+          needSla ? `Gap: ${bad(needSla.toLocaleString())} more tasks must finish on time.` : (a.sla !== null ? 'No on-time shortfall identified.' : 'No SLA data in the file.'),
           worstProv ? `Lowest provider SLA: ${b(esc(worstProv.k))} ${bad(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? `; best ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}.` : null,
-          act(worstProv ? `hold a monthly SLA review with ${b(esc(worstProv.k))}; agree a recovery plan and apply KPI deductions if below target for 2 months.` : 'monitor weekly.')]),
+          act(worstProv ? `hold a monthly SLA review with ${b(esc(worstProv.k))}; agree a recovery plan and apply KPI deductions if SLA stays low for 2 months.` : 'monitor weekly.')]),
         `SLA ปิดงาน ${sl(a.sla, 95)}${prev && last.a.sla !== null && prev.a.sla !== null ? ` · ${esc(last.m)} ${(last.a.sla - prev.a.sla >= 0 ? '+' : '') + (last.a.sla - prev.a.sla).toFixed(1)} pp เทียบ ${esc(prev.m)}` : ''}` + ul([
-          needSla ? `ส่วนต่างถึงเป้า 95%: ต้องปิดงานตรงเวลาเพิ่ม ${bad(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'SLA ปิดงานถึงเป้า 95%' : 'ไม่มีข้อมูล SLA ในไฟล์'),
+          needSla ? `ส่วนต่าง: ต้องปิดงานตรงเวลาเพิ่ม ${bad(needSla.toLocaleString())} รายการ` : (a.sla !== null ? 'ไม่พบส่วนต่างการปิดงานตรงเวลา' : 'ไม่มีข้อมูล SLA ในไฟล์'),
           worstProv ? `ผู้ให้บริการที่ SLA ต่ำสุด: ${b(esc(worstProv.k))} ${bad(f(worstProv.a.sla))}${bestProv && bestProv !== worstProv ? ` ดีที่สุด ${esc(bestProv.k)} ${f(bestProv.a.sla)}` : ''}` : null,
-          act(worstProv ? `ประชุมทบทวน SLA รายเดือนกับ ${b(esc(worstProv.k))} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หากต่ำกว่าเป้า 2 เดือนติด` : 'ติดตามรายสัปดาห์')]));
+          act(worstProv ? `ประชุมทบทวน SLA รายเดือนกับ ${b(esc(worstProv.k))} กำหนดแผนแก้ไข และใช้บทปรับตาม KPI หาก SLA ยังต่ำต่อเนื่อง 2 เดือน` : 'ติดตามรายสัปดาห์')]));
       const c3 = L(
         `${b(pend.length.toLocaleString())} unfinished tasks — ${stages || '-'}.` + ul([
           pendProv ? `Most backlog with ${b(esc(pendProv[0]))} (${pendProv[1]}).` : null,
@@ -2632,8 +2632,8 @@ function dccExecPanel(hostId, o) {
           oldestPendM ? `งานค้างเก่าที่สุดตั้งแต่เดือน ${b(esc(oldestPendM))}` : null,
           act(`ให้ ${b(esc(pendProv?.[0] || 'ผู้ให้บริการ'))} ส่งแผนเร่งรัดพร้อมติดตามรายสัปดาห์ และปิดงานเดือน ${esc(oldestPendM || 'ก่อนหน้า')} ก่อน`)]));
       const rank = provs.slice(0, 5).map((p, i) => `${i + 1}. ${b(esc(p.k))} — ${p.a.total} ${L('tasks', 'งาน')} · ${L('done', 'ปิด')} ${f(p.a.comp)} · SLA ${f(p.a.sla)}`).join('<br>');
-      const c4 = L(`${b(provs.length)} service provider(s) in scope.<div class="mt-2 font-mono text-[11px] leading-relaxed">${rank}</div>` + ul([act('share this scorecard with providers monthly; agree targets of ≥ 95% completion and SLA.')]),
-                   `ผู้ให้บริการ ${b(provs.length)} ราย<div class="mt-2 font-mono text-[11px] leading-relaxed">${rank}</div>` + ul([act('ส่ง scorecard นี้ให้ผู้ให้บริการทุกเดือน และตกลงเป้า ปิดงานและ SLA ≥ 95%')]));
+      const c4 = L(`${b(provs.length)} service provider(s) in scope.<div class="mt-2 font-mono text-[11px] leading-relaxed">${rank}</div>` + ul([act('share this scorecard with providers monthly; review results with them.')]),
+                   `ผู้ให้บริการ ${b(provs.length)} ราย<div class="mt-2 font-mono text-[11px] leading-relaxed">${rank}</div>` + ul([act('ส่ง scorecard นี้ให้ผู้ให้บริการทุกเดือน และทบทวนผลร่วมกัน')]));
       const vm = document.getElementById('analyzeViewMode');
       vm.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">${card(L('Workload & Completion', 'ปริมาณงานและการปิดงาน'), 'sky', c1)}${card(L('SLA Performance', 'ประสิทธิภาพ SLA'), 'emerald', c2)}${card(L('Backlog Risk', 'ความเสี่ยงงานค้าง'), 'rose', c3)}${card(L('Service Provider Scorecard', 'Scorecard ผู้ให้บริการ'), 'indigo', c4)}</div>` +
         `<div class="mt-2 text-[10px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i> ${L('Live deep-dive analysis', 'วิเคราะห์เชิงลึกจากข้อมูลสด')}</div>`;
