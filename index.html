@@ -1801,11 +1801,23 @@
                 </div>
 
                 <!-- Category -->
-                <div class="flex flex-col min-w-[115px] max-w-[155px] flex-1">
+                <div class="flex flex-col min-w-[115px] max-w-[155px] flex-1 relative" onclick="event.stopPropagation()">
                     <label class="block text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate" data-i18n="lbl_category">Category</label>
-                    <select id="filterCategory" onchange="onCategoryFilterChanged(); updateActiveFilterSummary();" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none truncate">
-                        <option value="ALL" data-i18n="all_categories">All Categories</option>
-                    </select>
+                    <button type="button" id="btnCatDropdown" onclick="toggleCustomDropdown('dropdownCatMenu')" class="w-full flex items-center justify-between bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                        <span id="lblSelectedCat" class="truncate">All Categories</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1"></i>
+                    </button>
+                    <select id="filterCategory" class="hidden" aria-hidden="true"><option value="ALL">ALL</option></select>
+                    <div id="dropdownCatMenu" class="dropdown-panel hidden absolute left-0 top-full mt-1.5 w-64 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2.5 z-50 text-xs space-y-1">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-700/80 px-1 text-[11px]">
+                            <span class="font-bold text-slate-300">Select Categories</span>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="selectAllCats(true)" class="text-indigo-400 hover:text-indigo-300 text-[10px] font-semibold">All</button>
+                                <button type="button" onclick="selectAllCats(false)" class="text-rose-400 hover:text-rose-300 text-[10px] font-semibold">Clear</button>
+                            </div>
+                        </div>
+                        <div id="catCheckboxesContainer" class="max-h-52 overflow-y-auto custom-scrollbar space-y-1 pt-1"></div>
+                    </div>
                 </div>
 
                 <!-- Priority -->
@@ -3413,7 +3425,7 @@
             const fD = document.getElementById('filterDay');
             if (fD && fD.value !== 'ALL') activeCount++;
             if (fM && fM.value !== 'ALL') activeCount++;
-            if (fC && fC.value !== 'ALL') activeCount++;
+            if (!catIsAll()) activeCount++;
             if (fP && fP.value !== 'ALL') activeCount++;
             if (fZ && fZ.value !== 'ALL') activeCount++;
             if (ALL_ZONES.length && SELECTED_ZONES.size > 0 && SELECTED_ZONES.size < ALL_ZONES.length) activeCount++;
@@ -3509,7 +3521,7 @@
 
         function getCurrentFilterStateKey() {
             const m = document.getElementById('filterMonth')?.value || 'ALL';
-            const c = document.getElementById('filterCategory')?.value || 'ALL';
+            const c = catIsAll() ? 'ALL' : Array.from(SELECTED_CATS).sort().join('|');
             const p = document.getElementById('filterPriority')?.value || 'ALL';
             const z = (ALL_ZONES.length && SELECTED_ZONES.size > 0 && SELECTED_ZONES.size < ALL_ZONES.length) ? Array.from(SELECTED_ZONES).sort().join('|') : 'ALL';
             const f = document.getElementById('filterFA')?.value || 'ALL';
@@ -4269,6 +4281,7 @@ function dccExecPanel(hostId, o) {
             const badge = document.getElementById('activeCrossFilterBadge');
             if (badge) badge.classList.add('hidden');
 
+            SELECTED_CATS = new Set(ALL_CATS); try { renderCatMultiSelect(); } catch (e) {}
             const ids = ['filterYear', 'filterMonth', 'filterWeek', 'filterDay', 'filterCategory', 'filterPriority', 'filterZone', 'filterFA'];
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -4817,6 +4830,7 @@ function dccExecPanel(hostId, o) {
 
             setupSelect('filterMonth', sortedMonths, defaultMonthLbl);
             setupSelect('filterCategory', Array.from(cats || []).sort(), defaultCatLbl);
+            ALL_CATS = Array.from(cats || []).sort(); SELECTED_CATS = new Set(ALL_CATS); renderCatMultiSelect();
             setupSelect('filterPriority', Array.from(prios || []).sort(), defaultPrioLbl);
             
             const sortedZones = Array.from(zones || []).sort();
@@ -4919,24 +4933,44 @@ function dccExecPanel(hostId, o) {
             else lbl.textContent = `Component (${SELECTED_ZONES.size})`;
         }
 
+        // ---- Category multi-select ----
+        let ALL_CATS = [], SELECTED_CATS = new Set();
+        function catIsAll() { return !ALL_CATS.length || SELECTED_CATS.size === 0 || SELECTED_CATS.size >= ALL_CATS.length; }
+        function catScopeEvents() {
+            if (catIsAll()) return [...ALL_EVENT_TYPES];
+            const u = new Set(); SELECTED_CATS.forEach(c => (CATEGORY_EVENT_MAP[c] || []).forEach(e => u.add(e)));
+            return Array.from(u).sort();
+        }
+        function renderCatMultiSelect() {
+            const c = document.getElementById('catCheckboxesContainer'); if (!c) return;
+            const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+            c.innerHTML = ALL_CATS.map(z => `<label class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-slate-700/60 cursor-pointer select-none text-slate-200"><input type="checkbox" value="${esc(z)}" ${SELECTED_CATS.has(z) ? 'checked' : ''} onchange="onCatCheckboxChange(event)" class="rounded bg-slate-900 border-slate-600 text-indigo-600 focus:ring-0"><span class="truncate">${esc(z)}</span></label>`).join('');
+            updateCatDropdownLabel();
+        }
+        function updateCatDropdownLabel() {
+            const l = document.getElementById('lblSelectedCat'); if (!l) return; const th = CURRENT_LANG === 'TH';
+            if (catIsAll()) l.textContent = th ? 'ทุกหมวดหมู่' : 'All Categories';
+            else if (SELECTED_CATS.size === 1) l.textContent = [...SELECTED_CATS][0];
+            else l.textContent = (th ? 'หมวดหมู่' : 'Category') + ` (${SELECTED_CATS.size})`;
+        }
+        function onCatCheckboxChange(e) {
+            if (!RAW_DATA.length) return;
+            if (e.target.checked) SELECTED_CATS.add(e.target.value); else SELECTED_CATS.delete(e.target.value);
+            updateCatDropdownLabel(); updateActiveFilterBadgeCount();
+            clearTimeout(window.__catFilterT);
+            window.__catFilterT = setTimeout(() => { onCategoryFilterChanged(); updateActiveFilterSummary(); }, 350);
+        }
+        function selectAllCats(all) {
+            SELECTED_CATS = all ? new Set(ALL_CATS) : new Set();
+            renderCatMultiSelect(); onCategoryFilterChanged(); updateActiveFilterSummary();
+        }
         function onCategoryFilterChanged() {
-            const selectedCat = document.getElementById('filterCategory').value;
-            let availableEvents = [];
-
-            if (selectedCat === 'ALL') {
-                availableEvents = [...ALL_EVENT_TYPES];
-            } else if (CATEGORY_EVENT_MAP[selectedCat]) {
-                availableEvents = Array.from(CATEGORY_EVENT_MAP[selectedCat]).sort();
-            }
-
+            const availableEvents = catScopeEvents();
             const newSelected = new Set();
             availableEvents.forEach(ev => {
-                if (SELECTED_EVENT_TYPES.has(ev) || SELECTED_EVENT_TYPES.size === ALL_EVENT_TYPES.length) {
-                    newSelected.add(ev);
-                }
+                if (SELECTED_EVENT_TYPES.has(ev) || SELECTED_EVENT_TYPES.size === ALL_EVENT_TYPES.length) newSelected.add(ev);
             });
             SELECTED_EVENT_TYPES = newSelected.size > 0 ? newSelected : new Set(availableEvents);
-
             renderEventTypeMultiSelect(availableEvents);
             runFilterPipeline();
         }
@@ -4963,8 +4997,7 @@ function dccExecPanel(hostId, o) {
         }
 
         function filterEventTypeCheckboxes() {
-            const selectedCat = document.getElementById('filterCategory').value;
-            let currentScope = (selectedCat === 'ALL') ? ALL_EVENT_TYPES : Array.from(CATEGORY_EVENT_MAP[selectedCat] || []).sort();
+            let currentScope = catScopeEvents();
             renderEventTypeMultiSelect(currentScope);
         }
 
@@ -4980,8 +5013,7 @@ function dccExecPanel(hostId, o) {
         }
 
         function selectAllEventTypes(selectAll) {
-            const selectedCat = document.getElementById('filterCategory').value;
-            let currentScope = (selectedCat === 'ALL') ? ALL_EVENT_TYPES : Array.from(CATEGORY_EVENT_MAP[selectedCat] || []).sort();
+            let currentScope = catScopeEvents();
             const searchVal = (document.getElementById('inputSearchEventType').value || '').toLowerCase();
             const filteredEvents = currentScope.filter(ev => ev.toLowerCase().includes(searchVal));
             if (selectAll) {
@@ -5049,7 +5081,7 @@ function dccExecPanel(hostId, o) {
             const wVal = document.getElementById('filterWeek')?.value || 'ALL';
             const mVal = document.getElementById('filterMonth')?.value || 'ALL';
             const dVal = refreshDayFilterOptions(yVal, mVal, wVal);
-            const cVal = document.getElementById('filterCategory')?.value || 'ALL';
+            const catAll = catIsAll();
             const pVal = document.getElementById('filterPriority')?.value || 'ALL';
             const isAllZonesSelected = !ALL_ZONES.length || SELECTED_ZONES.size === 0 || SELECTED_ZONES.size === ALL_ZONES.length;
             const fVal = document.getElementById('filterFA')?.value || 'ALL';
@@ -5062,7 +5094,7 @@ function dccExecPanel(hostId, o) {
                 if (wVal !== 'ALL' && r.week !== wVal) return false;
                 if (mVal !== 'ALL' && r.month !== mVal) return false;
                 if (dVal !== 'ALL' && r.day !== dVal) return false;
-                if (cVal !== 'ALL' && r.cat !== cVal) return false;
+                if (!catAll && !SELECTED_CATS.has(r.cat)) return false;
                 if (pVal !== 'ALL' && r.prio !== pVal) return false;
                 if (!isAllStatusSelected && !SELECTED_STATUSES.has(r.status)) return false;
                 if (!isAllZonesSelected && !SELECTED_ZONES.has(r.comp)) return false;
@@ -5113,7 +5145,7 @@ function dccExecPanel(hostId, o) {
             if (document.getElementById('filterWeek')) document.getElementById('filterWeek').value = 'ALL';
             if (document.getElementById('activeWeekBadge')) document.getElementById('activeWeekBadge').textContent = 'All Weeks';
             if (document.getElementById('filterMonth')) document.getElementById('filterMonth').value = 'ALL';
-            if (document.getElementById('filterCategory')) document.getElementById('filterCategory').value = 'ALL';
+            SELECTED_CATS = new Set(ALL_CATS); renderCatMultiSelect();
             if (document.getElementById('filterPriority')) document.getElementById('filterPriority').value = 'ALL';
             if (document.getElementById('filterZone')) document.getElementById('filterZone').value = 'ALL';
             if (document.getElementById('filterFA')) document.getElementById('filterFA').value = 'ALL';
@@ -5155,13 +5187,14 @@ function dccExecPanel(hostId, o) {
                 SELECTED_ZONES = only ? new Set(ALL_ZONES) : new Set([targetValue]);
                 renderZoneMultiSelect(); runFilterPipeline(); return;
             }
+            if (elementId === 'filterCategory') {
+                const only = SELECTED_CATS.size === 1 && SELECTED_CATS.has(targetValue);
+                SELECTED_CATS = only ? new Set(ALL_CATS) : new Set([targetValue]);
+                renderCatMultiSelect(); onCategoryFilterChanged(); return;
+            }
             const el = document.getElementById(elementId);
             el.value = (el.value === targetValue) ? 'ALL' : targetValue;
-            if (elementId === 'filterCategory') {
-                onCategoryFilterChanged();
-            } else {
-                runFilterPipeline();
-            }
+            runFilterPipeline();
         }
 
         function updateKPICards() {
@@ -11107,10 +11140,9 @@ function dccExecPanel(hostId, o) {
                     const dOpt = dEl.selectedOptions[0];
                     chips.push({ label: 'Day', val: dOpt ? dOpt.textContent : dEl.value, clear: () => { dEl.value = 'ALL'; runFilterPipeline(); } });
                 }
-                const cEl = document.getElementById('filterCategory');
-                if (cEl && cEl.value !== 'ALL') {
+                if (!catIsAll()) {
                     activeCount++;
-                    chips.push({ label: 'Category', val: cEl.value, clear: () => { cEl.value = 'ALL'; onCategoryFilterChanged(); } });
+                    chips.push({ label: 'Category', val: SELECTED_CATS.size <= 2 ? Array.from(SELECTED_CATS).join(', ') : SELECTED_CATS.size + ' selected', clear: () => { SELECTED_CATS = new Set(ALL_CATS); renderCatMultiSelect(); onCategoryFilterChanged(); } });
                 }
                 const pEl = document.getElementById('filterPriority');
                 if (pEl && pEl.value !== 'ALL') {
