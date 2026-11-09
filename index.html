@@ -3831,7 +3831,7 @@
         // robust outside-click close (works even where a panel stops click propagation)
         document.addEventListener('pointerdown', ev => {
             try {
-                document.querySelectorAll('#dropdownZoneMenu, #dropdownStatusMenu, #dropdownEventTypeMenu, #dropdownExportMenu, #dropdownProfileMenu, #livePanel').forEach(d => {
+                document.querySelectorAll('#dropdownZoneMenu, #dropdownCatMenu, #dropdownStatusMenu, #dropdownEventTypeMenu, #dropdownExportMenu, #dropdownProfileMenu, #livePanel').forEach(d => {
                     if (d.classList.contains('hidden')) return;
                     const wrap = d.parentElement;
                     if (wrap && wrap.contains(ev.target)) return;
@@ -3843,7 +3843,7 @@
         // pending = same rule as Case Management (Open / In-Progress / Acknowledged)
         const cmpIsPending = d => { const t = String((d && d.Status) || '').toLowerCase().replace(/[-_]/g, ' '); return t.includes('open') || t.includes('progress') || t.includes('ack'); };
         function closeAllCustomDropdowns(e) {
-            document.querySelectorAll('#dropdownZoneMenu, #dropdownStatusMenu, #dropdownEventTypeMenu, #dropdownExportMenu, #dropdownProfileMenu, #livePanel').forEach(d => {
+            document.querySelectorAll('#dropdownZoneMenu, #dropdownCatMenu, #dropdownStatusMenu, #dropdownEventTypeMenu, #dropdownExportMenu, #dropdownProfileMenu, #livePanel').forEach(d => {
                 d.classList.add('hidden');
             });
         }
