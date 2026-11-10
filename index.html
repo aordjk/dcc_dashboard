@@ -1375,6 +1375,7 @@
         /* ===== Left section menu (jump list) ===== */
         #dccNav { position: fixed; left: 0; top: calc(var(--dcc-bar-h, 120px) + 6px); width: 176px; max-height: calc(100vh - var(--dcc-bar-h, 120px) - 18px); overflow-y: auto; z-index: 30; padding: 8px 6px 8px 8px; display: none; }
         #dccNav.is-on { display: block; }
+        body.has-card-expanded #dccNav { display: none !important; }
         #dccNav .dn-card { background: rgba(15,23,42,.92); border: 1px solid rgba(71,85,105,.55); border-radius: 14px; padding: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.35); backdrop-filter: blur(6px); }
         #dccNav .dn-head { display: flex; align-items: center; justify-content: space-between; padding: 3px 6px 6px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
         #dccNav .dn-tog { background: none; border: 0; color: #94a3b8; cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 6px; }
@@ -3875,6 +3876,7 @@
             }
             const sb = document.getElementById('stickyControlBar');
             document.documentElement.style.setProperty('--dcc-sticky-h', (sb ? sb.getBoundingClientRect().bottom : 0) + 'px');
+            document.body.classList.toggle('has-card-expanded', !!document.querySelector('.card-expanded'));
             document.body.style.overflow = document.querySelector('.card-expanded') ? 'hidden' : '';
             setTimeout(() => {
                 if (trendChart) trendChart.resize();
