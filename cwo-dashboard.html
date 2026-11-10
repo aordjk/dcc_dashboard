@@ -462,7 +462,7 @@
         <div class="flex items-center justify-between mb-3">
           <div>
             <h3 class="text-sm font-bold text-white" id="chartTitleSla">SLA TREND: ACKNOWLEDGE VS RESOLVE</h3>
-            <p class="text-xs text-slate-400" id="chartSubSla">Completion SLA % (Solid Green) vs Response SLA % (Dashed Cyan)</p>
+            <p class="text-xs text-slate-400" id="chartSubSla">Completion SLA % (Solid Mint) vs Response SLA % (Dashed Blue) vs Target 90% (Red)</p>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-semibold" id="badgeSla">SLA</span>
@@ -914,7 +914,7 @@
         chartCwo: "CWO VOLUME TREND (CLICK TO FILTER)",
         chartCwoSub: "Monthly work order intake across property",
         chartSla: "SLA TREND: ACKNOWLEDGE VS RESOLVE",
-        chartSlaSub: "Completion SLA % (Solid Green) vs Response SLA % (Dashed Cyan)",
+        chartSlaSub: "Completion SLA % (Solid Mint) vs Response SLA % (Dashed Blue) vs Target 90% (Red)",
         chartCategory: "WORK ORDERS BY CATEGORY",
         chartCategorySub: "Scroll down to view all categories",
         chartSource: "SOURCE DISTRIBUTION",
@@ -982,7 +982,7 @@
         chartCwo: "แนวโน้มปริมาณงาน CWO รายเดือน (คลิกที่กราฟเพื่อกรอง)",
         chartCwoSub: "จำนวนใบแจ้งงานทั้งหมดแยกรายเดือน",
         chartSla: "แนวโน้ม SLA: ปิดงาน (Resolve) เทียบ รับเรื่อง (Acknowledge)",
-        chartSlaSub: "เส้นทึบสีเขียว: Completion SLA % เทียบ เส้นประสีฟ้า: Response SLA %",
+        chartSlaSub: "เส้นทึบสีเขียวมิ้นต์: Completion SLA % เทียบ เส้นประสีน้ำเงิน: Response SLA % เทียบ เส้นสีแดง: Target 90%",
         chartCategory: "ปริมาณงานแยกตามหมวดหมู่",
         chartCategorySub: "เลื่อนลงเพื่อดูหมวดหมู่ทั้งหมด",
         chartSource: "สัดส่วนแหล่งที่มาของงาน (SOURCE)",
@@ -1214,7 +1214,7 @@
             {
               label: 'Completion SLA (Resolve %)',
               data: [],
-              borderColor: '#3b82f6',
+              borderColor: '#34d399',
               backgroundColor: 'transparent',
               borderDash: [],
               tension: 0.3,
@@ -1224,7 +1224,7 @@
                 anchor: 'end',
                 align: 'top',
                 offset: 8,
-                color: '#3b82f6',
+                color: '#34d399',
                 backgroundColor: () => document.documentElement.classList.contains('cwo-light') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(8, 13, 26, 0.8)',
                 borderRadius: 3,
                 font: { family: 'Plus Jakarta Sans', weight: 'bold', size: 9 },
@@ -1248,7 +1248,7 @@
             {
               label: 'Response SLA (Ack %)',
               data: [],
-              borderColor: '#38bdf8',
+              borderColor: '#3b82f6',
               backgroundColor: 'transparent',
               borderDash: [6, 4],
               tension: 0.3,
@@ -1258,7 +1258,7 @@
                 anchor: 'start',
                 align: 'bottom',
                 offset: 8,
-                color: '#38bdf8',
+                color: '#3b82f6',
                 backgroundColor: () => document.documentElement.classList.contains('cwo-light') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(8, 13, 26, 0.8)',
                 borderRadius: 3,
                 font: { family: 'Plus Jakarta Sans', weight: 'bold', size: 9 },
@@ -2395,8 +2395,8 @@
 
       const kpis = [
         { label: "Total Work Orders", val: totalText, col: "38BDF8" },
-        { label: "Completion SLA", val: compSlaText, col: "10B981" },
-        { label: "Response SLA (Ack)", val: respSlaText, col: "38BDF8" },
+        { label: "Completion SLA", val: compSlaText, col: "34D399" },
+        { label: "Response SLA (Ack)", val: respSlaText, col: "3B82F6" },
         { label: "Mean MTTR", val: mttrText, col: "C084FC" },
         { label: "Pending Tasks", val: pendingText, col: "F43F5E" }
       ];
