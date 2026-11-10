@@ -7010,11 +7010,25 @@ function dccExecPanel(hostId, o) {
                 return true;
             }
             if (type === 'line') {
-                const data = dss.map(ser);
+                // Target series is drawn as a solid red reference line over the plot (no per-point labels); other series get clear, non-red colours
+                const tgtDs = dss.find(d => /^Target/i.test(String(d.label || '')));
+                const tgtVal = tgtDs ? num((tgtDs.data || [])[0]) : null;
+                const lineDss = tgtDs ? dss.filter(d => d !== tgtDs) : dss;
+                const data = lineDss.map(ser);
+                const SLA_COL = d => /complet/i.test(d.label || '') ? '10B981' : /respon/i.test(d.label || '') ? '2563EB' : null;
+                const fallback = ['2563EB', '10B981', '7C3AED', 'F59E0B', '0891B2', '5F5F5F'];
+                const lo = tgtDs ? { x: 0.06, y: 0.05, w: 0.92, h: 0.76 } : null;
+                const axMax = common.valAxisMaxVal || 100, axMin = common.valAxisMinVal || 0;
                 slide.addChart('line', data, Object.assign({}, common, {
-                    chartColors: dss.map((d, i) => ['ED1C24', '5F5F5F', 'D17156', 'AF837B', '968E85', '796D6D'][i % 6]), lineSize: 2.25, lineDataSymbol: 'circle', lineDataSymbolSize: 7,
-                    lineSmooth: dss.some(d => d.tension > 0), dataLabelPosition: 't'
-                }));
+                    chartColors: lineDss.map((d, i) => tgtDs || SLA_COL(d) ? (SLA_COL(d) || fallback[i % 6]) : ['ED1C24', '5F5F5F', 'D17156', 'AF837B', '968E85', '796D6D'][i % 6]),
+                    lineSize: 2.25, lineDataSymbol: 'circle', lineDataSymbolSize: 7,
+                    lineSmooth: lineDss.some(d => d.tension > 0), dataLabelPosition: 't', showLegend: true
+                }, lo ? { layout: lo } : {}));
+                if (tgtDs) {
+                    const ly = y + h * (lo.y + lo.h * (1 - (tgtVal - axMin) / (axMax - axMin)));
+                    slide.addShape('line', { x: x + w * lo.x, y: ly, w: w * lo.w, h: 0, line: { color: 'DC2626', width: 2.25 } });
+                    slide.addText('Target ' + tgtVal + '%', { x: x + w * (lo.x + lo.w) - 1.3, y: ly - 0.24, w: 1.3, h: 0.22, fontFace: 'Arial', fontSize: 9, bold: true, color: 'DC2626', align: 'right', margin: 0 });
+                }
                 return true;
             }
             if (type === 'bar') {
